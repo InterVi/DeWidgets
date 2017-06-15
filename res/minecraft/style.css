@@ -1,0 +1,37 @@
+QWidget {
+    background: #4E4F33;
+    border: 1px dashed black;
+    padding: 3px;
+}
+QListWidget {
+    background: #4E4F33;
+}
+QListWidget::item {
+    background: #8E914C;
+    color: #E9F0AF;
+    margin-bottom: 3px;
+}
+QScrollBar {
+    height: 1px;
+    width: 1px;
+    background: black;
+    border: 0px;
+    padding: 0px;
+    margin: 0px;
+}
+QScrollBar::handle {
+    padding: 0px;
+    margin: 0px;
+    border: 0px;
+    background: white;
+}
+QMenu {
+    background: #ADB334;
+    color: black;
+}
+QMenu::item {
+    background: #979E03;
+}
+QMenu::item:selected {
+    color: white;
+}

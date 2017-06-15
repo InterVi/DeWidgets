@@ -1,0 +1,16 @@
+QWidget {
+    background: #DB9467;
+    padding: 0;
+}
+QLCDNumber {
+    background: #454545;
+    color: #faffa3;
+    border: 0;
+    min-width: 20px;
+    min-height: 20px;
+    margin: 1px;
+}
+QLCDNumber:disabled {
+    background: #303030;
+    color: #D1D676;
+}

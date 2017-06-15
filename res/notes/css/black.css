@@ -1,0 +1,27 @@
+QWidget {
+    background: #242424;
+}
+QTextEdit {
+    background: #4A4A4A;
+    border-top: 1px solid black;
+    color: white;
+    padding: 3px;
+    margin-top: 15px;
+    font-family: serif;
+    font-size: 12px;
+    font-style: italic;
+}
+QScrollBar {
+    height: 1px;
+    width: 1px;
+    background: black;
+    border: 0px;
+    padding: 0px;
+    margin: 0px;
+}
+QScrollBar::handle {
+    padding: 0px;
+    margin: 0px;
+    border: 0px;
+    background: white;
+}
