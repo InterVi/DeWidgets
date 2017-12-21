@@ -1,6 +1,17 @@
 # DeWidgets
 
-Qt5 widgets for desktop. Easy API for writing you custom widgets. Automatic save data in config file.
+Qt5 widgets for desktop. Easy API for writing you custom widgets. Automatic save data in config file. Support multi language.
+
+## Install and startup
+
+```
+
+pip3 install PyQt5
+pip3 install mcstatus
+git clone https://github.com/InterVi/DeWidgets.git
+cd DeWidgets
+python3 main.py
+```
 
 ## Available widgets
 
