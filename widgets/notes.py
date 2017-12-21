@@ -68,10 +68,7 @@ class Main(Widget, Note):
         Widget.__init__(self, widget_manager)
         Note.__init__(self, self, 0)
         self.lang = widget_manager.lang['NOTES']
-        if self.NAME in widget_manager.config.config:
-            self.conf = widget_manager.config.config[self.NAME]
-        else:
-            self.conf = None
+        self.conf = False
         # setup widget
         self.NAME = 'Simple Notes'
         self.DESCRIPTION = self.lang['description']
@@ -176,7 +173,8 @@ class Main(Widget, Note):
 
     def unload(self):
         try:
-            self.save_conf()
+            if self.conf != False:
+                self.save_conf()
         except:
             print(traceback.format_exc())
 

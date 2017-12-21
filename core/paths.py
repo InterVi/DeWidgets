@@ -1,6 +1,7 @@
 """Resources paths."""
 import os
 import sys
+from configparser import ConfigParser
 
 
 RES = os.path.join(sys.path[0], 'res')
@@ -33,6 +34,16 @@ STDOUT_LOG = os.path.join(sys.path[0], 'stdout.log')
 STDERR_LOG = os.path.join(sys.path[0], 'stderr.log')
 LICENSE_TXT = os.path.join(sys.path[0], 'license.txt')
 LOCK_FILE = os.path.join(sys.path[0], '.lock.lck')
+CONF_PATHS = os.path.join(sys.path[0], 'paths.conf')
+
+if os.path.isfile(CONF_PATHS):  # for user customization
+    paths = ConfigParser()
+    paths.read(CONF_PATHS, 'utf8')
+    CONF_SETTINGS = paths['CONFIGS']['settings']
+    CONF_WIDGETS = paths['CONFIGS']['widgets']
+    STDERR_LOG = paths['LOGS']['stderr']
+    STDOUT_LOG = paths['LOGS']['stdout']
+    LOCK_FILE = paths['OTHER']['lock']
 
 
 def get_paths(folder=RES, files=True) -> dict:
