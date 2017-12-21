@@ -4,9 +4,7 @@ Qt5 widgets for desktop. Easy API for writing you custom widgets. Automatic save
 
 ## Install and startup
 
-```
-#!shell
-
+```shell
 pip3 install PyQt5
 pip3 install mcstatus
 git clone https://github.com/InterVi/DeWidgets.git
@@ -23,4 +21,4 @@ python3 main.py
 ## Depends
 
 * PyQt5
-* [mcstatus](https://github.com/Dinnerbone/mcstatus) (for *MC monitiring*)
+* [mcstatus](https://github.com/Dinnerbone/mcstatus) (for *MC monitoring*)
