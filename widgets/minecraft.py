@@ -4,6 +4,7 @@ import sys
 import json
 import base64
 import traceback
+from multiprocessing import Process, Manager
 from mcstatus import MinecraftServer
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout
 from PyQt5.QtWidgets import QMenu, QPushButton, QMessageBox, QHBoxLayout
@@ -20,7 +21,7 @@ class Main(Widget, QWidget):
         Widget.__init__(self, widget_manager)
         QWidget.__init__(self)
         self.servers = []
-        self.timer_interval = 60000
+        self.timer_interval = 30000
         # setup widget
         self.NAME = 'Minecraft Servers Monitoring'
         self.DESCRIPTION = widget_manager.lang['MINECRAFT']['description']
@@ -57,15 +58,18 @@ class Main(Widget, QWidget):
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self._list_fill)
         self.start_timer = QTimer(self)
-        self.start_timer.timeout.connect(self._fill)
-
-    def _fill(self):
-        self._fill_settings()
-        self._list_fill()
+        self.start_timer.timeout.connect(self._list_fill)
+        # buffer
+        self.__manager = Manager()
+        self.list_buffer = self.__manager.dict()
+        # other
+        self.__procs = []
 
     def boot(self):
+        self._fill_settings()
+        self._list_fill()
         self.start_timer.setSingleShot(True)
-        self.start_timer.start(1)
+        self.start_timer.start(1000)
 
     def place(self):
         self.start_timer.setSingleShot(True)
@@ -73,9 +77,11 @@ class Main(Widget, QWidget):
 
     def remove(self):
         self.update_timer.stop()
+        self._kill_procs()
 
     def purge(self):
         self.update_timer.stop()
+        self._kill_procs()
 
     def show_settings(self):
         try:
@@ -84,32 +90,24 @@ class Main(Widget, QWidget):
             print(traceback.format_exc())
 
     def _list_fill(self):
+        self._pool_ping()
         self.list.clear()
         for addr in self.servers:
             item = QListWidgetItem(self.list)
             try:
-                status = MinecraftServer.lookup(addr).status()
-                favicon = base64.b64decode(status.favicon[
-                                           status.favicon.find(',')+1:])
+                if addr not in self.list_buffer:
+                    item.setText(addr)
+                    continue
+                text, favicon, tooltip = json.loads(self.list_buffer[addr])
+                favicon = base64.b64decode(favicon)
                 item.setIcon(QIcon(QPixmap.fromImage(QImage.fromData(favicon)))
                              )
-                text = '[' + str(status.players.online) + ' / ' +\
-                       str(status.players.max) + '] ' + \
-                       self.widget_manager.lang['MINECRAFT']['ping'].format(
-                           str(status.latency)) +\
-                       '\n[' + status.version.name + ']\n' +\
-                       re.sub('§+[a-zA-Z0-9]', '', status.description['text'])
                 item.setText(text)
                 font = item.font()
                 font.setPixelSize(10)
                 font.setBold(True)
                 item.setFont(font)
-                if not status.players.sample:
-                    continue
-                tooltip = ''
-                for player in status.players.sample:
-                    tooltip += player.name + ', '
-                item.setToolTip(tooltip[:-2])
+                item.setToolTip(tooltip)
             except:
                 item.setText(addr)
                 print(traceback.format_exc())
@@ -135,6 +133,37 @@ class Main(Widget, QWidget):
         except:
             print(traceback.format_exc())
 
+    def _kill_procs(self):
+        try:
+            for p in self.__procs:
+                if p and p.is_alive():
+                    p.terminate()
+            self.__procs.clear()
+        except:
+            print(traceback.format_exc())
+
+    def _pool_ping(self):
+        def ping(addr):
+            status = MinecraftServer.lookup(addr).status()
+            favicon = status.favicon[status.favicon.find(',') + 1:]
+            tooltip = ''
+            if status.players.sample:
+                for player in status.players.sample:
+                    tooltip += player.name + ', '
+            text = '[' + str(status.players.online) + ' / ' + \
+                   str(status.players.max) + '] ' + \
+                   self.widget_manager.lang['MINECRAFT']['ping'].format(
+                       str(status.latency)) + \
+                   '\n[' + status.version.name + ']\n' + \
+                   re.sub('§+[a-zA-Z0-9]', '', status.description['text'])
+            self.list_buffer[addr] = json.dumps((text, favicon, tooltip[:-2]))
+
+        self._kill_procs()
+        for addr in self.servers:
+            proc = Process(target=ping, args=(addr,))
+            proc.start()
+            self.__procs.append(proc)
+
 
 class ShowMore(TextViewer):
     def __init__(self, main):
@@ -150,19 +179,28 @@ class ShowMore(TextViewer):
         self.setWindowIcon(main.list.item(main.list.currentRow()).icon())
         self.exit_button.clicked.connect(self.close)
         self.text.setHtml(self.lang['MINECRAFT']['wait'])
+        self.__manager = Manager()
+        self.__info_buffer = self.__manager.dict()
+        self.__proc = None
+        self._ping_server()
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self.print_info)
-        self.timer.start(1)
+        self.timer.start(100)
         self.show()
 
-    def print_info(self):
-        result = {
-            'online': '', 'max': '', 'version': '', 'protocol': '',
-            'players': '', 'ping': '', 'description': '', 'map': '',
-            'brand': '', 'plugins': ''
-        }
-        try:
+    def _ping_server(self):
+        def ping():
+            self.__info_buffer['online'] = ''
+            self.__info_buffer['max'] = ''
+            self.__info_buffer['version'] = ''
+            self.__info_buffer['protocol'] = ''
+            self.__info_buffer['players'] = ''
+            self.__info_buffer['ping'] = ''
+            self.__info_buffer['description'] = ''
+            self.__info_buffer['map'] = ''
+            self.__info_buffer['brand'] = ''
+            self.__info_buffer['plugins'] = ''
             config = self.main.widget_manager.config.config
             if 'servers' not in config[self.main.NAME]:
                 return
@@ -175,39 +213,49 @@ class ShowMore(TextViewer):
             except:
                 print(traceback.format_exc())
                 return
-            result['online'] = str(status.players.online)
-            result['max'] = str(status.players.max)
-            result['version'] = status.version.name
-            result['protocol'] = status.version.protocol
-            result['ping'] = str(status.latency)
+            self.__info_buffer['online'] = str(status.players.online)
+            self.__info_buffer['max'] = str(status.players.max)
+            self.__info_buffer['version'] = status.version.name
+            self.__info_buffer['protocol'] = status.version.protocol
+            self.__info_buffer['ping'] = str(status.latency)
             players = ''
             if status.players.sample:
                 for p in status.players.sample:
                     players += p.name + '(' + p.id + ')' + ', <br/>'
-            result['players'] = players[:-2]
-            result['description'] = status.description['text']
+            self.__info_buffer['players'] = players[:-2]
+            self.__info_buffer['description'] = status.description['text']
             try:
                 query = MinecraftServer.lookup(addr).query()
             except:
                 print(traceback.format_exc())
                 return
-            result['map'] = query.map
-            result['brand'] = query.software.brand
+            self.__info_buffer['map'] = query.map
+            self.__info_buffer['brand'] = query.software.brand
             plugins = ''
             for p in query.software.plugins:
                 plugins += p + ', '
-            result['plugins'] = plugins[:-2]
-        except:
-            print(traceback.format_exc())
-        finally:
-            try:
-                self.text.setHtml(self.lang['MINECRAFT']['info'].format(
-                    **result))
-            except:
-                print(traceback.format_exc())
+            self.__info_buffer['plugins'] = plugins[:-2]
+
+        if self.__proc and self.__proc.is_alive():
+            self.__proc.terminate()
+        self.__proc = Process(target=ping)
+        self.__proc.start()
+
+    def print_info(self):
+        self.text.setHtml(self.lang['MINECRAFT']['info'].format(
+            **self.__info_buffer))
+        if self.__proc and self.__proc.is_alive():
+            self.timer.start(100)
 
     def close(self):
         try:
+            self.timer.stop()
+            try:
+                if self.__proc and self.__proc.is_alive():
+                    self.__proc.terminate()
+                    self.__proc = None
+            except:
+                print(traceback.format_exc())
             super().setHidden(True)  # app close bug -> call close or destroy
         except:
             print(traceback.format_exc())
