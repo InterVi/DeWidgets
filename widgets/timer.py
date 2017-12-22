@@ -29,7 +29,7 @@ class Main(Widget, QWidget):
         self.DESCRIPTION = self.lang['description']
         self.AUTHOR = 'InterVi'
         self.EMAIL = 'intervionly@gmail.com'
-        self.URL = 'https://github.com/InterVi'
+        self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(RES, 'timer', 'icon.png'))
         # setup window
         with open(os.path.join(RES, 'timer', 'style.css'),

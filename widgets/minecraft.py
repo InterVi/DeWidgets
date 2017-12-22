@@ -27,7 +27,7 @@ class Main(Widget, QWidget):
         self.DESCRIPTION = widget_manager.lang['MINECRAFT']['description']
         self.AUTHOR = 'InterVi'
         self.EMAIL = 'intervionly@gmail.com'
-        self.URL = 'https://github.com/InterVi'
+        self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(sys.path[0], 'res', 'minecraft',
                                        'minecraft.png'))
         # setup stylesheet

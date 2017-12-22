@@ -11,5 +11,5 @@ class Main(Widget, QWidget):
         self.DESCRIPTION = 'This is a example widget.'
         self.AUTHOR = 'InterVi'
         self.EMAIL = 'intervionly@gmail.com'
-        self.URL = 'https://github.com/InterVi'
+        self.URL = 'https://github.com/InterVi/DeWidgets'
         self.not_loading = True

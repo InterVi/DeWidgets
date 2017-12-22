@@ -74,7 +74,7 @@ class Main(Widget, Note):
         self.DESCRIPTION = self.lang['description']
         self.AUTHOR = 'InterVi'
         self.EMAIL = 'intervionly@gmail.com'
-        self.URL = 'https://github.com/InterVi'
+        self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(RES, 'notes', 'icon.png'))
         # setup vars
         self.notes = [self.lang['note']]
