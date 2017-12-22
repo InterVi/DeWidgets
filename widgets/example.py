@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget
 from core.manager import Widget
 
+not_loading = True
 
 class Main(Widget, QWidget):
     def __init__(self, widget_manager):
@@ -11,3 +12,4 @@ class Main(Widget, QWidget):
         self.AUTHOR = 'InterVi'
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi'
+        self.not_loading = True

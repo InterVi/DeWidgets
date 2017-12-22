@@ -101,6 +101,8 @@ class WidgetManager:
             mod = __import__(name)
             if 'Main' not in mod.__dict__ or not callable(mod.Main):
                 return
+            if 'not_loading' in mod.__dict__:
+                return
             widget = mod.Main(self)
             widget.load()
             widget.setWindowFlags(Qt.CustomizeWindowHint |
