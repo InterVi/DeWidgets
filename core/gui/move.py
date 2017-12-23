@@ -1,14 +1,19 @@
 """Move widget window."""
 import traceback
-from PyQt5.QtWidgets import QLabel, QLineEdit, QPushButton, QSlider, QWidget
+from PyQt5.QtWidgets import QLabel, QSpinBox, QPushButton, QSlider, QWidget
 from PyQt5.QtCore import QRect, Qt, QPoint, QSize
-from PyQt5.QtGui import QIntValidator, QIcon
+from PyQt5.QtGui import QIcon
 from core.paths import MOVE
 
 
 class Move(QWidget):
     """move widget window"""
     def __init__(self, window, manager):
+        """
+
+        :param window: QWidget
+        :param manager: WidgetManager class
+        """
         super().__init__()
         # vars
         lang = manager.lang
@@ -19,7 +24,7 @@ class Move(QWidget):
         self.h_win = window.height()
         self.w_win = window.width()
         self.opacity_win = window.windowOpacity()
-        validator = QIntValidator(self)
+        screen = manager.main_gui.app.desktop().screenGeometry()
         # setup window
         self.setWindowTitle(lang['MOVE']['title'].format(window.NAME))
         self.setFixedSize(194, 199)
@@ -32,17 +37,17 @@ class Move(QWidget):
         self.x_label.setText(lang['MOVE']['x_label'])
         # setup 'Y' label
         self.y_label = QLabel(self)
-        self.y_label.setGeometry(QRect(143, 10, 20, 15))
+        self.y_label.setGeometry(QRect(133, 10, 20, 15))
         self.y_label.setAlignment(Qt.AlignCenter)
         self.y_label.setText(lang['MOVE']['y_label'])
         # setup 'Height' label
         self.h_label = QLabel(self)
-        self.h_label.setGeometry(QRect(3, 70, 65, 15))
+        self.h_label.setGeometry(QRect(3, 70, 80, 15))
         self.h_label.setAlignment(Qt.AlignCenter)
         self.h_label.setText(lang['MOVE']['h_label'])
         # setup 'Width' label
         self.w_label = QLabel(self)
-        self.w_label.setGeometry(QRect(120, 70, 65, 15))
+        self.w_label.setGeometry(QRect(110, 70, 80, 15))
         self.w_label.setAlignment(Qt.AlignCenter)
         self.w_label.setText(lang['MOVE']['w_label'])
         # setup 'Opacity' label
@@ -50,34 +55,38 @@ class Move(QWidget):
         self.opacity_win_label.setGeometry(QRect(43, 120, 111, 20))
         self.opacity_win_label.setAlignment(Qt.AlignCenter)
         self.opacity_win_label.setText(lang['MOVE']['opacity_label'])
-        # setup 'X' edit
-        self.x_edit = QLineEdit(self)
-        self.x_edit.setGeometry(QRect(3, 30, 70, 27))
+        # setup 'X' spinbox
+        self.x_edit = QSpinBox(self)
+        self.x_edit.setGeometry(QRect(3, 30, 80, 27))
         self.x_edit.setToolTip(lang['MOVE']['x_edit_tt'])
-        self.x_edit.setValidator(validator)
-        self.x_edit.setText(str(self.x_cord))
-        self.x_edit.textChanged.connect(self._move)
-        # setup 'Y' edit
-        self.y_edit = QLineEdit(self)
-        self.y_edit.setGeometry(QRect(120, 30, 70, 27))
+        self.x_edit.setMinimum(0)
+        self.x_edit.setMaximum(screen.width())
+        self.x_edit.setValue(self.x_cord)
+        self.x_edit.valueChanged.connect(self._move)
+        # setup 'Y' spinbox
+        self.y_edit = QSpinBox(self)
+        self.y_edit.setGeometry(QRect(110, 30, 80, 27))
         self.y_edit.setToolTip(lang['MOVE']['y_edit_tt'])
-        self.y_edit.setValidator(validator)
-        self.y_edit.setText(str(self.y_cord))
-        self.y_edit.textChanged.connect(self._move)
-        # setup 'Height' edit
-        self.h_edit = QLineEdit(self)
-        self.h_edit.setGeometry(QRect(3, 90, 70, 27))
+        self.y_edit.setMinimum(0)
+        self.y_edit.setMaximum(screen.height())
+        self.y_edit.setValue(self.y_cord)
+        self.y_edit.valueChanged.connect(self._move)
+        # setup 'Height' spinbox
+        self.h_edit = QSpinBox(self)
+        self.h_edit.setGeometry(QRect(3, 90, 80, 27))
         self.h_edit.setToolTip(lang['MOVE']['h_edit_tt'])
-        self.h_edit.setValidator(validator)
-        self.h_edit.setText(str(self.h_win))
-        self.h_edit.textChanged.connect(self._resize)
-        # setup 'Width' edit
-        self.w_edit = QLineEdit(self)
-        self.w_edit.setGeometry(QRect(120, 90, 70, 27))
+        self.h_edit.setMinimum(0)
+        self.h_edit.setMaximum(screen.height())
+        self.h_edit.setValue(self.h_win)
+        self.h_edit.valueChanged.connect(self._resize)
+        # setup 'Width' spinbox
+        self.w_edit = QSpinBox(self)
+        self.w_edit.setGeometry(QRect(110, 90, 80, 27))
         self.w_edit.setToolTip(lang['MOVE']['w_edit_tt'])
-        self.w_edit.setValidator(validator)
-        self.w_edit.setText(str(self.w_win))
-        self.w_edit.textChanged.connect(self._resize)
+        self.w_edit.setMinimum(0)
+        self.w_edit.setMaximum(screen.width())
+        self.w_edit.setValue(self.w_win)
+        self.w_edit.valueChanged.connect(self._resize)
         # setup slider
         self.slider = QSlider(self)
         self.slider.setGeometry(QRect(3, 140, 188, 21))
@@ -118,8 +127,8 @@ class Move(QWidget):
         try:
             if not self.x_edit.text() or not self.y_edit.text():
                 return
-            x = int(self.x_edit.text())
-            y = int(self.y_edit.text())
+            x = self.x_edit.value()
+            y = self.y_edit.value()
             self.window.move(QPoint(x, y))
             self.window.show()
         except:
@@ -129,8 +138,8 @@ class Move(QWidget):
         try:
             if not self.w_edit.text() or not self.h_edit.text():
                 return
-            w = int(self.w_edit.text())
-            h = int(self.h_edit.text())
+            w = self.w_edit.value()
+            h = self.h_edit.value()
             self.window.resize(QSize(w, h))
             self.window.show()
         except:

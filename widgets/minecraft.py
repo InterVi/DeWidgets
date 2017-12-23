@@ -8,8 +8,8 @@ from multiprocessing import Process, Manager
 from mcstatus import MinecraftServer
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout
 from PyQt5.QtWidgets import QMenu, QPushButton, QMessageBox, QHBoxLayout
-from PyQt5.QtWidgets import QInputDialog, QLineEdit, QLabel
-from PyQt5.QtGui import QIcon, QPixmap, QImage, QIntValidator
+from PyQt5.QtWidgets import QInputDialog, QSpinBox, QLabel
+from PyQt5.QtGui import QIcon, QPixmap, QImage
 from PyQt5.QtCore import Qt, QSize, QTimer
 from core.manager import Widget
 from core.gui.help import TextViewer
@@ -279,13 +279,14 @@ class Settings(QWidget):
         self.update_label = QLabel(self)
         self.update_label.setText(self.lang['MINECRAFT']['time_label'])
         self.update_label.setAlignment(Qt.AlignCenter)
-        # setup 'Time' input
-        self.time_edit = QLineEdit(self)
-        self.time_edit.setText(str(int(self.main.timer_interval/1000)))
+        # setup 'Time' spinbox
+        self.time_edit = QSpinBox(self)
+        self.time_edit.setMinimum(0)
+        self.time_edit.setMaximum(1000000000)
+        self.time_edit.setValue(int(self.main.timer_interval/1000))
         self.time_edit.setToolTip(self.lang['MINECRAFT']['time_input_tt'])
-        self.time_edit.setValidator(QIntValidator(self))
         self.time_edit.setAlignment(Qt.AlignCenter)
-        self.time_edit.textChanged.connect(self._time_changed)
+        self.time_edit.valueChanged.connect(self._time_changed)
         # setup 'Up' button
         self.up_button = QPushButton(self.lang['MINECRAFT']['up_button'], self)
         self.up_button.setToolTip(self.lang['MINECRAFT']['up_button_tt'])
@@ -352,8 +353,8 @@ class Settings(QWidget):
     def _time_changed(self):
         try:
             self.main.update_timer.stop()
-            if self.time_edit.text():
-                value = int(self.time_edit.text())
+            if self.time_edit.value():
+                value = self.time_edit.value()
             else:
                 value = 0
             if value > 0:

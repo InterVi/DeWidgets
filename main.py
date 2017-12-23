@@ -21,11 +21,9 @@ if __name__ == '__main__':
         status = app.exec()  # waiting
         sys.exit(status)
     except SystemExit as se:
-        status = 1
         print('exit code ' + str(se))
         # pass
     except:
-        status = 1
         print(traceback.format_exc())
     finally:  # correct exit
         try:
@@ -36,6 +34,10 @@ if __name__ == '__main__':
             gui.manager.config.save()
         except:
             print(traceback.format_exc())
-        if status != 2:
-            if os.path.isfile(LOCK_FILE):  # remove lock file
-                os.remove(LOCK_FILE)
+        if os.path.isfile(LOCK_FILE):  # remove lock file
+            os.remove(LOCK_FILE)
+        try:
+            out.close()
+            err.close()
+        except:
+            print(traceback.format_exc())
