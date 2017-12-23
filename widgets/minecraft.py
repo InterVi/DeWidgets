@@ -16,6 +16,15 @@ from core.gui.help import TextViewer
 from core.paths import RES, RELOAD, SETTINGS, ERROR, DELETE, HELP
 
 
+def get_description(desc) -> str:
+    if desc['text']:
+        return desc['text']
+    result = ''
+    for part in desc['extra']:
+        result += part['text']
+    return result
+
+
 class Main(Widget, QWidget):
     def __init__(self, widget_manager):
         Widget.__init__(self, widget_manager)
@@ -157,7 +166,8 @@ class Main(Widget, QWidget):
                    self.lang['ping'].format(
                        str(status.latency)) + \
                    '\n[' + status.version.name + ']\n' + \
-                   re.sub('§+[a-zA-Z0-9]', '', status.description['text'])
+                   re.sub('§+[a-zA-Z0-9]', '',
+                          get_description(status.description))
             self.list_buffer[addr] = json.dumps((text, favicon, tooltip[:-2]))
 
         self._kill_procs()
@@ -224,8 +234,9 @@ class ShowMore(TextViewer):
             if status.players.sample:
                 for p in status.players.sample:
                     players += p.name + '(' + p.id + ')' + ', <br/>'
-            self.__info_buffer['players'] = players[:-2]
-            self.__info_buffer['description'] = status.description['text']
+            self.__info_buffer['players'] = players[:-7]
+            self.__info_buffer['description'] = get_description(
+                status.description)
             try:
                 query = MinecraftServer.lookup(addr).query()
             except:
@@ -237,6 +248,10 @@ class ShowMore(TextViewer):
             for p in query.software.plugins:
                 plugins += p + ', '
             self.__info_buffer['plugins'] = plugins[:-2]
+            for p in query.players.names:
+                if p not in players:
+                    players += p + ', <br/>'
+            self.__info_buffer['players'] = players[:-7]
 
         if self.__proc and self.__proc.is_alive():
             self.__proc.terminate()
