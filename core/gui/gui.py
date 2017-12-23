@@ -422,7 +422,7 @@ class ItemInfo(TextViewer):
         kwargs = {
             'name': name, 'description': widget.DESCRIPTION,
             'author': widget.AUTHOR, 'email': widget.EMAIL,
-            'link': widget.URL
+            'link': widget.URL, 'help': widget.HELP
         }
         self.text.setHtml(lang['ITEM']['html'].format(**kwargs))
         # show

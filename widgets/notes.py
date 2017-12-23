@@ -72,6 +72,7 @@ class Main(Widget, Note):
         # setup widget
         self.NAME = 'Simple Notes'
         self.DESCRIPTION = self.lang['description']
+        self.HELP = self.lang['help']
         self.AUTHOR = 'InterVi'
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi/DeWidgets'

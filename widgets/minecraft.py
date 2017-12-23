@@ -22,9 +22,11 @@ class Main(Widget, QWidget):
         QWidget.__init__(self)
         self.servers = []
         self.timer_interval = 30000
+        self.lang = widget_manager.lang['MINECRAFT']
         # setup widget
         self.NAME = 'Minecraft Servers Monitoring'
-        self.DESCRIPTION = widget_manager.lang['MINECRAFT']['description']
+        self.DESCRIPTION = self.lang['description']
+        self.HELP = self.lang['help']
         self.AUTHOR = 'InterVi'
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi/DeWidgets'
@@ -152,7 +154,7 @@ class Main(Widget, QWidget):
                     tooltip += player.name + ', '
             text = '[' + str(status.players.online) + ' / ' + \
                    str(status.players.max) + '] ' + \
-                   self.widget_manager.lang['MINECRAFT']['ping'].format(
+                   self.lang['ping'].format(
                        str(status.latency)) + \
                    '\n[' + status.version.name + ']\n' + \
                    re.sub('§+[a-zA-Z0-9]', '', status.description['text'])
@@ -168,17 +170,17 @@ class Main(Widget, QWidget):
 class ShowMore(TextViewer):
     def __init__(self, main):
         self.main = main
-        self.lang = main.widget_manager.lang
+        self.lang = main.widget_manager.lang['MINECRAFT']
         title = main.list.item(main.list.currentRow()).text()
         for i in range(4):
             title = title[title.find(']\n'):]
         super().__init__(
-            title[2:].strip(), self.lang['MINECRAFT']['close_button'],
-            self.lang['MINECRAFT']['close_button_tt']
+            title[2:].strip(), self.lang['close_button'],
+            self.lang['close_button_tt']
         )
         self.setWindowIcon(main.list.item(main.list.currentRow()).icon())
         self.exit_button.clicked.connect(self.close)
-        self.text.setHtml(self.lang['MINECRAFT']['wait'])
+        self.text.setHtml(self.lang['wait'])
         self.__manager = Manager()
         self.__info_buffer = self.__manager.dict()
         self.__proc = None
@@ -242,7 +244,7 @@ class ShowMore(TextViewer):
         self.__proc.start()
 
     def print_info(self):
-        self.text.setHtml(self.lang['MINECRAFT']['info'].format(
+        self.text.setHtml(self.lang['info'].format(
             **self.__info_buffer))
         if self.__proc and self.__proc.is_alive():
             self.timer.start(100)
@@ -265,9 +267,9 @@ class Settings(QWidget):
     def __init__(self, main):
         super().__init__()
         self.main = main
-        self.lang = main.widget_manager.lang
+        self.lang = main.widget_manager.lang['MINECRAFT']
         # setup window
-        self.setWindowTitle(self.lang['MINECRAFT']['settings_title'])
+        self.setWindowTitle(self.lang['settings_title'])
         self.setWindowIcon(QIcon(SETTINGS))
         self.resize(400, 460)
         # setup list
@@ -277,45 +279,37 @@ class Settings(QWidget):
         self._list_fill()
         # setup 'Update' label
         self.update_label = QLabel(self)
-        self.update_label.setText(self.lang['MINECRAFT']['time_label'])
+        self.update_label.setText(self.lang['time_label'])
         self.update_label.setAlignment(Qt.AlignCenter)
         # setup 'Time' spinbox
         self.time_edit = QSpinBox(self)
         self.time_edit.setMinimum(0)
         self.time_edit.setMaximum(1000000000)
         self.time_edit.setValue(int(self.main.timer_interval/1000))
-        self.time_edit.setToolTip(self.lang['MINECRAFT']['time_input_tt'])
+        self.time_edit.setToolTip(self.lang['time_input_tt'])
         self.time_edit.setAlignment(Qt.AlignCenter)
         self.time_edit.valueChanged.connect(self._time_changed)
         # setup 'Up' button
-        self.up_button = QPushButton(self.lang['MINECRAFT']['up_button'], self)
-        self.up_button.setToolTip(self.lang['MINECRAFT']['up_button_tt'])
+        self.up_button = QPushButton(self.lang['up_button'], self)
+        self.up_button.setToolTip(self.lang['up_button_tt'])
         self.up_button.clicked.connect(self._up)
         # setup 'Down' button
-        self.down_button = QPushButton(self.lang['MINECRAFT']['down_button'],
-                                       self)
-        self.down_button.setToolTip(self.lang['MINECRAFT']['down_button_tt'])
+        self.down_button = QPushButton(self.lang['down_button'], self)
+        self.down_button.setToolTip(self.lang['down_button_tt'])
         self.down_button.clicked.connect(self._down)
         # setup 'Delete' button
-        self.delete_button = QPushButton(
-            self.lang['MINECRAFT']['delete_button'], self
-        )
-        self.delete_button.setToolTip(self.lang['MINECRAFT']
-                                      ['delete_button_tt'])
+        self.delete_button = QPushButton(self.lang['delete_button'], self)
+        self.delete_button.setToolTip(self.lang['delete_button_tt'])
         self.delete_button.clicked.connect(self._delete)
         # setup 'Add' button
-        self.add_button = QPushButton(
-            self.lang['MINECRAFT']['add_button'], self
-        )
-        self.add_button.setToolTip(self.lang['MINECRAFT']['add_button_tt'])
+        self.add_button = QPushButton(self.lang['add_button'], self)
+        self.add_button.setToolTip(self.lang['add_button_tt'])
         self.add_button.clicked.connect(self._add)
         # setup 'Close' button
         self.close_button = QPushButton(
-            self.lang['MINECRAFT']['settings_close_button'], self
+            self.lang['settings_close_button'], self
         )
-        self.close_button.setToolTip(
-            self.lang['MINECRAFT']['settings_close_button_tt']
-        )
+        self.close_button.setToolTip(self.lang['settings_close_button_tt'])
         self.close_button.clicked.connect(self.hide)  # close, destroy - bugs
         # setup one h box layout
         self.h_box = QHBoxLayout()
@@ -401,18 +395,18 @@ class Settings(QWidget):
             mbox = QMessageBox(self)
             mbox.setIcon(QMessageBox.Question)
             mbox.setWindowIcon(QIcon(DELETE))
-            mbox.setWindowTitle(self.lang['MINECRAFT']['confirm_title'])
-            mbox.setText(self.lang['MINECRAFT']['confirm_text'])
+            mbox.setWindowTitle(self.lang['confirm_title'])
+            mbox.setText(self.lang['confirm_text'])
             mbox.setInformativeText(
-                self.lang['MINECRAFT']['confirm_inf'].format(
+                self.lang['confirm_inf'].format(
                     self.list.currentItem().text()))
             mbox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             ok = mbox.button(QMessageBox.Ok)
-            ok.setText(self.lang['MINECRAFT']['confirm_ok_button'])
-            ok.setToolTip(self.lang['MINECRAFT']['confirm_ok_button_tt'])
+            ok.setText(self.lang['confirm_ok_button'])
+            ok.setToolTip(self.lang['confirm_ok_button_tt'])
             cancel = mbox.button(QMessageBox.Cancel)
-            cancel.setText(self.lang['MINECRAFT']['confirm_cancel_button'])
-            cancel.setToolTip(self.lang['MINECRAFT']
+            cancel.setText(self.lang['confirm_cancel_button'])
+            cancel.setToolTip(self.lang
                               ['confirm_cancel_button_tt'])
             if mbox.exec() == QMessageBox.Ok:
                 del self.main.servers[self.list.currentRow()]
@@ -428,12 +422,12 @@ class Settings(QWidget):
         try:
             id = QInputDialog(self)
             id.setWindowIcon(QIcon(HELP))
-            id.setWindowTitle(self.lang['MINECRAFT']['input_title'])
-            id.setLabelText(self.lang['MINECRAFT']['input_text'])
+            id.setWindowTitle(self.lang['input_title'])
+            id.setLabelText(self.lang['input_text'])
             id.setTextValue('s.vomine.ru:25565')
-            id.setOkButtonText(self.lang['MINECRAFT']['input_ok_button'])
+            id.setOkButtonText(self.lang['input_ok_button'])
             id.setCancelButtonText(
-                self.lang['MINECRAFT']['input_cancel_button'])
+                self.lang['input_cancel_button'])
             if id.exec() == QInputDialog.Accepted:
                 text = id.textValue()
                 if not text or len(text.split(':')) != 2\
@@ -455,12 +449,12 @@ class Settings(QWidget):
             mbox = QMessageBox(self)
             mbox.setIcon(QMessageBox.Critical)
             mbox.setWindowIcon(QIcon(ERROR))
-            mbox.setWindowTitle(self.lang['MINECRAFT']['error_title'])
-            mbox.setText(self.lang['MINECRAFT']['error_text'])
+            mbox.setWindowTitle(self.lang['error_title'])
+            mbox.setText(self.lang['error_text'])
             mbox.setStandardButtons(QMessageBox.Ok)
             ok = mbox.button(QMessageBox.Ok)
-            ok.setText(self.lang['MINECRAFT']['error_ok_button'])
-            ok.setToolTip(self.lang['MINECRAFT']['error_ok_button_tt'])
+            ok.setText(self.lang['error_ok_button'])
+            ok.setToolTip(self.lang['error_ok_button_tt'])
             mbox.exec()
         except:
             print(traceback.format_exc())

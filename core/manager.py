@@ -15,6 +15,7 @@ class Widget:
         self.widget_manager = widget_manager
         self.NAME = 'none'
         self.DESCRIPTION = 'none'
+        self.HELP = 'none'
         self.AUTHOR = 'none'
         self.EMAIL = 'none'
         self.URL = 'none'
