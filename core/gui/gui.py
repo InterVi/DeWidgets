@@ -36,14 +36,20 @@ def __init__(main_app):
     lang.read(os.path.join(LANGS, settings['MAIN']['locale'] + '.conf'),
               'utf-8')
     if os.path.isfile(LOCK_FILE):  # check lock
-        _show_error()
-        sys.exit(2)
+        with open(LOCK_FILE) as lock:
+            try:
+                os.kill(int(lock.read()), 0)
+            except OSError:
+                pass
+            else:
+                _show_error()
+                sys.exit(0)
     # setup locale
     QLocale.setDefault(QLocale(QLocale.__dict__[lang['LANG']['language']],
                                QLocale.__dict__[lang['LANG']['country']]))
     # create lock file
     with open(LOCK_FILE, 'w') as lock:
-        lock.write('a')
+        lock.write(str(os.getpid()))
     if settings['MAIN']['load_placed'].lower() in ('true', 'yes', 'on'):
         manager.load_placed()  # placed only
     else:

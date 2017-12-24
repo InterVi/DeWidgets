@@ -33,7 +33,7 @@ CONF_WIDGETS = os.path.join(sys.path[0], 'widgets.conf')
 STDOUT_LOG = os.path.join(sys.path[0], 'stdout.log')
 STDERR_LOG = os.path.join(sys.path[0], 'stderr.log')
 LICENSE_TXT = os.path.join(sys.path[0], 'license.txt')
-LOCK_FILE = os.path.join(sys.path[0], '.lock.lck')
+LOCK_FILE = os.path.join(sys.path[0], '.pid.lock')
 CONF_PATHS = os.path.join(sys.path[0], 'paths.conf')
 
 if os.path.isfile(CONF_PATHS):  # for user customization

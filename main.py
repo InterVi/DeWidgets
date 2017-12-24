@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import os
 import sys
 import traceback
 from PyQt5.QtWidgets import QApplication
@@ -34,8 +33,6 @@ if __name__ == '__main__':
             gui.manager.config.save()
         except:
             print(traceback.format_exc())
-        if os.path.isfile(LOCK_FILE):  # remove lock file
-            os.remove(LOCK_FILE)
         try:
             out.close()
             err.close()
