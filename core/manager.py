@@ -1,12 +1,20 @@
 """Manage widgets."""
 import os
+import sys
 import inspect
 import traceback
 from configparser import ConfigParser
+from importlib.machinery import SourceFileLoader
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 import widgets as w
-from core.paths import CONF_WIDGETS, WIDGET
+from core.paths import CONF_WIDGETS, WIDGET, C_WIDGETS
+
+sys.path.append(C_WIDGETS)
+CUSTOM_WIDGETS = SourceFileLoader('__init__',
+                                  os.path.join(C_WIDGETS, '__init__.py')
+                                  ).load_module()
+"""Custom widgets module for *use get_widgets(path)* function."""
 
 
 class Widget:
@@ -56,19 +64,31 @@ class Widget:
         pass
 
     def remove(self):
-        """remove widget in desktop (before call close)."""
+        """remove widget in desktop (before call destroy)."""
         pass
 
     def purge(self):
-        """purge widget and all data (before call close)."""
+        """purge widget and all data (before call destroy)."""
+        pass
+
+    def delete_widget(self):
+        """remove widget files (after call purge, before call unload)"""
         pass
 
 
 class WidgetManager:
     """manage widgets"""
-    def __init__(self, lang, main):
+    def __init__(self, lang, c_lang, main):
+        """
+
+        :param lang: ConfigParser locale dict
+        :param c_lang: ConfigParser locale dict for custom widgets
+        :param main: gui module
+        """
         self.lang = lang
         """ConfigParser dict, current locale."""
+        self.c_lang = c_lang
+        """ConfigParser dict, current locale for custom widgets"""
         self.widgets = {}
         """Widgets dict, key - name, value - widget object (Main class)."""
         self.config = ConfigManager(self)
@@ -78,6 +98,8 @@ class WidgetManager:
 
     def load_all(self):
         for name in w.get_widgets():
+            self.load(name)
+        for name in CUSTOM_WIDGETS.get_widgets():
             self.load(name)
 
     def load_placed(self, placed=True):
@@ -91,9 +113,15 @@ class WidgetManager:
         for name in w.get_widgets():
             if name not in self.widgets and name not in self.config.config:
                 self.load(name)
+        for name in CUSTOM_WIDGETS.get_widgets():
+            if name not in self.widgets and name not in self.config.config:
+                self.load(name)
 
     def load_new(self):
         for name in w.get_widgets():
+            if name not in self.widgets:
+                self.load(name)
+        for name in CUSTOM_WIDGETS.get_widgets():
             if name not in self.widgets:
                 self.load(name)
 
@@ -128,6 +156,17 @@ class WidgetManager:
                 self.widgets[name].destroy()
                 self.config.add(name)
             self.config.save()
+        except:
+            print(traceback.format_exc())
+
+    def delete_widget(self, name):
+        try:
+            self.remove(name, True)
+            try:
+                self.widgets[name].delete_widget()
+            except:
+                print(traceback.format_exc())
+            self.unload(name)
         except:
             print(traceback.format_exc())
 

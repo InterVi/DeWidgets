@@ -213,6 +213,8 @@ class Main(Widget, QWidget):
 
     def _save_timers(self):
         try:
+            if not self.conf:
+                return
             timers = []
             for timer in self.list:
                 timers.append((timer[4][0], timer[4][1], timer[4][2],

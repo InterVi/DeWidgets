@@ -1,11 +1,13 @@
 """Add new widget dialog."""
 import os
 import sys
+import json
 import zipfile
 from configparser import ConfigParser
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtGui import QIcon
-from core.paths import ZIP, SUCCESS, ERROR, CONF_WIDGETS, RES
+from core.paths import ZIP, SUCCESS, ERROR, C_WIDGETS, C_RES, C_LANGS
+from core.paths import CONF_INSTALL
 
 lang = None
 """locale dict, setup from __init__"""
@@ -76,7 +78,8 @@ def _show_success(names=()):
 
 
 def install() -> list:
-    """Init installation. Open dialog and more actions.
+    """Init installation. Open dialog and more actions. Return list - names
+    '*.py' files.
     
     Structure zip file:
     
@@ -91,6 +94,10 @@ def install() -> list:
     files = _get_files()
     broken = []  # broken files
     result = []  # widget names (*.py files)
+    conf_inst = {}
+    if os.path.isfile(CONF_INSTALL):
+        with open(CONF_INSTALL, encoding='utf-8') as file_install:
+            conf_inst = json.loads(file_install.read())
     for file in files:
         if not zipfile.is_zipfile(file):  # test
             broken.append(os.path.basename(file))
@@ -102,25 +109,30 @@ def install() -> list:
                 if 'DeWidgets' not in arch.namelist():  # test
                     broken.append(os.path.basename(file))
                     continue
+                inst_info = {'py': [], 'res': [], 'langs': []}
                 for info in arch.infolist():
                     if info.is_dir():
                         continue
                     if info.filename[-3:] == '.py':
                         # search *.py files (widgets)
-                        arch.extract(info, CONF_WIDGETS)
+                        arch.extract(info, C_WIDGETS)
                         result.append(info.filename[:-3])
+                        inst_info['py'].append(os.path.join(C_WIDGETS,
+                                                            info.filename)
+                                               )
                     elif info.filename[:3] == 'res':
                         # search files in 'res' folder
-                        if not os.path.isfile(os.path.join(RES,
-                                                           info.filename[4:])):
-                            arch.extract(info, sys.path[0])
+                        r_file = os.path.join(C_RES, info.filename[4:])
+                        if not os.path.isfile(r_file):
+                            arch.extract(info, os.path.join(C_RES, '..'))
+                            inst_info['res'].append(r_file)
                     elif info.filename[:5] == 'langs':
                         # search files in 'langs' folder
                         conf = ConfigParser()  # lang file from patch
                         with arch.open(info) as patch:
                             conf.read_string(patch.read().decode('utf-8'))
-                        lang_file = os.path.join(sys.path[0], 'langs',  # to
-                                                 info.filename[6:])
+                        lang_file = os.path.join(C_LANGS, info.filename[6:])
+                        inst_info['langs'].append((lang_file, conf._sections))
                         if os.path.isfile(lang_file):
                             # if exists - patching
                             old = ConfigParser()  # to patch
@@ -134,11 +146,16 @@ def install() -> list:
                                                 conf[section][key]
                                 else:  # adding sections
                                     old[section] = conf[section]
-                            with open(lang_file, 'w') as object_file:
+                            with open(lang_file, 'w',
+                                      encoding='utf-8') as object_file:
                                 old.write(object_file)
                         else:  # no exists - add
-                            with open(lang_file, 'w') as object_file:
+                            with open(lang_file, 'w',
+                                      encoding='utf-8') as object_file:
                                 conf.write(object_file)
+                    conf_inst[file] = inst_info
+    with open(CONF_INSTALL, 'w', encoding='utf-8') as file_install:
+        file_install.write(json.dumps(conf_inst))
     if broken:  # show broken files
         _show_error(broken)
     if result:  # show widgets names (*.py files)

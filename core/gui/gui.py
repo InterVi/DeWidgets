@@ -4,12 +4,13 @@ import sys
 import traceback
 from configparser import ConfigParser
 from PyQt5.QtWidgets import QMainWindow, QListWidgetItem
-from PyQt5.QtWidgets import QPushButton, QCheckBox, QStatusBar,  QListWidget
+from PyQt5.QtWidgets import QPushButton, QCheckBox, QStatusBar, QListWidget
 from PyQt5.QtWidgets import QMessageBox, QSystemTrayIcon, QMenu
 from PyQt5.QtCore import Qt, QRect, QEvent, QLocale
 from PyQt5.QtGui import QIcon
 from core.paths import CONF_SETTINGS, DeWidgetsIcon, ERROR, LOCK_FILE, DELETE
 from core.paths import LOAD, UNLOAD, RELOAD, SHOW, HIDE, SETTINGS, EXIT, LANGS
+from core.paths import C_LANGS
 from core.gui import add_new
 from core.gui.help import Help, TextViewer
 from core.gui.move import Move
@@ -20,7 +21,9 @@ settings = ConfigParser()
 """ConfigParser, settings dict"""
 lang = ConfigParser()
 """ConfigParser, locale dict"""
-manager = WidgetManager(lang, sys.modules[__name__])
+c_lang = ConfigParser()
+"""ConfigParser, locale dict for custom widgets"""
+manager = WidgetManager(lang, c_lang, sys.modules[__name__])
 """WidgetManager"""
 app = None
 """QApplication"""
@@ -35,6 +38,9 @@ def __init__(main_app):
     settings.read(CONF_SETTINGS, 'utf-8')
     lang.read(os.path.join(LANGS, settings['MAIN']['locale'] + '.conf'),
               'utf-8')
+    cl_file = os.path.join(C_LANGS, settings['MAIN']['locale'] + '.conf')
+    if os.path.isfile(cl_file):
+        c_lang.read(cl_file, 'utf-8')
     if os.path.isfile(LOCK_FILE):  # check lock
         with open(LOCK_FILE) as lock:
             try:
