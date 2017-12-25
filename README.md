@@ -64,5 +64,5 @@ class Main(Widget, QWidget):
         self.AUTHOR = 'InterVi'
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi/DeWidgets'
-        self.ICON = QIcon(os.path.join(RES, 'example', 'icon.png'))
+        self.ICON = QIcon(os.path.join(C_RES, 'example', 'icon.png'))
 ```
