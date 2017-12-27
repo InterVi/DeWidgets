@@ -91,6 +91,10 @@ class WidgetManager:
         """ConfigParser dict, current locale for custom widgets"""
         self.widgets = {}
         """Widgets dict, key - name, value - widget object (Main class)."""
+        self.custom_widgets = []
+        """Custom widgets names list."""
+        self.paths = {}
+        """Paths to widget files. Keys - names, values - paths to files."""
         self.config = ConfigManager(self)
         """ConfigManager class"""
         self.main_gui = main
@@ -140,6 +144,9 @@ class WidgetManager:
             widget.setWindowIcon(widget.ICON)
             self.widgets[widget.NAME] = widget
             self.config.load(widget.NAME)
+            self.paths[widget.NAME] = mod.__file__
+            if os.path.dirname(mod.__file__) == C_WIDGETS:
+                self.custom_widgets.append(widget.NAME)
         except:
             print(traceback.format_exc())
 
@@ -161,12 +168,14 @@ class WidgetManager:
 
     def delete_widget(self, name):
         try:
+            path = self.paths[name]
             self.remove(name, True)
             try:
                 self.widgets[name].delete_widget()
             except:
                 print(traceback.format_exc())
             self.unload(name)
+            os.remove(path)
         except:
             print(traceback.format_exc())
 
@@ -175,6 +184,9 @@ class WidgetManager:
             self.widgets[name].unload()
             self.widgets[name].destroy()
             del self.widgets[name]
+            del sys.modules[os.path.basename(self.paths[name])[:-3]]
+            if name in self.custom_widgets:
+                self.custom_widgets.remove(name)
         except:
             print(traceback.format_exc())
 

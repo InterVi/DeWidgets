@@ -292,7 +292,7 @@ class Main(QMainWindow):
 
     def _show_del(self):
         try:
-            # change item font
+            # check item
             item = self.list.currentItem()
             if not item:  # check selected
                 self.statusBar().showMessage(lang['STATUS']['noselect'])
@@ -328,6 +328,7 @@ class Main(QMainWindow):
                 manager.remove(item.text())
             else:
                 return
+            # change item font
             font = item.font()
             font.setBold(False)
             item.setFont(font)

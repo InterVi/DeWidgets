@@ -1,17 +1,25 @@
 """Edit gui settings app."""
 import os
+import sys
 import traceback
 from configparser import ConfigParser
 from PyQt5.QtWidgets import QWidget, QPushButton, QCheckBox, QComboBox, QLabel
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QRect
+from core.gui.del_widgets import Delete
 from core.paths import SETTINGS, SUCCESS, LANGS, CONF_SETTINGS
 
 
 class Settings(QWidget):
     """settings window"""
     def __init__(self, lang, main, settings):
+        """
+
+        :param lang: dict, current locale
+        :param main: core.gui.gui.Main class
+        :param settings: dict, current settings
+        """
         super().__init__()
         self.lang = lang
         self.main = main
@@ -20,7 +28,7 @@ class Settings(QWidget):
         # setup window
         self.setWindowTitle(lang['SETTINGS']['title'])
         self.setWindowIcon(QIcon(SETTINGS))
-        self.setFixedSize(286, 131)
+        self.setFixedSize(286, 171)
         self.setWindowFlags(Qt.WindowMinimizeButtonHint |
                             Qt.WindowCloseButtonHint)
         # setup languages list
@@ -41,16 +49,21 @@ class Settings(QWidget):
         self.label.setGeometry(QRect(70, 10, 151, 16))
         self.label.setAlignment(Qt.AlignCenter)
         self.label.setText(lang['SETTINGS']['label'])
+        # setup widgets delete button
+        self.del_button = QPushButton(lang['SETTINGS']['del_button'], self)
+        self.del_button.setToolTip(lang['SETTINGS']['del_button_tt'])
+        self.del_button.setGeometry(QRect(80, 100, 125, 27))
+        self.del_button.clicked.connect(self._show_del_widgets)
         # setup 'Save' button
         self.save_button = QPushButton(lang['SETTINGS']['save_button'], self)
         self.save_button.setToolTip(lang['SETTINGS']['save_button_tt'])
-        self.save_button.setGeometry(QRect(2, 100, 94, 27))
+        self.save_button.setGeometry(QRect(2, 140, 94, 27))
         self.save_button.clicked.connect(self._save)
         # setup 'Cancel' button
         self.cancel_button = QPushButton(lang['SETTINGS']['cancel_button'],
                                          self)
         self.cancel_button.setToolTip(lang['SETTINGS']['cancel_button_tt'])
-        self.cancel_button.setGeometry(QRect(190, 100, 94, 27))
+        self.cancel_button.setGeometry(QRect(190, 140, 94, 27))
         self.cancel_button.clicked.connect(self._cancel)
         # show
         self.show()
@@ -97,6 +110,7 @@ class Settings(QWidget):
             with open(CONF_SETTINGS, 'w') as file:
                 self.settings.write(file)
             self._show_warn()
+            self.main._list_fill()
             # strange bug: open from tray (main win hide),
             # call self.close() -> exit app
             self.destroy()
@@ -105,6 +119,7 @@ class Settings(QWidget):
 
     def _cancel(self):
         try:
+            self.main._list_fill()
             self.destroy()
         except:
             print(traceback.format_exc())
@@ -120,3 +135,10 @@ class Settings(QWidget):
         ok.setText(self.lang['SETTINGS']['warn_ok_button'])
         ok.setToolTip(self.lang['SETTINGS']['warn_ok_button_tt'])
         mbox.exec()
+
+    def _show_del_widgets(self):
+        try:
+            self.del_widgets_win = Delete(self.lang,
+                                          sys.modules['core.gui.gui'].manager)
+        except:
+            print(traceback.format_exc())

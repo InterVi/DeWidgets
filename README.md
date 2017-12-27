@@ -2,6 +2,8 @@
 
 Qt5 widgets for desktop. Easy API for writing you custom widgets. Automatic save data in config file. Support multi language. Support install widgets from *ZIP* archive.
 
+Require Python >= **3.5** version.
+
 ## Install and startup
 
 ```shell
