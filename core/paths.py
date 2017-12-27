@@ -35,6 +35,8 @@ RELOAD = os.path.join(RES, 'reload.png')
 PLAY = os.path.join(RES, 'play.png')
 PAUSE = os.path.join(RES, 'pause.png')
 STOP = os.path.join(RES, 'stop.png')
+DEL_WIDGETS = os.path.join(RES, 'del_widgets.png')
+DEL_ARCHIVES = os.path.join(RES, 'del_archives.png')
 
 CONF_SETTINGS = os.path.join(sys.path[0], 'settings.conf')
 CONF_WIDGETS = os.path.join(sys.path[0], 'widgets.conf')

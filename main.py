@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import sys
+import time
 import traceback
 from PyQt5.QtWidgets import QApplication
 import core.gui.gui as gui
-from core.paths import STDERR_LOG, STDOUT_LOG, LOCK_FILE
+from core.paths import STDERR_LOG, STDOUT_LOG
+
+TIME_FORMAT = '%Y-%m-%d %X'
 
 if __name__ == '__main__':
     # setup streams
@@ -14,6 +17,7 @@ if __name__ == '__main__':
     sys.stdout = out
     try:
         # start
+        print('[' + time.strftime(TIME_FORMAT) + '] start')
         app = QApplication(sys.argv)
         gui.__init__(app)
         # exit
@@ -21,7 +25,6 @@ if __name__ == '__main__':
         sys.exit(status)
     except SystemExit as se:
         print('exit code ' + str(se))
-        # pass
     except:
         print(traceback.format_exc())
     finally:  # correct exit
@@ -34,6 +37,7 @@ if __name__ == '__main__':
         except:
             print(traceback.format_exc())
         try:
+            print('[' + time.strftime(TIME_FORMAT) + '] stop')
             out.close()
             err.close()
         except:

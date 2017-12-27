@@ -68,3 +68,5 @@ class Main(Widget, QWidget):
         self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(C_RES, 'example', 'icon.png'))
 ```
+
+Please, using unique module names.
