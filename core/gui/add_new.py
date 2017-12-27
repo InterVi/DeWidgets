@@ -122,6 +122,8 @@ def install() -> list:
                                                )
                     elif info.filename[:3] == 'res':
                         # search files in 'res' folder
+                        if not os.path.isdir(C_RES):
+                            os.mkdir(C_RES)
                         r_file = os.path.join(C_RES, info.filename[4:])
                         if not os.path.isfile(r_file):
                             arch.extract(info, os.path.join(C_RES, '..'))
@@ -131,6 +133,8 @@ def install() -> list:
                         conf = ConfigParser()  # lang file from patch
                         with arch.open(info) as patch:
                             conf.read_string(patch.read().decode('utf-8'))
+                        if not os.path.isdir(C_LANGS):
+                            os.mkdir(C_LANGS)
                         lang_file = os.path.join(C_LANGS, info.filename[6:])
                         inst_info['langs'].append((lang_file, conf._sections))
                         if os.path.isfile(lang_file):
