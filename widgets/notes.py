@@ -1,5 +1,6 @@
 import os
 import json
+import base64
 import traceback
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QPushButton
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QCheckBox
@@ -90,7 +91,11 @@ class Main(Widget, Note):
 
     def save_conf(self):
         try:
-            self.conf['notes'] = json.dumps(self.notes)
+            b_notes = []
+            for note in self.notes:
+                b_notes.append(base64.b64encode(note.encode('utf-8')
+                                                ).decode('ASCII'))
+            self.conf['notes'] = json.dumps(b_notes)
             self.conf['styles'] = json.dumps(self.styles)
             self.sizes.clear()
             for widget in self.widgets:
@@ -119,7 +124,10 @@ class Main(Widget, Note):
         try:
             self.conf = self.widget_manager.config.config[self.NAME]
             if 'notes' in self.conf:
-                self.notes = json.loads(self.conf['notes'])
+                self.notes.clear()
+                b_notes = json.loads(self.conf['notes'])
+                for b_note in b_notes:
+                    self.notes.append(base64.b64decode(b_note).decode('utf-8'))
             if 'styles' in self.conf:
                 self.styles = json.loads(self.conf['styles'])
             if 'sizes' in self.conf:
