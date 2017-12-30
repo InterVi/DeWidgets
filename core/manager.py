@@ -133,8 +133,10 @@ class WidgetManager:
         try:
             mod = __import__(name)
             if 'Main' not in mod.__dict__ or not callable(mod.Main):
+                del sys.modules[name]
                 return
-            if 'not_loading' in mod.__dict__:
+            if 'not_loading' in mod.__dict__ and mod.__dict__['not_loading']:
+                del sys.modules[name]
                 return
             widget = mod.Main(self)
             widget.load()
