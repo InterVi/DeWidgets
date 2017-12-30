@@ -30,7 +30,7 @@ python3 main.py
 **Archive structure**:
 
 ```
--DeWidgets
+-DeWidgets.txt
 -widget.py
 -more_widgets.py
 -res

@@ -173,11 +173,8 @@ class Main(Widget, Note):
             print(traceback.format_exc())
 
     def unload(self):
-        try:
-            if self.conf != False:
-                self.save_conf()
-        except:
-            print(traceback.format_exc())
+        if self.conf != False:
+            self.save_conf()
 
     def show_settings(self):
         try:

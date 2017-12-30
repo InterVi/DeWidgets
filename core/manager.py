@@ -181,8 +181,11 @@ class WidgetManager:
 
     def unload(self, name):
         try:
-            self.widgets[name].unload()
-            self.widgets[name].destroy()
+            try:
+                self.widgets[name].unload()
+                self.widgets[name].destroy()
+            except:
+                print(traceback.format_exc())
             del self.widgets[name]
             del sys.modules[os.path.basename(self.paths[name])[:-3]]
             if name in self.custom_widgets:

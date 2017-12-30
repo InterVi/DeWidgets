@@ -249,24 +249,15 @@ class Main(Widget, QWidget):
             print(traceback.format_exc())
 
     def place(self):
-        try:
-            self._setup_conf()
-            self._load_timers()
-        except:
-            print(traceback.format_exc())
+        self._setup_conf()
+        self._load_timers()
 
     def boot(self):
-        try:
-            self._setup_conf()
-            self._load_timers()
-        except:
-            print(traceback.format_exc())
+        self._setup_conf()
+        self._load_timers()
 
     def unload(self):
-        try:
-            self._save_timers()
-        except:
-            print(traceback.format_exc())
+        self._save_timers()
 
     def show_settings(self):
         try:

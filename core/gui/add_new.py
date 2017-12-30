@@ -88,7 +88,7 @@ def install() -> list:
     - langs (folder, all locales)\n
     -- en.conf (ini file utf-8, example)\n
     -- ru.conf (ini file utf-8, example)\n
-    - DeWidgets (file or folder, say 'I widget for DeWidget!')\n
+    - DeWidgets.txt (any file)\n
     - widget.py (python module, widget file)
     """
     files = _get_files()
@@ -106,7 +106,7 @@ def install() -> list:
                 if arch.testzip():  # test
                     broken.append(os.path.basename(file))
                     continue
-                if 'DeWidgets' not in arch.namelist():  # test
+                if 'DeWidgets.txt' not in arch.namelist():  # test
                     broken.append(os.path.basename(file))
                     continue
                 inst_info = {'py': [], 'res': [], 'langs': []}
