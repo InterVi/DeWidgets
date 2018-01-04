@@ -19,6 +19,7 @@ python3 main.py
 * **Simple Notes** - colored sticky sheets
 * **Timer** - multiple timers, popup alert and sound alarm
 * **Minecraft Server Monitoring** - show online MC servers statistics with query
+* **Digital Time** - show digital time and date
 
 ## Depends
 
