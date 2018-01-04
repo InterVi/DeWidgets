@@ -48,7 +48,7 @@ LICENSE_TXT = os.path.join(sys.path[0], 'license.txt')
 LOCK_FILE = os.path.join(sys.path[0], '.pid.lock')
 
 if len(sys.argv):  # parsing arguments
-    parser = ArgumentParser('DeWidgets', 'DeWidgets [-p paths.conf]',
+    parser = ArgumentParser('DeWidgets', 'DeWidgets [-c /home/alex/.dw]',
                             'Qt5 widgets for desktop.',
                             'Source code: https://github.com/InterVi/DeWidgets'
                             )

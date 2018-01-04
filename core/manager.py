@@ -68,11 +68,11 @@ class Widget:
         pass
 
     def purge(self):
-        """purge widget and all data (before call destroy)."""
+        """purge widget and all data (before call unload)."""
         pass
 
     def delete_widget(self):
-        """remove widget files (after call purge, before call unload)"""
+        """remove widget files (before call purge and unload)"""
         pass
 
 
@@ -101,12 +101,17 @@ class WidgetManager:
         """core.gui.gui module"""
 
     def load_all(self):
+        """Loading all widgets."""
         for name in w.get_widgets():
             self.load(name)
         for name in CUSTOM_WIDGETS.get_widgets():
             self.load(name)
 
     def load_placed(self, placed=True):
+        """Loading placed widgets.
+
+        :param placed: bool, True - only placed, False - only hidden
+        """
         for name in self.config.config:
             if name == 'DEFAULT' or name in self.widgets:
                 continue
@@ -114,14 +119,9 @@ class WidgetManager:
                 self.load(self.config.config[name]['file'])
             elif not placed and self.config.config[name]['placed'] != 'True':
                 self.load(self.config.config[name]['file'])
-        for name in w.get_widgets():
-            if name not in self.widgets and name not in self.config.config:
-                self.load(name)
-        for name in CUSTOM_WIDGETS.get_widgets():
-            if name not in self.widgets and name not in self.config.config:
-                self.load(name)
 
     def load_new(self):
+        """Loading only new widgets (not loaded before)."""
         for name in w.get_widgets():
             if name not in self.widgets:
                 self.load(name)
@@ -130,6 +130,10 @@ class WidgetManager:
                 self.load(name)
 
     def load(self, name):
+        """Load widget from module.
+
+        :param name: str, module name
+        """
         try:
             mod = __import__(name)
             if 'Main' not in mod.__dict__ or not callable(mod.Main):
@@ -153,35 +157,59 @@ class WidgetManager:
             print(traceback.format_exc())
 
     def remove(self, name, reminconf=False):
+        """Remove widget from desktop.
+
+        :param name: str, module name
+        :param reminconf: bool, True - remove widget all data from config
+        """
         try:
             if reminconf:
-                self.widgets[name].purge()
-                self.widgets[name].setHidden(True)
-                self.widgets[name].destroy()
-                self.config.remove(name)
+                try:
+                    self.widgets[name].purge()
+                except:
+                    print(traceback.format_exc())
             else:
-                self.widgets[name].remove()
-                self.widgets[name].setHidden(True)
-                self.widgets[name].destroy()
+                try:
+                    self.widgets[name].remove()
+                except:
+                    print(traceback.format_exc())
                 self.config.add(name)
+            self.widgets[name].hide()
+            self.widgets[name].destroy()
+            if reminconf:
+                self.config.remove(name)
             self.config.save()
         except:
             print(traceback.format_exc())
 
     def delete_widget(self, name):
+        """Remove widget file (after remove widget data from config
+        and unload.
+
+        :param name: str, widget name
+        """
         try:
             path = self.paths[name]
-            self.remove(name, True)
             try:
                 self.widgets[name].delete_widget()
             except:
                 print(traceback.format_exc())
+            self.remove(name, True)
+            try:
+                self.widgets[name].unload()
+            except:
+                print(traceback.format_exc())
             self.unload(name)
+            self.config.remove(name)  # warranty
             os.remove(path)
         except:
             print(traceback.format_exc())
 
     def unload(self, name):
+        """Unload widget in memory. Destroy.
+
+        :param name: str, widget name
+        """
         try:
             try:
                 self.widgets[name].unload()
@@ -196,10 +224,12 @@ class WidgetManager:
             print(traceback.format_exc())
 
     def unload_all(self):
+        """Unload all loaded widgets."""
         for name in list(self.widgets.keys()):
             self.unload(name)
 
     def unload_hidden(self):
+        """Unload only hidden (not placed) widgets."""
         for name in list(self.widgets.keys()):
             if self.widgets[name].isHidden():
                 self.unload(name)
@@ -246,12 +276,17 @@ class ConfigManager:
             print(traceback.format_exc())
 
     def load_all(self):
+        """Load (setup) only configured widgets."""
         for name in self.config:
             if name not in self.wm.widgets:
                 continue
             self.load(name)
 
     def load(self, name):
+        """Setup widget (set size, position, opacity, call boot and show.
+
+        :param name: str, widget name
+        """
         try:
             if name not in self.config or name not in self.wm.widgets:
                 return
@@ -268,6 +303,7 @@ class ConfigManager:
             print(traceback.format_exc())
 
     def save(self):
+        """Save config to file."""
         try:
             with open(CONF_WIDGETS, 'w', encoding='UTF-8') as config:
                 self.config.write(config)
@@ -275,6 +311,11 @@ class ConfigManager:
             print(traceback.format_exc())
 
     def add(self, name):
+        """Add or update widget data in config (not call save).
+        Size, position, opacity, placed, file (module name).
+
+        :param name: str, widget name
+        """
         try:
             widget = self.wm.widgets[name]
             if name in self.config:
@@ -302,6 +343,10 @@ class ConfigManager:
             print(traceback.format_exc())
 
     def remove(self, name):
+        """Remove widget data from config (not call save).
+
+        :param name: str, widget name
+        """
         try:
             if name in self.config:
                 del self.config[name]
@@ -309,12 +354,22 @@ class ConfigManager:
             print(traceback.format_exc())
 
     def set_placed(self, name, value):
+        """Set placed status.
+
+        :param name: str, widget name
+        :param value: bool, True - if placed to desktop
+        """
         try:
             self.config[name]['placed'] = value
         except:
             print(traceback.format_exc())
 
     def is_placed(self, name) -> bool:
+        """Check widget placed.
+
+        :param name: str, widget name
+        :return: bool, True - if widget placed to desktop
+        """
         if name in self.config\
                 and self.config[name]['placed'].lower() in ('true', 'yes'):
             return True

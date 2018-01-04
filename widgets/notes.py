@@ -69,7 +69,7 @@ class Main(Widget, Note):
         Widget.__init__(self, widget_manager)
         Note.__init__(self, self, 0)
         self.lang = widget_manager.lang['NOTES']
-        self.conf = False
+        self.conf = None
         # setup widget
         self.NAME = 'Simple Notes'
         self.DESCRIPTION = self.lang['description']
@@ -79,6 +79,9 @@ class Main(Widget, Note):
         self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(RES, 'notes', 'icon.png'))
         # setup vars
+        self.__setup_vars()
+
+    def __setup_vars(self):
         self.notes = [self.lang['note']]
         self.styles = ['white.css']
         self.sizes = []  # -1 index offset
@@ -181,8 +184,22 @@ class Main(Widget, Note):
             print(traceback.format_exc())
 
     def unload(self):
-        if self.conf != False:
+        if self.isVisible():
             self.save_conf()
+
+    def remove(self):
+        try:
+            for widget in self.widgets:
+                widget.destroy()
+        except:
+            print(traceback.format_exc())
+
+    def purge(self):
+        try:
+            self.remove()
+            self.__setup_vars()
+        except:
+            print(traceback.format_exc())
 
     def show_settings(self):
         try:
@@ -386,11 +403,11 @@ class NoteSettings(QWidget):
             self.text_edit.setPlainText(
                 main.widgets[self.row-1].text_edit.toPlainText())
         self.text_edit.textChanged.connect(self._text_changed)
-        # setup styles lable
+        # setup styles label
         self.label = QLabel(self)
         self.label.setText(main.lang['item_label'])
         self.label.setAlignment(Qt.AlignCenter)
-        # setup styles list
+        # setup styles combobox
         self.styles_list = QComboBox(self)
         self.styles_list.addItems(main.style_names.values())
         self.styles_list.setToolTip(main.lang['item_styles_tt'])

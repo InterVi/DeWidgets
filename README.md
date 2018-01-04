@@ -4,6 +4,27 @@ Qt5 widgets for desktop. Easy API for writing you custom widgets. Automatic save
 
 Require Python >= **3.5** version.
 
+## Available widgets
+
+* **Simple Notes** - colored sticky sheets
+* **Timer** - multiple timers, popup alert and sound alarm
+* **Minecraft Server Monitoring** - show online MC servers statistics with query
+* **Digital Time** - show digital time and date
+
+## Commandline arguments
+
+* **-h, --help** - show this help message and exit
+* **-p** *PATH*, **--paths** *PATH* - Load config for use custom components paths.
+* **-c** *PATH*, **--create** *PATH* - Create paths config into the given path.
+
+**Example for user separation**
+
+```shell
+DeWidgets -c /home/user/.dw
+```
+
+*-c* - creating folders and files, and/or using this path (as *-p* argument)
+
 ## Install and startup
 
 ```shell
@@ -13,13 +34,6 @@ git clone https://github.com/InterVi/DeWidgets.git
 cd DeWidgets
 python3 main.py
 ```
-
-## Available widgets
-
-* **Simple Notes** - colored sticky sheets
-* **Timer** - multiple timers, popup alert and sound alarm
-* **Minecraft Server Monitoring** - show online MC servers statistics with query
-* **Digital Time** - show digital time and date
 
 ## Depends
 
@@ -70,4 +84,4 @@ class Main(Widget, QWidget):
         self.ICON = QIcon(os.path.join(C_RES, 'example', 'icon.png'))
 ```
 
-Please, using unique module names.
+Please, using unique module names. See *digital_time* widget for best example realisation widget.

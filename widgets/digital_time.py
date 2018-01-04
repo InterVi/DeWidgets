@@ -130,7 +130,7 @@ class Main(Widget, DTime):
         Widget.__init__(self, widget_manager)
         DTime.__init__(self, self, 0)
         self.lang = widget_manager.lang['DIGITAL_TIME']
-        self.conf = False
+        self.conf = None
         # setup widget
         self.NAME = 'Digital Time'
         self.DESCRIPTION = self.lang['description']
@@ -142,7 +142,11 @@ class Main(Widget, DTime):
         # setup timer
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._timeout)
+        self.destroyed.connect(self.timer.stop)
         # setup vars
+        self.__setup_vars()
+
+    def __setup_vars(self):
         self.times = ['%X']
         self.offsets = [(0, 0, 0)]
         self.sizes = []  # -1 index offset
@@ -268,7 +272,7 @@ class Main(Widget, DTime):
             print(traceback.format_exc())
 
     def unload(self):
-        if self.conf != False:
+        if self.isVisible():
             self.save_settings()
 
     def remove(self):
@@ -278,11 +282,27 @@ class Main(Widget, DTime):
         except:
             print(traceback.format_exc())
 
+    def purge(self):
+        try:
+            self.remove()
+            self.__setup_vars()
+        except:
+            print(traceback.format_exc())
+
     def show_settings(self):
         try:
             self.settings_win = Settings(self)
         except:
             print(traceback.format_exc())
+
+    def hideEvent(self, event):
+        try:
+            self.timer.stop()
+        except:
+            print(traceback.format_exc())
+
+    def closeEvent(self, event):
+        self.hideEvent(event)
 
 
 class Settings(QWidget):
@@ -379,7 +399,11 @@ class Settings(QWidget):
     def _add_time(self):
         try:
             # adding
-            name = self.lang['names'] + ' ' + str(len(self.main.times))
+            name = self.lang['names']
+            i = 1
+            while name in self.main.names:
+                name = self.lang['names'] + ' ' + str(i)
+                i += 1
             self.main.times.append('%X')
             self.main.offsets.append((0, 0, 0))
             self.main.names.append(name)
@@ -388,6 +412,7 @@ class Settings(QWidget):
             dtime._init()
             dtime.show()
             self.main.widgets.append(dtime)
+            self.main.save_settings()
             self.list.addItem(QListWidgetItem(name, self.list))
             self.list.setCurrentRow(self.list.count() - 1)
             # show success alert
@@ -447,7 +472,8 @@ class Settings(QWidget):
                 del self.main.offsets[row]
                 del self.main.names[row]
                 del self.main.colors[row]
-                del self.main.sizes[row - 1]
+                if row <= len(self.main.sizes):
+                    del self.main.sizes[row - 1]
                 self.main.widgets[row - 1].destroy()
                 del self.main.widgets[row - 1]
             self._list_fill()
@@ -621,6 +647,7 @@ class TimeEdit(QWidget):
             self.main.offsets[self.element] = (self.hours.value(),
                                                self.minutes.value(),
                                                self.seconds.value())
+            self.main.save_settings()
             self.settings._list_fill()
             self.widget._init()
             self.close()
