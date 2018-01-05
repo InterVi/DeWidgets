@@ -343,6 +343,17 @@ class Settings(QWidget):
         self.utc_checkbox.setText(main.lang['utc_checkbox'])
         self.utc_checkbox.setToolTip(main.lang['utc_checkbox_tt'])
         self.utc_checkbox.stateChanged.connect(self._utc_changed)
+        # setup interval label
+        self.timer_label = QLabel(self)
+        self.timer_label.setText(self.lang['timer_label'])
+        self.timer_label.setToolTip(self.lang['timer_label_tt'])
+        # setup interval spinbox
+        self.timer_spinbox = QSpinBox(self)
+        self.timer_spinbox.setToolTip(self.lang['timer_spinbox_tt'])
+        self.timer_spinbox.setMinimum(1)
+        self.timer_spinbox.setMaximum(86400000)
+        self.timer_spinbox.setValue(self.main._msec)
+        self.timer_spinbox.valueChanged.connect(self._timer_change)
         # setup add button
         self.add_button = QPushButton(main.lang['add_button'], self)
         self.add_button.setToolTip(main.lang['add_button_tt'])
@@ -363,10 +374,15 @@ class Settings(QWidget):
         self.h_box = QHBoxLayout()
         self.h_box.addWidget(self.time_label)
         self.h_box.addWidget(self.utc_checkbox)
+        # setup timer h box layout
+        self.h_box2 = QHBoxLayout()
+        self.h_box2.addWidget(self.timer_label)
+        self.h_box2.addWidget(self.timer_spinbox)
         # setup v box layout
         self.v_box = QVBoxLayout(self)
         self.v_box.addWidget(self.list)
         self.v_box.addLayout(self.h_box)
+        self.v_box.addLayout(self.h_box2)
         self.v_box.addWidget(self.add_button)
         self.v_box.addWidget(self.del_button)
         self.v_box.addWidget(self.close_button)
@@ -398,6 +414,16 @@ class Settings(QWidget):
     def _utc_changed(self):
         try:
             self.main._utc = self.utc_checkbox.isChecked()
+        except:
+            print(traceback.format_exc())
+
+    def _timer_change(self):
+        try:
+            self.main._msec = self.timer_spinbox.value()
+            self.timer.stop()
+            self.main.timer.stop()
+            self.timer.start(self.main._msec)
+            self.main.timer.start(self.main._msec)
         except:
             print(traceback.format_exc())
 

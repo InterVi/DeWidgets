@@ -23,7 +23,7 @@ Require Python >= **3.5** version.
 DeWidgets -c /home/user/.dw
 ```
 
-*-c* - creating folders and files, and/or using this path
+**-c** - creating folders and files, and/or using this path
 
 ## Install and startup
 
