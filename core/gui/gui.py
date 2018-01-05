@@ -56,14 +56,16 @@ def __init__(main_app):
     # create lock file
     with open(LOCK_FILE, 'w') as lock:
         lock.write(str(os.getpid()))
-    if settings['MAIN']['load_placed'].lower() in ('true', 'yes', 'on'):
-        manager.load_placed()  # placed only
-    else:
-        manager.load_all()  # all widgets
     # init
     app = main_app
     main = Main()
     add_new.__init__(lang, main)
+    # load widgets
+    if settings['MAIN']['load_placed'].lower() in ('true', 'yes', 'on'):
+        manager.load_placed()  # placed only
+    else:
+        manager.load_all()  # all widgets
+    main._list_fill()
     for w in manager.widgets.values():
         if not w.isHidden():  # if found placed widgets - no show main window
             return
@@ -85,7 +87,6 @@ class Main(QMainWindow):
         self.list = QListWidget(self)
         self.list.setGeometry(QRect(0, 0, 281, 231))
         self.list.setSpacing(2)
-        self._list_fill()
         self.list.itemClicked.connect(self._list_click)
         self.list.itemDoubleClicked.connect(self._list_double_click)
         self.list.setContextMenuPolicy(Qt.CustomContextMenu)

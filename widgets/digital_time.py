@@ -59,7 +59,6 @@ class DTime(QWidget):
         QWidget.__init__(self)
         self.main = main
         self.index = index
-        self._size = self.size()
         # setup window
         if self.index > -1:
             self.NAME = 'Digital Time'
@@ -107,10 +106,11 @@ class DTime(QWidget):
 
     def resizeEvent(self, event):
         try:
-            if self.size() == self._size:
-                return  # break possible loop
-            else:
-                self._size = self.size()
+            screen = self.main.widget_manager.main_gui.app.desktop().\
+                screenGeometry()
+            if event.size().width() >= screen.width() or\
+                    event.size().height() >= screen.height():  # break loop
+                return
             h_size = int(self.height() / self.main._hdi)
             w_size = int(self.width() / self.main._wdi)
             size = h_size
@@ -242,12 +242,10 @@ class Main(Widget, DTime):
     def boot(self):
         self._load_settings()
         self._load_widgets()
-        self.timer.start(self._msec)
 
     def place(self):
         self._load_settings()
         self._load_widgets()
-        self.timer.start(self._msec)
 
     def hide_event(self, mode):
         try:
@@ -292,6 +290,13 @@ class Main(Widget, DTime):
     def show_settings(self):
         try:
             self.settings_win = Settings(self)
+        except:
+            print(traceback.format_exc())
+
+    def showEvent(self, event):
+        try:
+            self._timeout()
+            self.timer.start(self._msec)
         except:
             print(traceback.format_exc())
 
