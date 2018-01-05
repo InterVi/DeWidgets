@@ -55,7 +55,7 @@ if len(sys.argv):  # parsing arguments
     parser.add_argument('-p', '--paths', default=None, type=str,
                         help='Load config for use custom components paths.')
     parser.add_argument('-c', '--create', default=None, type=str,
-                        help='Create paths config into the given path.')
+                        help='Create folders and filed into the given path.')
     result = parser.parse_known_args(sys.argv)[0]
     if result.create:
         CR = os.path.join(result.create, 'res')

@@ -15,7 +15,7 @@ Require Python >= **3.5** version.
 
 * **-h, --help** - show this help message and exit
 * **-p** *PATH*, **--paths** *PATH* - Load config for use custom components paths.
-* **-c** *PATH*, **--create** *PATH* - Create paths config into the given path.
+* **-c** *PATH*, **--create** *PATH* - Create folders and files into the given path.
 
 **Example for user separation**
 
@@ -23,7 +23,7 @@ Require Python >= **3.5** version.
 DeWidgets -c /home/user/.dw
 ```
 
-*-c* - creating folders and files, and/or using this path (as *-p* argument)
+*-c* - creating folders and files, and/or using this path
 
 ## Install and startup
 
