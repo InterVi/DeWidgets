@@ -14,10 +14,11 @@ class Help(QWidget):
         self.lang = lang
         # setup window
         self.setWindowTitle(lang['HELP']['title'])
-        self.resize(400, 300)
+        self.resize(400, 450)
         self.setWindowIcon(QIcon(HELP))
         # setup text
         self.text = QTextBrowser()
+        self.text.setOpenExternalLinks(True)
         self.text.setHtml(lang['HELP']['html'])
         # setup 'License' button
         self.license_button = QPushButton(lang['HELP']['license_button'], self)

@@ -557,14 +557,14 @@ class TimeEdit(QWidget):
         self.hours.setToolTip(self.lang['hours_tt'])
         # setup minutes spinbox
         self.minutes = QSpinBox(self)
-        self.minutes.setMinimum(-24)
-        self.minutes.setMaximum(24)
+        self.minutes.setMinimum(-59)
+        self.minutes.setMaximum(59)
         self.minutes.setValue(self.main.offsets[element][1])
         self.minutes.setToolTip(self.lang['minutes_tt'])
         # setup seconds spinbox
         self.seconds = QSpinBox(self)
-        self.seconds.setMinimum(-24)
-        self.seconds.setMaximum(24)
+        self.seconds.setMinimum(-59)
+        self.seconds.setMaximum(59)
         self.seconds.setValue(self.main.offsets[element][2])
         self.seconds.setToolTip(self.lang['seconds_tt'])
         # setup offset time show label
