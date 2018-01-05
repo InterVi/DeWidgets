@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QLabel, QListWidget, QSpinBox, QPushButton, QMenu
 from PyQt5.QtWidgets import QCheckBox, QSlider, QMessageBox, QSystemTrayIcon
 from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QTimer, Qt, QUrl, QRect
+from PyQt5.QtCore import QTimer, Qt, QUrl
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from core.manager import Widget
 from core.paths import RES, SETTINGS, PLAY, PAUSE, STOP, SUCCESS
@@ -535,31 +535,25 @@ class TimerSettings(QWidget):
         else:
             self.setWindowTitle(self.main.lang['ts_title'].format(''))
         self.setWindowIcon(self.main.windowIcon())
-        self.setFixedSize(205, 121)
+        self.resize(210, 120)
         # setup 'Hours' label
         self.h_label = QLabel(self.main.lang['ts_hours'], self)
-        self.h_label.setGeometry(QRect(1, 0, 110, 17))
         # setup 'Minuts' label
         self.m_label = QLabel(self.main.lang['ts_minuts'], self)
-        self.m_label.setGeometry((QRect(70, 0, 110, 17)))
         # setup 'Seconds' label
         self.s_label = QLabel(self.main.lang['ts_seconds'], self)
-        self.s_label.setGeometry(QRect(140, 0, 110, 17))
         # setup 'Hours' spinbox
         self.hbox = QSpinBox(self)
         if edit:
             self.hbox.setValue(self.main.list[self.index][4][0])
-        self.hbox.setGeometry(QRect(1, 20, 61, 29))
         # setup 'Minuts' spinbox
         self.mbox = QSpinBox(self)
         if edit:
             self.mbox.setValue(self.main.list[self.index][4][1])
-        self.mbox.setGeometry(QRect(70, 20, 61, 29))
         # setup 'Seconds' spinbox
         self.sbox = QSpinBox(self)
         if edit:
             self.sbox.setValue(self.main.list[self.index][4][2])
-        self.sbox.setGeometry(QRect(140, 20, 61, 29))
         # setup 'Enabled' checkbox
         self.enabled = QCheckBox(self.main.lang['ts_enabled'], self)
         self.enabled.setToolTip(self.main.lang['ts_enabled_tt'])
@@ -567,18 +561,36 @@ class TimerSettings(QWidget):
             self.enabled.setChecked(self.main.list[self.index][3])
         else:
             self.enabled.setChecked(True)
-        self.enabled.setGeometry(QRect(1, 60, 110, 22))
         # setup 'Save' button
         self.save_button = QPushButton(self.main.lang['ts_save_button'], self)
         self.save_button.setToolTip(self.main.lang['ts_save_button_tt'])
-        self.save_button.setGeometry(QRect(1, 90, 94, 29))
         self.save_button.clicked.connect(self._save_exit)
         # setup 'Cancel' button
         self.cancel_button = QPushButton(self.main.lang['ts_cancel_button'],
                                          self)
         self.cancel_button.setToolTip(self.main.lang['ts_cancel_button_tt'])
-        self.cancel_button.setGeometry(QRect(109, 90, 94, 29))
         self.cancel_button.clicked.connect(self.hide)
+        # setup h box layout
+        self.h_box = QHBoxLayout()
+        self.h_box.addWidget(self.h_label)
+        self.h_box.addWidget(self.m_label)
+        self.h_box.addWidget(self.s_label)
+        # setup h box layout 2
+        self.h_box2 = QHBoxLayout()
+        self.h_box2.addWidget(self.hbox)
+        self.h_box2.addWidget(self.mbox)
+        self.h_box2.addWidget(self.sbox)
+        # setup h box layout 3
+        self.h_box3 = QHBoxLayout()
+        self.h_box3.addWidget(self.save_button)
+        self.h_box3.addWidget(self.cancel_button)
+        # setup v box layout
+        self.v_box = QVBoxLayout(self)
+        self.v_box.addLayout(self.h_box)
+        self.v_box.addLayout(self.h_box2)
+        self.v_box.addWidget(self.enabled)
+        self.v_box.addLayout(self.h_box3)
+        self.setLayout(self.v_box)
         # show
         self.show()
 

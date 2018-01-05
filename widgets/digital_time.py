@@ -512,7 +512,7 @@ class TimeEdit(QWidget):
         else:
             self.widget = self.main
         # setup window
-        self.setWindowIcon(QIcon(SETTINGS))
+        self.setWindowIcon(self.main.windowIcon())
         self.setWindowTitle(self.lang['edit_title'])
         self.resize(245, 250)
         # setup time show label
