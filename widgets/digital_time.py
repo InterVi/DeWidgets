@@ -537,6 +537,7 @@ class TimeEdit(QWidget):
             self.widget = self.main.widgets[self.element - 1]
         else:
             self.widget = self.main
+        self._palette = self.widget.label.palette()
         # setup window
         self.setWindowIcon(self.main.windowIcon())
         self.setWindowTitle(self.lang['edit_title'])
@@ -551,8 +552,8 @@ class TimeEdit(QWidget):
         self.time_show.setToolTip(self.lang['time_show_tt'])
         # setup hours spinbox
         self.hours = QSpinBox(self)
-        self.hours.setMinimum(-24)
-        self.hours.setMaximum(24)
+        self.hours.setMinimum(-23)
+        self.hours.setMaximum(23)
         self.hours.setValue(self.main.offsets[element][0])
         self.hours.setToolTip(self.lang['hours_tt'])
         # setup minutes spinbox
@@ -572,7 +573,6 @@ class TimeEdit(QWidget):
         self.offset_time.setAlignment(Qt.AlignCenter)
         self.offset_time.setFont(font)
         self.offset_time.setToolTip(self.lang['offset_time_tt'])
-        self.offset_time.setPalette(self.widget.label.palette())
         # setup format label
         self.format_label = QLabel(self)
         self.format_label.setAlignment(Qt.AlignCenter)
@@ -662,13 +662,13 @@ class TimeEdit(QWidget):
                                  palette.color(QPalette.WindowText), self,
                                  self.lang['color_title']
                              ))
-            self.offset_time.setPalette(palette)
+            self._palette = palette
         except:
             print(traceback.format_exc())
 
     def _save(self):
         try:
-            self.main.colors[self.element] = self.offset_time.palette().color(
+            self.main.colors[self.element] = self._palette.color(
                 QPalette.WindowText).name()
             self.main.names[self.element] = self.name_edit.text()
             time_format = self.format_edit.text()
