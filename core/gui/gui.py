@@ -192,7 +192,7 @@ class Main(QMainWindow):
             font.setBold(True)
             item.setFont(font)
             # setup widget
-            manager.config.config[item.text()] = {}
+            manager.config.create(item.text())
             widget = manager.widgets[item.text()]
             widget.place()
             widget.setWindowFlags(Qt.CustomizeWindowHint |

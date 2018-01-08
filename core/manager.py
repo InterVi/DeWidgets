@@ -3,6 +3,7 @@ import os
 import sys
 import inspect
 import traceback
+from distutils.util import strtobool
 from configparser import ConfigParser
 from importlib.machinery import SourceFileLoader
 from PyQt5.QtCore import Qt
@@ -64,7 +65,7 @@ class Widget:
         pass
 
     def remove(self):
-        """remove widget in desktop (before call destroy)."""
+        """remove widget from desktop (before call destroy)."""
         pass
 
     def purge(self):
@@ -115,18 +116,18 @@ class WidgetManager:
         for name in self.config.config:
             if name == 'DEFAULT' or name in self.widgets:
                 continue
-            if placed and self.config.config[name]['placed'] == 'True':
+            if placed and self.config.is_placed(name):
                 self.load(self.config.config[name]['file'])
-            elif not placed and self.config.config[name]['placed'] != 'True':
+            elif not placed and not self.config.is_placed(name):
                 self.load(self.config.config[name]['file'])
 
     def load_new(self):
         """Loading only new widgets (not loaded before)."""
         for name in w.get_widgets():
-            if name not in self.widgets:
+            if name not in sys.modules:
                 self.load(name)
         for name in CUSTOM_WIDGETS.get_widgets():
-            if name not in self.widgets:
+            if name not in sys.modules:
                 self.load(name)
 
     def load(self, name):
@@ -176,6 +177,7 @@ class WidgetManager:
                 self.config.add(name)
             self.widgets[name].hide()
             self.widgets[name].destroy()
+            self.config.set_placed(name, False)
             if reminconf:
                 self.config.remove(name)
             self.config.save()
@@ -295,7 +297,7 @@ class ConfigManager:
             widget.resize(int(prop['width']), int(prop['height']))
             widget.move(int(prop['x']), int(prop['y']))
             widget.setWindowOpacity(float(prop['opacity']))
-            if prop['placed'].lower() in ('true', 'yes', 'on'):
+            if self.is_placed(name):
                 # if placed, show window
                 widget.boot()
                 widget.show()
@@ -360,7 +362,7 @@ class ConfigManager:
         :param value: bool, True - if placed to desktop
         """
         try:
-            self.config[name]['placed'] = value
+            self.config[name]['placed'] = str(value)
         except:
             print(traceback.format_exc())
 
@@ -370,8 +372,18 @@ class ConfigManager:
         :param name: str, widget name
         :return: bool, True - if widget placed to desktop
         """
-        if name in self.config\
-                and self.config[name]['placed'].lower() in ('true', 'yes'):
-            return True
+        if name in self.config:
+            return bool(strtobool(self.config[name]['placed']))
         else:
             return False
+
+    def create(self, name):
+        """Create section (empty dict) in config for widget.
+
+        :param name: str, widget name
+        """
+        try:
+            if name not in self.config:
+                self.config[name] = {}
+        except:
+            print(traceback.format_exc())
