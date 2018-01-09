@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import gzip
 import base64
 import hashlib
 import traceback
@@ -68,27 +69,26 @@ class AESCip:
     def _unpad(self, s) -> str:
         return s[:-ord(s[len(s)-1:])]
 
-    def encrypt(self, s) -> str:
+    def encrypt(self, s) -> bytearray:
         """Encrypt text.
 
         :param s: str for encrypt
-        :return: str, encrypted str in Base85
+        :return: bytearray
         """
         iv = Random.new().read(AES.block_size)
         cip = AES.new(self.__hashpass, AES.MODE_CBC, iv)
-        return base64.b85encode(iv + cip.encrypt(
-            self._pad(s.encode(self.encoding)))).decode(self.encoding)
+        return iv + cip.encrypt(self._pad(gzip.compress(
+            s.encode(self.encoding), 9)))
 
-    def decrypt(self, s) -> str:
+    def decrypt(self, b) -> str:
         """Decrypt text to text.
 
-        :param s: str, encrypted in Base85
+        :param b: bytearray, encrypted data
         :return: str, decrypted
         """
-        enc = base64.b85decode(s)
-        cip = AES.new(self.__hashpass, AES.MODE_CBC, enc[:AES.block_size])
-        return self._unpad(cip.decrypt(enc[AES.block_size:]).decode(
-            self.encoding))
+        cip = AES.new(self.__hashpass, AES.MODE_CBC, b[:AES.block_size])
+        return gzip.decompress(self._unpad(
+            cip.decrypt(b[AES.block_size:]))).decode('utf-8')
 
 
 class Main(Widget, QWidget):
@@ -216,7 +216,8 @@ class Main(Widget, QWidget):
         try:
             t = self.lang['empty_text'] if empty else self.lang['wrong_text']
             mbox = QMessageBox(QMessageBox.Critical,
-                               self.lang['wrong_title'], t, QMessageBox.Ok)
+                               self.lang['wrong_title'], t, QMessageBox.Ok,
+                               self)
             mbox.setWindowIcon(QIcon(ERROR))
             ok = mbox.button(QMessageBox.Ok)
             ok.setText(self.lang['wrong_ok_button'])
@@ -306,8 +307,7 @@ class Note(QWidget):
         self.setLayout(self.v_box)
         # setup cipher
         self.cip = AESCip(password, hexpass)
-        # show
-        self.show()
+        # load note and show
         self._load_note()
 
     def _text_changed(self):
@@ -320,10 +320,13 @@ class Note(QWidget):
     def _load_note(self):
         try:
             if 'note' in self.main.conf:
-                note = base64.b64decode(self.main.conf['note']).decode('utf-8')
+                # base64 -> gzip -> AES-256 -> gzip -> text
+                note = gzip.decompress(base64.b64decode(self.main.conf['note'])
+                                       )
                 self.text_edit.setPlainText(self.cip.decrypt(note))
             self.main.image.setPixmap(OPEN_PIXMAP)
             self.main.image.show()
+            self.show()
         except:
             print(traceback.format_exc())
             self.cip.hexpass = None
@@ -332,8 +335,9 @@ class Note(QWidget):
 
     def _save_note(self):
         try:
-            note = base64.b64encode(self.cip.encrypt(
-                self.text_edit.toPlainText()).encode('utf-8')).decode('ASCII')
+            # text -> gzip -> AES-256 -> gzip -> base64
+            note = base64.b64encode(gzip.compress(self.cip.encrypt(
+                self.text_edit.toPlainText()), 9)).decode('ASCII')
             self.main.conf['note'] = note
             self.main.widget_manager.config.save()
         except:
@@ -484,11 +488,12 @@ class Settings(QWidget):
             self.main._session = self.session_sbox.value()
             self.main._hot_save = self.hot_save.isChecked()
             if 'note' in self.main.conf:
+                # text edit checks
                 if self.new_pass.text() != self.rep_pass.text():
                     mbox = QMessageBox(QMessageBox.Critical,
                                        self.lang['disagree_title'],
                                        self.lang['disagree_text'],
-                                       QMessageBox.Ok)
+                                       QMessageBox.Ok, self)
                     mbox.setWindowIcon(QIcon(ERROR))
                     ok = mbox.button(QMessageBox.Ok)
                     ok.setText(self.lang['dis_ok_button'])
@@ -504,16 +509,18 @@ class Settings(QWidget):
                     self.main.show_pass_error(True)
                     return
                 else:
-                    try:
+                    try:  # replacing note content
                         cip = AESCip(self.old_pass.text())
-                        note = base64.b64decode(self.main.conf['note']
-                                                ).decode('utf-8')
+                        # base64 -> gzip -> AES-256 -> gzip -> text
+                        note = gzip.decompress(base64.b64decode(
+                            self.main.conf['note']))
                         note = cip.decrypt(note)
                         cip.update_pass(self.new_pass.text())
-                        note = base64.b64encode(
-                            cip.encrypt(note).encode('utf-8')).decode('ASCII')
+                        # text -> gzip -> AES-256 -> gzip -> base64
+                        note = base64.b64encode(gzip.compress(
+                            cip.encrypt(note), 9)).decode('ASCII')
                         self.main.conf['note'] = note
-                    except:
+                    except:  # if bad password (possible)
                         print(traceback.format_exc())
                         self.main.show_pass_error()
                         return
