@@ -10,6 +10,7 @@ Require Python >= **3.5** version.
 * **Timer** - multiple timers, popup alert and sound alarm
 * **Minecraft Server Monitoring** - show online MC servers statistics with query
 * **Digital Time** - show digital time and date
+* **Crypto Note** - low secure note as passowrd (AES-256)
 
 ## Commandline arguments
 
@@ -28,8 +29,9 @@ DeWidgets -c /home/user/.dw
 ## Install and startup
 
 ```shell
-pip3 install PyQt5
-pip3 install mcstatus
+pip3 install PyQt5  # or pacman -S python-pyqt5
+pip3 install mcstatus  # or yaourt -S mcstatus
+pip3 install pycrypto  # or pacman -S python-crypto
 git clone https://github.com/InterVi/DeWidgets.git
 cd DeWidgets
 python3 main.py
@@ -37,8 +39,9 @@ python3 main.py
 
 ## Depends
 
-* PyQt5
+* [PyQt5](https://github.com/baoboa/pyqt5)
 * [mcstatus](https://github.com/Dinnerbone/mcstatus) (for *MC monitoring*)
+* [pycrypto](https://github.com/dlitz/pycrypto) (for *Crypto Note*)
 
 ## How to create ZIP widget
 
@@ -84,4 +87,4 @@ class Main(Widget, QWidget):
         self.ICON = QIcon(os.path.join(C_RES, 'example', 'icon.png'))
 ```
 
-Please, using unique module names. See *digital_time* widget for best example realisation widget.
+Please, using unique module names.
