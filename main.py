@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
 import sys
 import time
 import traceback
 from PyQt5.QtWidgets import QApplication
 import core.gui.gui as gui
-from core.paths import STDERR_LOG, STDOUT_LOG
+from core.paths import STDERR_LOG, STDOUT_LOG, LOCK_FILE
 
 TIME_FORMAT = '%Y-%m-%d %X'
 
@@ -28,15 +29,20 @@ if __name__ == '__main__':
     except:
         print(traceback.format_exc())
     finally:  # correct exit
-        try:
+        try:  # unload widgets
             gui.manager.unload_all()
         except:
             print(traceback.format_exc())
-        try:
+        try:  # save widgets config
             gui.manager.config.save()
         except:
             print(traceback.format_exc())
-        try:
+        try:  # remove lock file
+            if os.path.isfile(LOCK_FILE):
+                os.remove(LOCK_FILE)
+        except:
+            print(traceback.format_exc())
+        try:  # close file streams
             print('[' + time.strftime(TIME_FORMAT) + '] stop')
             out.close()
             err.close()
