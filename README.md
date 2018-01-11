@@ -11,6 +11,7 @@ Require Python >= **3.5** version.
 * **Minecraft Server Monitoring** - show online MC servers statistics with query
 * **Digital Time** - show digital time and date
 * **Crypto Note** - low secure note as passowrd (AES-256)
+* **CPU Info** - show SPU information (load and freq)
 
 ## Commandline arguments
 
@@ -32,6 +33,7 @@ DeWidgets -c /home/user/.dw
 pip3 install PyQt5  # or pacman -S python-pyqt5
 pip3 install mcstatus  # or yaourt -S mcstatus
 pip3 install pycrypto  # or pacman -S python-crypto
+pip3 insrall psutil  # or pacman -S python-psutil
 git clone https://github.com/InterVi/DeWidgets.git
 cd DeWidgets
 python3 main.py
@@ -42,6 +44,7 @@ python3 main.py
 * [PyQt5](https://github.com/baoboa/pyqt5)
 * [mcstatus](https://github.com/Dinnerbone/mcstatus) (for *MC monitoring*)
 * [pycrypto](https://github.com/dlitz/pycrypto) (for *Crypto Note*)
+* [psutil](https://github.com/giampaolo/psutil) (for *CPU Info*)
 
 ## How to create ZIP widget
 

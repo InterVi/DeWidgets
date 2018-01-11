@@ -60,11 +60,9 @@ class DTime(QWidget):
         self.main = main
         self.index = index
         # setup window
-        if self.index > -1:
-            self.NAME = 'Digital Time'
-            self.setWindowFlags(Qt.CustomizeWindowHint |
-                                Qt.WindowStaysOnBottomHint | Qt.Tool)
-            self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setWindowFlags(Qt.CustomizeWindowHint |
+                            Qt.WindowStaysOnBottomHint | Qt.Tool)
+        self.setAttribute(Qt.WA_TranslucentBackground)
         # setup label
         self.label = QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
