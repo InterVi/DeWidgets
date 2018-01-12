@@ -12,6 +12,7 @@ Require Python >= **3.5** version.
 * **Digital Time** - show digital time and date
 * **Crypto Note** - low secure note as passowrd (AES-256)
 * **CPU Info** - show SPU information (load and freq)
+* **RAM Info** - show RAM and swap information
 
 ## Commandline arguments
 
@@ -44,7 +45,7 @@ python3 main.py
 * [PyQt5](https://github.com/baoboa/pyqt5)
 * [mcstatus](https://github.com/Dinnerbone/mcstatus) (for *MC monitoring*)
 * [pycrypto](https://github.com/dlitz/pycrypto) (for *Crypto Note*)
-* [psutil](https://github.com/giampaolo/psutil) (for *CPU Info*)
+* [psutil](https://github.com/giampaolo/psutil) (for hardware monitors)
 
 ## How to create ZIP widget
 
