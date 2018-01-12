@@ -36,8 +36,10 @@ def _get_files() -> list:
     dialog.setLabelText(QFileDialog.Reject, lang['ADD_NEW']['cancel'])
     # show
     dialog.show()
-    dialog.exec()
-    return dialog.selectedFiles()
+    if dialog.exec() == QFileDialog.Accepted:
+        return dialog.selectedFiles()
+    else:
+        return []
 
 
 def get_str_list(list_) -> str:
@@ -92,6 +94,8 @@ def install() -> list:
     - widget.py (python module, widget file)
     """
     files = _get_files()
+    if not files:
+        return []
     broken = []  # broken files
     result = []  # widget names (*.py files)
     conf_inst = {}
