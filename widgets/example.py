@@ -15,6 +15,7 @@ class Main(Widget, QWidget):
         self.lang = widget_manager.lang['EXAMPLE']
         # setup widget
         self.NAME = 'Example Widget'
+        self.VERSION = '1.0'
         self.DESCRIPTION = self.lang['description']
         self.HELP = self.lang['help']
         self.AUTHOR = 'InterVi'

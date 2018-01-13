@@ -7,7 +7,7 @@ import traceback
 from multiprocessing import Process, Manager
 from mcstatus import MinecraftServer
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout
-from PyQt5.QtWidgets import QMenu, QPushButton, QMessageBox, QHBoxLayout
+from PyQt5.QtWidgets import QMenu, QPushButton, QMessageBox, QGridLayout
 from PyQt5.QtWidgets import QInputDialog, QSpinBox, QLabel
 from PyQt5.QtGui import QIcon, QPixmap, QImage
 from PyQt5.QtCore import Qt, QSize, QTimer
@@ -290,11 +290,11 @@ class Settings(QWidget):
         # setup list
         self.list = QListWidget(self)
         self.list.setIconSize(QSize(64, 64))
+        self.list.itemClicked.connect(self.__change_enabeld)
         self.list.setWordWrap(True)
         self._list_fill()
         # setup 'Update' label
-        self.update_label = QLabel(self)
-        self.update_label.setText(self.lang['time_label'])
+        self.update_label = QLabel(self.lang['time_label'], self)
         self.update_label.setAlignment(Qt.AlignCenter)
         # setup 'Time' spinbox
         self.time_edit = QSpinBox(self)
@@ -325,26 +325,34 @@ class Settings(QWidget):
             self.lang['settings_close_button'], self
         )
         self.close_button.setToolTip(self.lang['settings_close_button_tt'])
-        self.close_button.clicked.connect(self.hide)  # close, destroy - bugs
-        # setup one h box layout
-        self.h_box = QHBoxLayout()
-        self.h_box.addWidget(self.update_label)
-        self.h_box.addWidget(self.time_edit)
-        # setup two h box layout
-        self.h_box2 = QHBoxLayout()
-        self.h_box2.addWidget(self.up_button)
-        self.h_box2.addWidget(self.down_button)
-        # setup v box layout
-        self.v_box = QVBoxLayout(self)
-        self.v_box.addWidget(self.list)
-        self.v_box.addLayout(self.h_box)
-        self.v_box.addLayout(self.h_box2)
-        self.v_box.addWidget(self.delete_button)
-        self.v_box.addWidget(self.add_button)
-        self.v_box.addWidget(self.close_button)
-        self.setLayout(self.v_box)
+        self.close_button.clicked.connect(self.close)
+        # setup layout
+        self.grid = QGridLayout(self)
+        self.grid.addWidget(self.list, 0, 0, 1, 2)
+        self.grid.addWidget(self.update_label, 1, 0)
+        self.grid.addWidget(self.time_edit, 1, 1)
+        self.grid.addWidget(self.up_button, 2, 0)
+        self.grid.addWidget(self.down_button, 2, 1)
+        self.grid.addWidget(self.delete_button, 3, 0, 1, 2)
+        self.grid.addWidget(self.add_button, 4, 0, 1, 2)
+        self.grid.addWidget(self.close_button, 5, 0, 1, 2)
+        self.setLayout(self.grid)
         # show
+        self.__change_enabeld()
         self.show()
+
+    def __change_enabeld(self):
+        item = self.list.currentItem()
+        if item:
+            self.delete_button.setEnabled(True)
+        else:
+            self.delete_button.setEnabled(False)
+        if item and self.list.count() > 1:
+            self.up_button.setEnabled(True)
+            self.down_button.setEnabled(True)
+        else:
+            self.up_button.setEnabled(False)
+            self.down_button.setEnabled(False)
 
     def _list_fill(self):
         try:
@@ -355,7 +363,6 @@ class Settings(QWidget):
                 item.setText(m_item.text())
                 item.setIcon(m_item.icon())
                 self.list.addItem(item)
-            self.list.setCurrentRow(0)
         except:
             print(traceback.format_exc())
 
@@ -407,15 +414,14 @@ class Settings(QWidget):
         try:
             if not self.list.count():
                 return
-            mbox = QMessageBox(self)
-            mbox.setIcon(QMessageBox.Question)
+            mbox = QMessageBox(QMessageBox.Question,
+                               self.lang['confirm_title'],
+                               self.lang['confirm_text'],
+                               QMessageBox.Ok | QMessageBox.Cancel, self)
             mbox.setWindowIcon(QIcon(DELETE))
-            mbox.setWindowTitle(self.lang['confirm_title'])
-            mbox.setText(self.lang['confirm_text'])
             mbox.setInformativeText(
                 self.lang['confirm_inf'].format(
                     self.list.currentItem().text()))
-            mbox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             ok = mbox.button(QMessageBox.Ok)
             ok.setText(self.lang['confirm_ok_button'])
             ok.setToolTip(self.lang['confirm_ok_button_tt'])
@@ -430,6 +436,7 @@ class Settings(QWidget):
                 self.main.widget_manager.config.save()
                 self.main._list_fill()
                 self._list_fill()
+                self.__change_enabeld()
         except:
             print(traceback.format_exc())
 
@@ -455,18 +462,16 @@ class Settings(QWidget):
                     self.main.widget_manager.config.save()
                     self.main._list_fill()
                     self._list_fill()
+                    self.__change_enabeld()
                     self.list.setCurrentRow(self.list.count()-1)
         except:
             print(traceback.format_exc())
 
     def _show_error(self):
         try:
-            mbox = QMessageBox(self)
-            mbox.setIcon(QMessageBox.Critical)
+            mbox = QMessageBox(QMessageBox.Critical, self.lang['error_title'],
+                               self.lang['error_text'], QMessageBox.Ok, self)
             mbox.setWindowIcon(QIcon(ERROR))
-            mbox.setWindowTitle(self.lang['error_title'])
-            mbox.setText(self.lang['error_text'])
-            mbox.setStandardButtons(QMessageBox.Ok)
             ok = mbox.button(QMessageBox.Ok)
             ok.setText(self.lang['error_ok_button'])
             ok.setToolTip(self.lang['error_ok_button_tt'])

@@ -4,7 +4,7 @@ import sys
 import traceback
 from configparser import ConfigParser
 from PyQt5.QtWidgets import QWidget, QPushButton, QCheckBox, QComboBox, QLabel
-from PyQt5.QtWidgets import QMessageBox, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import QMessageBox, QGridLayout, QHBoxLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from core.gui.del_widgets import Delete
@@ -37,15 +37,13 @@ class Settings(QWidget):
         self.language.activated.connect(self._item_select)
         self._box_fill()
         # setup 'Load placed' checkbox
-        self.load_placed = QCheckBox(self)
-        self.load_placed.setText(lang['SETTINGS']['load_placed'])
+        self.load_placed = QCheckBox(lang['SETTINGS']['load_placed'], self)
         self.load_placed.setToolTip(lang['SETTINGS']['load_placed_tt'])
         if settings['MAIN']['load_placed'].lower() in ('true', 'yes', 'on'):
             self.load_placed.setChecked(True)
         # setup 'Languages' lebel
-        self.label = QLabel(self)
+        self.label = QLabel(lang['SETTINGS']['label'], self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setText(lang['SETTINGS']['label'])
         # setup widgets delete button
         self.del_button = QPushButton(lang['SETTINGS']['del_button'], self)
         self.del_button.setToolTip(lang['SETTINGS']['del_button_tt'])
@@ -61,19 +59,16 @@ class Settings(QWidget):
         self.cancel_button.clicked.connect(self._cancel)
         # setup h box layout
         self.h_box = QHBoxLayout()
-        self.h_box.addWidget(self.label)
-        self.h_box.addWidget(self.language)
-        # setup h box layout 2
-        self.h_box2 = QHBoxLayout()
-        self.h_box2.addWidget(self.save_button)
-        self.h_box2.addWidget(self.cancel_button)
-        # setup v box layout
-        self.v_box = QVBoxLayout(self)
-        self.v_box.addLayout(self.h_box)
-        self.v_box.addWidget(self.load_placed)
-        self.v_box.addWidget(self.del_button)
-        self.v_box.addLayout(self.h_box2)
-        self.setLayout(self.v_box)
+        self.h_box.addWidget(self.save_button)
+        self.h_box.addWidget(self.cancel_button)
+        # setup grid layout
+        self.grid = QGridLayout(self)
+        self.grid.addWidget(self.label, 0, 0)
+        self.grid.addWidget(self.language, 0, 1)
+        self.grid.addWidget(self.load_placed, 1, 0, 1, 2)
+        self.grid.addWidget(self.del_button, 2, 0, 1, 2)
+        self.grid.addLayout(self.h_box, 3, 0, 1, 2)
+        self.setLayout(self.grid)
         # show
         self.show()
 
@@ -134,12 +129,11 @@ class Settings(QWidget):
             print(traceback.format_exc())
 
     def _show_warn(self):
-        mbox = QMessageBox(self)
+        mbox = QMessageBox(QMessageBox.Warning,
+                           self.lang['SETTINGS']['warn_title'],
+                           self.lang['SETTINGS']['warn_text'], QMessageBox.Ok,
+                           self)
         mbox.setWindowIcon(QIcon(SUCCESS))
-        mbox.setIcon(QMessageBox.Warning)
-        mbox.setWindowTitle(self.lang['SETTINGS']['warn_title'])
-        mbox.setText(self.lang['SETTINGS']['warn_text'])
-        mbox.setStandardButtons(QMessageBox.Ok)
         ok = mbox.button(QMessageBox.Ok)
         ok.setText(self.lang['SETTINGS']['warn_ok_button'])
         ok.setToolTip(self.lang['SETTINGS']['warn_ok_button_tt'])

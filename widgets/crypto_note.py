@@ -9,8 +9,8 @@ from distutils.util import strtobool
 from Crypto.Cipher import AES
 from Crypto import Random
 from PyQt5.QtWidgets import QWidget, QLabel, QSpinBox, QTextEdit, QLineEdit
-from PyQt5.QtWidgets import QPushButton, QCheckBox, QHBoxLayout, QVBoxLayout
-from PyQt5.QtWidgets import QGridLayout, QMessageBox, QInputDialog
+from PyQt5.QtWidgets import QPushButton, QCheckBox, QMessageBox, QInputDialog
+from PyQt5.QtWidgets import QGridLayout, QHBoxLayout
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QRect
 from core.manager import Widget
@@ -295,16 +295,13 @@ class Note(QWidget):
         self.close_button = QPushButton(self.lang['close_button'], self)
         self.close_button.setToolTip(self.lang['close_button_tt'])
         self.close_button.clicked.connect(self._close)
-        # setup h box layout
-        self.h_box = QHBoxLayout()
-        self.h_box.addWidget(self.exit_button)
-        self.h_box.addWidget(self.close_button)
-        # setup v box layout
-        self.v_box = QVBoxLayout(self)
-        self.v_box.addWidget(self.warn_label)
-        self.v_box.addWidget(self.text_edit)
-        self.v_box.addLayout(self.h_box)
-        self.setLayout(self.v_box)
+        # setup layout
+        self.grid = QGridLayout(self)
+        self.grid.addWidget(self.warn_label, 0, 0, 1, 2)
+        self.grid.addWidget(self.text_edit, 1, 0, 1, 2)
+        self.grid.addWidget(self.exit_button, 2, 0)
+        self.grid.addWidget(self.close_button, 2, 1)
+        self.setLayout(self.grid)
         # setup cipher
         self.cip = AESCip(password, hexpass)
         # load note and show
@@ -393,8 +390,7 @@ class Settings(QWidget):
         self.setWindowIcon(QIcon(SETTINGS))
         self.resize(200, 220)
         # setup session label
-        self.session_label = QLabel(self)
-        self.session_label.setText(self.lang['session_label'])
+        self.session_label = QLabel(self.lang['session_label'], self)
         self.session_label.setToolTip(self.lang['session_label_tt'])
         self.session_label.setAlignment(Qt.AlignCenter)
         # setup session spin box
@@ -404,13 +400,11 @@ class Settings(QWidget):
         self.session_sbox.setMaximum(3600)
         self.session_sbox.setValue(self.main._session)
         # setup hot save chbox
-        self.hot_save = QCheckBox(self)
-        self.hot_save.setText(self.lang['hot_save'])
+        self.hot_save = QCheckBox(self.lang['hot_save'], self)
         self.hot_save.setToolTip(self.lang['hot_save_tt'])
         self.hot_save.setChecked(self.main._hot_save)
         # setup change pass label
-        self.change_pass = QLabel(self)
-        self.change_pass.setText(self.lang['change_pass'])
+        self.change_pass = QLabel(self.lang['change_pass'], self)
         self.change_pass.setAlignment(Qt.AlignCenter)
         # setup old pass edit
         self.old_pass = QLineEdit(self)
@@ -433,8 +427,7 @@ class Settings(QWidget):
             self.new_pass.setEnabled(False)
             self.rep_pass.setEnabled(False)
         # setup show pass checkbox
-        self.show_pass = QCheckBox(self)
-        self.show_pass.setText(self.lang['show_pass'])
+        self.show_pass = QCheckBox(self.lang['show_pass'], self)
         self.show_pass.setToolTip(self.lang['show_pass_tt'])
         self.show_pass.stateChanged.connect(self._show_pass)
         # setup save button
@@ -445,28 +438,25 @@ class Settings(QWidget):
         self.cancel_button = QPushButton(self.lang['cancel_button'], self)
         self.cancel_button.setToolTip(self.lang['cancel_button_tt'])
         self.cancel_button.clicked.connect(self.close)
-        # setup session h box layout
-        self.h_box = QHBoxLayout()
-        self.h_box.addWidget(self.session_label)
-        self.h_box.addWidget(self.session_sbox)
         # setup pass h box layout
-        self.h_box2 = QHBoxLayout()
-        self.h_box2.addWidget(self.new_pass)
-        self.h_box2.addWidget(self.rep_pass)
+        self.h_box = QHBoxLayout()
+        self.h_box.addWidget(self.new_pass)
+        self.h_box.addWidget(self.rep_pass)
         # setup buttons h box layout
-        self.h_box3 = QHBoxLayout()
-        self.h_box3.addWidget(self.save_button)
-        self.h_box3.addWidget(self.cancel_button)
-        # setup v box layout
-        self.v_box = QVBoxLayout(self)
-        self.v_box.addLayout(self.h_box)
-        self.v_box.addWidget(self.hot_save)
-        self.v_box.addWidget(self.change_pass)
-        self.v_box.addWidget(self.old_pass)
-        self.v_box.addLayout(self.h_box2)
-        self.v_box.addWidget(self.show_pass)
-        self.v_box.addLayout(self.h_box3)
-        self.setLayout(self.v_box)
+        self.h_box2 = QHBoxLayout()
+        self.h_box2.addWidget(self.save_button)
+        self.h_box2.addWidget(self.cancel_button)
+        # setup grid layout
+        self.grid = QGridLayout(self)
+        self.grid.addWidget(self.session_label, 0, 0)
+        self.grid.addWidget(self.session_sbox, 0, 1)
+        self.grid.addWidget(self.hot_save, 1, 0, 1, 2)
+        self.grid.addWidget(self.change_pass, 2, 0, 1, 2)
+        self.grid.addWidget(self.old_pass, 3, 0, 1, 2)
+        self.grid.addLayout(self.h_box, 4, 0, 1, 2)
+        self.grid.addWidget(self.show_pass, 5, 0, 1, 2)
+        self.grid.addLayout(self.h_box2, 6, 0, 1, 2)
+        self.setLayout(self.grid)
         # show
         self.show()
 

@@ -83,6 +83,7 @@ class Main(Widget, QWidget):
         self.lang = widget_manager.c_lang['C_EXAMPLE']
         # setup widget
         self.NAME = 'Example Custom Widget'
+        self.VERSION = '1.0'
         self.DESCRIPTION = self.lang['description']
         self.HELP = self.lang['help']
         self.AUTHOR = 'InterVi'

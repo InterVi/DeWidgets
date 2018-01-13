@@ -4,10 +4,10 @@ import base64
 from distutils.util import strtobool
 from datetime import datetime
 import traceback
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QListWidget
-from PyQt5.QtWidgets import QListWidgetItem, QHBoxLayout, QCheckBox
-from PyQt5.QtWidgets import QPushButton, QSpinBox, QLineEdit
+from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QListWidgetItem
+from PyQt5.QtWidgets import QCheckBox, QPushButton, QSpinBox, QLineEdit
 from PyQt5.QtWidgets import QColorDialog, QMessageBox
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout
 from PyQt5.QtGui import QIcon, QColor, QPalette
 from PyQt5.QtCore import Qt, QTimer
 from core.manager import Widget
@@ -327,23 +327,20 @@ class Settings(QWidget):
         self.list.itemDoubleClicked.connect(self._item_double_clicked)
         self._list_fill()
         # setup time label
-        self.time_label = QLabel(self)
+        self.time_label = QLabel(get_time(self.main._utc), self)
         self.time_label.setAlignment(Qt.AlignCenter)
         font = self.time_label.font()
         font.setPointSize(12)
         font.setBold(True)
         self.time_label.setFont(font)
         self.time_label.setToolTip(main.lang['display_tt'])
-        self.time_label.setText(get_time(self.main._utc))
         # setup utc time checkbox
-        self.utc_checkbox = QCheckBox(self)
+        self.utc_checkbox = QCheckBox(main.lang['utc_checkbox'], self)
         self.utc_checkbox.setChecked(main._utc)
-        self.utc_checkbox.setText(main.lang['utc_checkbox'])
         self.utc_checkbox.setToolTip(main.lang['utc_checkbox_tt'])
         self.utc_checkbox.stateChanged.connect(self._utc_changed)
         # setup interval label
-        self.timer_label = QLabel(self)
-        self.timer_label.setText(self.lang['timer_label'])
+        self.timer_label = QLabel(self.lang['timer_label'], self)
         self.timer_label.setToolTip(self.lang['timer_label_tt'])
         # setup interval spinbox
         self.timer_spinbox = QSpinBox(self)
@@ -572,17 +569,14 @@ class TimeEdit(QWidget):
         self.offset_time.setFont(font)
         self.offset_time.setToolTip(self.lang['offset_time_tt'])
         # setup format label
-        self.format_label = QLabel(self)
+        self.format_label = QLabel(self.lang['format_label'], self)
         self.format_label.setAlignment(Qt.AlignCenter)
-        self.format_label.setText(self.lang['format_label'])
         self.format_label.setToolTip(self.lang['format_label_tt'])
         # setup format edit
-        self.format_edit = QLineEdit(self)
-        self.format_edit.setText(self.main.times[element])
+        self.format_edit = QLineEdit(self.main.times[element], self)
         self.format_edit.setToolTip(self.lang['format_edit_tt'])
         # setup name edit
-        self.name_edit = QLineEdit(self)
-        self.name_edit.setText(self.main.names[element])
+        self.name_edit = QLineEdit(self.main.names[element], self)
         self.name_edit.setToolTip(self.lang['name_edit_tt'])
         # setup move button
         self.move_button = QPushButton(self.lang['move_button'], self)
@@ -606,28 +600,25 @@ class TimeEdit(QWidget):
         self.timer.start(self.main._msec)
         # setup h box layout
         self.h_box = QHBoxLayout()
-        self.h_box.addWidget(self.hours)
-        self.h_box.addWidget(self.minutes)
-        self.h_box.addWidget(self.seconds)
+        self.h_box.addWidget(self.format_label)
+        self.h_box.addWidget(self.format_edit)
         # setup h box layout 2
         self.h_box2 = QHBoxLayout()
-        self.h_box2.addWidget(self.format_label)
-        self.h_box2.addWidget(self.format_edit)
-        # setup h box layout 3
-        self.h_box3 = QHBoxLayout()
-        self.h_box3.addWidget(self.save_button)
-        self.h_box3.addWidget(self.cancel_button)
-        # setup v box layout
-        self.v_box = QVBoxLayout(self)
-        self.v_box.addWidget(self.time_show)
-        self.v_box.addLayout(self.h_box)
-        self.v_box.addWidget(self.offset_time)
-        self.v_box.addLayout(self.h_box2)
-        self.v_box.addWidget(self.name_edit)
-        self.v_box.addWidget(self.move_button)
-        self.v_box.addWidget(self.color_button)
-        self.v_box.addLayout(self.h_box3)
-        self.setLayout(self.v_box)
+        self.h_box2.addWidget(self.save_button)
+        self.h_box2.addWidget(self.cancel_button)
+        # setup grid layout
+        self.grid = QGridLayout(self)
+        self.grid.addWidget(self.time_show, 0, 0, 1, 3)
+        self.grid.addWidget(self.hours, 1, 0)
+        self.grid.addWidget(self.minutes, 1, 1)
+        self.grid.addWidget(self.seconds, 1, 2)
+        self.grid.addWidget(self.offset_time, 2, 0, 1, 3)
+        self.grid.addLayout(self.h_box, 3, 0, 1, 3)
+        self.grid.addWidget(self.name_edit, 4, 0, 1, 3)
+        self.grid.addWidget(self.move_button, 5, 0, 1, 3)
+        self.grid.addWidget(self.color_button, 6, 0, 1, 3)
+        self.grid.addLayout(self.h_box2, 7, 0, 1, 3)
+        self.setLayout(self.grid)
         # show
         self._timeout()
         self.show()

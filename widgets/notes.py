@@ -2,9 +2,9 @@ import os
 import json
 import base64
 import traceback
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QPushButton
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QCheckBox
-from PyQt5.QtWidgets import QMessageBox, QComboBox, QLabel, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QTextEdit, QPushButton, QListWidget
+from PyQt5.QtWidgets import QListWidgetItem, QCheckBox, QMessageBox, QComboBox
+from PyQt5.QtWidgets import QLabel, QGridLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from core.manager import Widget
@@ -29,10 +29,10 @@ class Note(QWidget):
         self.text_edit = QTextEdit(self)
         self.text_edit.textChanged.connect(self._text_changed)
         # setup v box layout
-        self.v_box = QVBoxLayout(self)
-        self.v_box.setContentsMargins(0, 0, 0, 0)
-        self.v_box.addWidget(self.text_edit)
-        self.setLayout(self.v_box)
+        self.grid = QGridLayout(self)
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.grid.addWidget(self.text_edit)
+        self.setLayout(self.grid)
 
     def _init(self):
         try:
@@ -219,17 +219,16 @@ class Settings(QWidget):
         # setup list
         self.list = QListWidget(self)
         self.list.setWordWrap(True)
+        self.list.itemClicked.connect(self.__change_enabled)
         self.list.itemDoubleClicked.connect(self._list_double_click)
         self._list_fill()
         # setup 'Editable' checkbox
-        self.editable = QCheckBox(self)
-        self.editable.setText(main.lang['settings_editable'])
+        self.editable = QCheckBox(main.lang['settings_editable'], self)
         self.editable.setToolTip(main.lang['settings_editable_tt'])
         self.editable.setChecked(main.editable)
         self.editable.stateChanged.connect(self._editable_changed)
         # setup 'Hot save' checkbox
-        self.hot_save = QCheckBox(self)
-        self.hot_save.setText(main.lang['save_checkbox'])
+        self.hot_save = QCheckBox(main.lang['save_checkbox'], self)
         self.hot_save.setToolTip(main.lang['save_checkbox_tt'])
         if 'hot_saves' in main.conf:
             self.hot_save.setChecked(json.loads(main.conf['hot_saves']))
@@ -247,21 +246,25 @@ class Settings(QWidget):
         self.close_button = QPushButton(main.lang['settings_close_button'],
                                         self)
         self.close_button.setToolTip(main.lang['settings_close_button_tt'])
-        self.close_button.clicked.connect(self.hide)  # close, destroy - bugs
-        # setup h box layout
-        self.h_box = QHBoxLayout()
-        self.h_box.addWidget(self.editable)
-        self.h_box.addWidget(self.hot_save)
-        # setup v box layout
-        self.v_box = QVBoxLayout(self)
-        self.v_box.addWidget(self.list)
-        self.v_box.addLayout(self.h_box)
-        self.v_box.addWidget(self.delete_button)
-        self.v_box.addWidget(self.add_button)
-        self.v_box.addWidget(self.close_button)
-        self.setLayout(self.v_box)
+        self.close_button.clicked.connect(self.close)
+        # setup layout
+        self.grid = QGridLayout(self)
+        self.grid.addWidget(self.list, 0, 0, 1, 2)
+        self.grid.addWidget(self.editable, 1, 0)
+        self.grid.addWidget(self.hot_save, 1, 1)
+        self.grid.addWidget(self.delete_button, 2, 0, 1, 2)
+        self.grid.addWidget(self.add_button, 3, 0, 1, 2)
+        self.grid.addWidget(self.close_button, 4, 0, 1, 2)
+        self.setLayout(self.grid)
         # show
+        self.__change_enabled()
         self.show()
+
+    def __change_enabled(self):
+        if self.list.currentItem():
+            self.delete_button.setEnabled(True)
+        else:
+            self.delete_button.setEnabled(False)
 
     def _list_fill(self):
         try:
@@ -279,7 +282,6 @@ class Settings(QWidget):
                 if not item.text():
                     item.setText('-')
                 self.list.addItem(item)
-            self.list.setCurrentRow(0)
         except:
             print(traceback.format_exc())
 
@@ -311,14 +313,13 @@ class Settings(QWidget):
             if self.list.count() <= 1:
                 return
             # confirm dialog
-            mbox = QMessageBox(self)
-            mbox.setIcon(QMessageBox.Question)
+            mbox = QMessageBox(QMessageBox.Question,
+                               self.main.lang['delete_title'],
+                               self.main.lang['delete_text'],
+                               QMessageBox.Yes | QMessageBox.No, self)
             mbox.setWindowIcon(QIcon(DELETE))
-            mbox.setWindowTitle(self.main.lang['delete_title'])
-            mbox.setText(self.main.lang['delete_text'])
             mbox.setInformativeText(self.main.lang['delete_inf'].format(
                 self.list.currentItem().text()))
-            mbox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             yes = mbox.button(QMessageBox.Yes)
             yes.setText(self.main.lang['delete_yes_button'])
             yes.setToolTip(self.main.lang['delete_yes_button_tt'])
@@ -370,12 +371,11 @@ class Settings(QWidget):
             self.list.setCurrentRow(self.list.count()-1)
             self.main.save_conf()
             # show success alert
-            mbox = QMessageBox(self)
-            mbox.setIcon(QMessageBox.Information)
+            mbox = QMessageBox(QMessageBox.Information,
+                               self.main.lang['success_title'],
+                               self.main.lang['success_text'], QMessageBox.Ok,
+                               self)
             mbox.setWindowIcon(QIcon(SUCCESS))
-            mbox.setWindowTitle(self.main.lang['success_title'])
-            mbox.setText(self.main.lang['success_text'])
-            mbox.setStandardButtons(QMessageBox.Ok)
             ok = mbox.button(QMessageBox.Ok)
             ok.setText(self.main.lang['success_ok_button'])
             ok.setToolTip(self.main.lang['success_ok_button_tt'])
@@ -404,8 +404,7 @@ class NoteSettings(QWidget):
                 main.widgets[self.row-1].text_edit.toPlainText())
         self.text_edit.textChanged.connect(self._text_changed)
         # setup styles label
-        self.label = QLabel(self)
-        self.label.setText(main.lang['item_label'])
+        self.label = QLabel(main.lang['item_label'], self)
         self.label.setAlignment(Qt.AlignCenter)
         # setup styles combobox
         self.styles_list = QComboBox(self)
@@ -421,18 +420,15 @@ class NoteSettings(QWidget):
         # setup 'Close' button
         self.close_button = QPushButton(main.lang['item_close_button'], self)
         self.close_button.setToolTip(main.lang['item_close_button_tt'])
-        self.close_button.clicked.connect(self.hide)  # close, destroy - bugs
-        # setup h box layout
-        self.h_box = QHBoxLayout()
-        self.h_box.addWidget(self.label)
-        self.h_box.addWidget(self.styles_list)
-        # setup v box layout
-        self.v_box = QVBoxLayout(self)
-        self.v_box.addWidget(self.text_edit)
-        self.v_box.addLayout(self.h_box)
-        self.v_box.addWidget(self.move_button)
-        self.v_box.addWidget(self.close_button)
-        self.setLayout(self.v_box)
+        self.close_button.clicked.connect(self.close)
+        # setup layout
+        self.grid = QGridLayout(self)
+        self.grid.addWidget(self.text_edit, 0, 0, 1, 2)
+        self.grid.addWidget(self.label, 1, 0)
+        self.grid.addWidget(self.styles_list, 1, 1)
+        self.grid.addWidget(self.move_button, 2, 0, 1, 2)
+        self.grid.addWidget(self.close_button, 3, 0, 1, 2)
+        self.setLayout(self.grid)
         # show
         self.show()
 

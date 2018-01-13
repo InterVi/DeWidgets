@@ -50,12 +50,9 @@ def get_str_list(list_) -> str:
 
 
 def _show_error(names=()):
-    mbox = QMessageBox(parent)
-    mbox.setIcon(QMessageBox.Critical)
+    mbox = QMessageBox(QMessageBox.Critical, lang['ADD_NEW']['error_title'],
+                       lang['ADD_NEW']['error_text'], QMessageBox.Ok, parent)
     mbox.setWindowIcon(QIcon(ERROR))
-    mbox.setWindowTitle(lang['ADD_NEW']['error_title'])
-    mbox.setText(lang['ADD_NEW']['error_text'])
-    mbox.setStandardButtons(QMessageBox.Ok)
     ok = mbox.button(QMessageBox.Ok)
     ok.setText(lang['ADD_NEW']['error_ok_button'])
     ok.setToolTip(lang['ADD_NEW']['error_ok_button_tt'])
@@ -65,12 +62,10 @@ def _show_error(names=()):
 
 
 def _show_success(names=()):
-    mbox = QMessageBox(parent)
+    mbox = QMessageBox(QMessageBox.Information,
+                       lang['ADD_NEW']['success_title'],
+                       lang['ADD_NEW']['success_text'], QMessageBox.Ok, parent)
     mbox.setWindowIcon(QIcon(SUCCESS))
-    mbox.setIcon(QMessageBox.Information)
-    mbox.setWindowTitle(lang['ADD_NEW']['success_title'])
-    mbox.setText(lang['ADD_NEW']['success_text'])
-    mbox.setStandardButtons(QMessageBox.Ok)
     ok = mbox.button(QMessageBox.Ok)
     ok.setText(lang['ADD_NEW']['success_ok_button'])
     ok.setToolTip(lang['ADD_NEW']['success_ok_button_tt'])

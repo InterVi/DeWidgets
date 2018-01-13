@@ -52,9 +52,8 @@ class Delete(QWidget):
         self.w_list.itemDoubleClicked.connect(self._list_double_click)
         self._list_fill()
         # setup label
-        self.h_label = QLabel(self)
+        self.h_label = QLabel(self.lang['label'], self)
         self.h_label.setGeometry(QRect(0, 305, 410, 17))
-        self.h_label.setText(self.lang['label'])
         self.h_label.setAlignment(Qt.AlignCenter)
         # setup delete button
         self.del_button = QPushButton(self.lang['del_button'], self)
@@ -72,7 +71,14 @@ class Delete(QWidget):
         self.close_button.setToolTip(self.lang['close_button_tt'])
         self.close_button.clicked.connect(self.close)
         # show
+        self._change_enabled()
         self.show()
+
+    def _change_enabled(self):
+        if self.w_list.currentItem():
+            self.del_button.setEnabled(True)
+        else:
+            self.del_button.setEnabled(False)
 
     def _list_fill(self):
         try:
@@ -92,13 +98,12 @@ class Delete(QWidget):
                     self.w_list.addItem(item)
                 except:
                     print(traceback.format_exc())
-            if not self.w_list.size().isEmpty():
-                self.w_list.setCurrentRow(0)
         except:
             print(traceback.format_exc())
 
     def _list_click(self):
         try:
+            self.__change_enabled()
             item = self.w_list.currentItem()
             if not item:
                 self.h_label.setText(self.lang['no_select'])
@@ -140,6 +145,7 @@ class Delete(QWidget):
             if mbox.exec() == QMessageBox.Yes:
                 self.manager.delete_widget(item.text())
                 self._list_fill()
+                self.__change_enabled()
         except:
             print(traceback.format_exc())
 
@@ -176,9 +182,8 @@ class ArchDelete(QWidget):
         self.w_list.itemDoubleClicked.connect(self._list_double_click)
         self._list_fill()
         # setup label
-        self.h_label = QLabel(self)
+        self.h_label = QLabel(self.lang['label'], self)
         self.h_label.setGeometry(QRect(0, 305, 410, 17))
-        self.h_label.setText(self.lang['label'])
         self.h_label.setAlignment(Qt.AlignCenter)
         # setup delete button
         self.del_button = QPushButton(self.lang['del_button'], self)
@@ -191,7 +196,14 @@ class ArchDelete(QWidget):
         self.close_button.setToolTip(self.lang['close_button_tt'])
         self.close_button.clicked.connect(self.close)
         # show
+        self.__change_enabled()
         self.show()
+
+    def __change_enabled(self):
+        if self.w_list.currentItem():
+            self.del_button.setEnabled(True)
+        else:
+            self.del_button.setEnabled(False)
 
     def _list_fill(self):
         try:
@@ -211,6 +223,7 @@ class ArchDelete(QWidget):
 
     def _list_click(self):
         try:
+            self.__change_enabled()
             item = self.w_list.currentItem()
             if not item:
                 self.h_label.setText(self.lang['no_select'])
@@ -265,6 +278,8 @@ class ArchDelete(QWidget):
                     file.write(json.dumps(self.archives))
                 self._list_fill()
                 self.main._list_fill()
+                self.__change_enabled()
+                self.main._change_enabled()
         except:
             print(traceback.format_exc())
 

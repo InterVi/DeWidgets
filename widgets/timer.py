@@ -291,17 +291,16 @@ class Main(Widget, QWidget):
 
 class Timeout(QMessageBox):
     def __init__(self, main, timer):
-        QMessageBox.__init__(self)
+        QMessageBox.__init__(self, QMessageBox.Information,
+                             main.lang['success_title'],
+                             main.lang['success_text'].format(timer),
+                             QMessageBox.NoButton, self)
         self.main = main
         # setup window
         self.setWindowIcon(QIcon(SUCCESS))
-        self.setIcon(QMessageBox.Information)
-        self.setWindowTitle(main.lang['success_title'])
-        self.setText(main.lang['success_text'].format(timer))
         self.setWindowFlags(Qt.WindowMinimizeButtonHint |
                             Qt.WindowStaysOnTopHint | Qt.Tool)
         # setup 'Ok' button
-        self.setStandardButtons(QMessageBox.NoButton)
         ok = QPushButton(main.lang['success_ok_button'], self)
         ok.setToolTip(main.lang['success_ok_button_tt'])
         ok.clicked.connect(self.exit)  # app close bug -> call close or destroy
@@ -330,6 +329,7 @@ class Settings(QWidget):
         # setup list
         self.list = QListWidget(self)
         self.list.setToolTip(main.lang['list_tt'])
+        self.list.itemClicked.connect(self._change_enabled)
         self.list.itemDoubleClicked.connect(self._item_double_clicked)
         self._list_fill()
         # setup 'Alert' checkbox
@@ -398,7 +398,7 @@ class Settings(QWidget):
         # setup 'Close' button
         self.close_button = QPushButton(main.lang['close_button'], self)
         self.close_button.setToolTip(main.lang['close_button_tt'])
-        self.close_button.clicked.connect(self.hide)
+        self.close_button.clicked.connect(self.close)
         # setup alarm h box layout
         self.h_box1 = QHBoxLayout()
         self.h_box1.addWidget(self.alarm_checkbox)
@@ -428,7 +428,14 @@ class Settings(QWidget):
         self.v_box.addWidget(self.close_button)
         self.setLayout(self.v_box)
         # show
+        self._change_enabled()
         self.show()
+
+    def _change_enabled(self):
+        if self.list.currentItem():
+            self.delete_button.setEnabled(True)
+        else:
+            self.delete_button.setEnabled(False)
 
     def _list_fill(self):
         try:
@@ -440,7 +447,6 @@ class Settings(QWidget):
                     font.setBold(True)
                     item.setFont(font)
                 self.list.addItem(item)
-            self.list.setCurrentRow(0)
         except:
             print(traceback.format_exc())
 
@@ -517,6 +523,7 @@ class Settings(QWidget):
                 return
             self.main._delete_timer(self.list.currentRow())
             self._list_fill()
+            self._change_enabled()
         except:
             print(traceback.format_exc())
 
@@ -569,7 +576,7 @@ class TimerSettings(QWidget):
         self.cancel_button = QPushButton(self.main.lang['ts_cancel_button'],
                                          self)
         self.cancel_button.setToolTip(self.main.lang['ts_cancel_button_tt'])
-        self.cancel_button.clicked.connect(self.hide)
+        self.cancel_button.clicked.connect(self.close)
         # setup h box layout
         self.h_box = QHBoxLayout()
         self.h_box.addWidget(self.h_label)
@@ -606,11 +613,13 @@ class TimerSettings(QWidget):
                 self.main.list[self.index] = (item[0], item[1], item[2], e,
                                               time_)
                 self.settings._list_fill()
+                self.settings._change_enabled()
             else:
                 self.main._add_timer(self.hbox.value(), self.mbox.value(),
                                      self.sbox.value(),
                                      self.enabled.isChecked())
                 self.settings._list_fill()
+                self.settings._change_enabled()
             self.hide()
         except:
             print(traceback.format_exc())

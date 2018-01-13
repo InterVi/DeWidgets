@@ -2,6 +2,7 @@
 import os
 import sys
 import traceback
+from distutils.util import strtobool
 from configparser import ConfigParser
 from PyQt5.QtWidgets import QMainWindow, QListWidgetItem
 from PyQt5.QtWidgets import QPushButton, QCheckBox, QStatusBar, QListWidget
@@ -66,9 +67,8 @@ def __init__(main_app):
     else:
         manager.load_all()  # all widgets
     main._list_fill()
-    for w in manager.widgets.values():
-        if not w.isHidden():  # if found placed widgets - no show main window
-            return
+    if manager.is_placed():
+        return  # if found placed widgets - no show main window
     main.show()  # if no placed widgets, show window
 
 
@@ -177,6 +177,31 @@ class Main(QMainWindow):
         exit_action.triggered.connect(app.quit)
         self.tray.setContextMenu(menu)
         self.tray.show()
+        # set enabled
+        self.__change_enabled()
+
+    def __change_enabled(self):
+        item = self.list.currentItem()
+        if not item:
+            self.add_button.setEnabled(False)
+            self.del_button.setEnabled(False)
+            self.wset_button.setEnabled(False)
+            self.move_button.setEnabled(False)
+            return
+        if manager.config.is_placed(item.text()):
+            self.add_button.setEnabled(False)
+            self.del_button.setEnabled(True)
+            self.wset_button.setEnabled(True)
+            self.move_button.setEnabled(True)
+        else:
+            self.add_button.setEnabled(True)
+            self.del_button.setEnabled(False)
+            self.wset_button.setEnabled(False)
+            self.move_button.setEnabled(False)
+        if self.list.size().isEmpty():
+            self.edit_mode_checkbox.setEnabled(False)
+        elif manager.is_placed():
+            self.edit_mode_checkbox.setEnabled(True)
 
     def _add_widget(self):
         try:
@@ -201,6 +226,8 @@ class Main(QMainWindow):
             # edit config
             manager.config.add(widget.NAME)
             manager.config.save()
+            # changing enabled
+            self.__change_enabled()
         except:
             print(traceback.format_exc())
 
@@ -225,8 +252,6 @@ class Main(QMainWindow):
                 self.list.addItem(item)
             except:
                 print(traceback.format_exc())
-        if not self.list.size().isEmpty():
-            self.list.setCurrentRow(0)
 
     def _list_double_click(self):
         try:
@@ -240,6 +265,7 @@ class Main(QMainWindow):
 
     def _list_click(self):
         try:
+            self.__change_enabled()
             item = self.list.currentItem()
             if not item:  # check selected
                 self.statusBar().showMessage(lang['STATUS']['noselect'])
@@ -259,6 +285,7 @@ class Main(QMainWindow):
                     print(traceback.format_exc())
             if names:
                 self._list_fill()
+            self.__change_enabled()
         except:
             print(traceback.format_exc())
 
@@ -303,13 +330,10 @@ class Main(QMainWindow):
                 self.statusBar().showMessage(lang['STATUS']['noset'])
                 return
             # setup box
-            mbox = QMessageBox(self)
-            mbox.setIcon(QMessageBox.Question)
+            mbox = QMessageBox(QMessageBox.Question, lang['DELETE']['title'],
+                               lang['DELETE']['question'], QMessageBox.Yes |
+                               QMessageBox.No | QMessageBox.Cancel, self)
             mbox.setWindowIcon(QIcon(DELETE))
-            mbox.setWindowTitle(lang['DELETE']['title'])
-            mbox.setText(lang['DELETE']['question'])
-            mbox.setStandardButtons(QMessageBox.Yes | QMessageBox.No |
-                                    QMessageBox.Cancel)
             # setup 'Yes' button
             yes = mbox.button(QMessageBox.Yes)
             yes.setText(lang['DELETE']['yes'])
@@ -334,6 +358,8 @@ class Main(QMainWindow):
             font = item.font()
             font.setBold(False)
             item.setFont(font)
+            # changing enabled
+            self.__change_enabled()
         except:
             print(traceback.format_exc())
 
@@ -376,7 +402,7 @@ class Main(QMainWindow):
             for name in conf:
                 if name == 'DEFAULT':
                     continue
-                if conf[name]['placed'].lower() in ('true', 'yes', 'on'):
+                if manager.config.is_placed(name):
                     if manager.widgets[name].isHidden():
                         manager.widgets[name].hide_event(False)
                         manager.widgets[name].setHidden(False)
@@ -396,6 +422,7 @@ class Main(QMainWindow):
         try:
             manager.unload_hidden()
             self._list_fill()
+            self.__change_enabled()
         except:
             print(traceback.format_exc())
 
@@ -403,18 +430,19 @@ class Main(QMainWindow):
         try:
             manager.load_placed(False)
             self._list_fill()
+            self.__change_enabled()
         except:
             print(traceback.format_exc())
 
     def _reload(self):
         try:
             manager.unload_all()
-            if settings['MAIN']['load_placed'].lower() in ('true', 'yes', 'on'
-                                                           ):
+            if bool(strtobool(settings['MAIN']['load_placed'])):
                 manager.load_placed()
             else:
                 manager.load_all()
             self._list_fill()
+            self.__change_enabled()
         except:
             print(traceback.format_exc())
 
@@ -435,9 +463,9 @@ class ItemInfo(TextViewer):
         widget = manager.widgets[name]
         self.setWindowIcon(widget.ICON)
         kwargs = {
-            'name': name, 'description': widget.DESCRIPTION,
-            'author': widget.AUTHOR, 'email': widget.EMAIL,
-            'link': widget.URL, 'help': widget.HELP
+            'name': name, 'version': widget.VERSION,
+            'description': widget.DESCRIPTION, 'author': widget.AUTHOR,
+            'email': widget.EMAIL, 'link': widget.URL, 'help': widget.HELP
         }
         self.text.setHtml(lang['ITEM']['html'].format(**kwargs))
         # show
@@ -445,12 +473,9 @@ class ItemInfo(TextViewer):
 
 
 def _show_error():
-    mbox = QMessageBox()
-    mbox.setIcon(QMessageBox.Critical)
+    mbox = QMessageBox(QMessageBox.Critical, lang['RUNNING']['title'],
+                       lang['RUNNING']['text'], QMessageBox.Ok)
     mbox.setWindowIcon(QIcon(ERROR))
-    mbox.setWindowTitle(lang['RUNNING']['title'])
-    mbox.setText(lang['RUNNING']['text'])
-    mbox.setStandardButtons(QMessageBox.Ok)
     ok = mbox.button(QMessageBox.Ok)
     ok.setText(lang['RUNNING']['ok_button'])
     ok.setToolTip(lang['RUNNING']['ok_button_tt'])

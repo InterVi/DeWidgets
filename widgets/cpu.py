@@ -3,7 +3,8 @@ import traceback
 from distutils.util import strtobool
 import psutil
 from PyQt5.QtWidgets import QWidget, QLabel, QProgressBar, QPushButton
-from PyQt5.QtWidgets import QCheckBox, QHBoxLayout, QVBoxLayout, QSpinBox
+from PyQt5.QtWidgets import QCheckBox, QSpinBox
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer
 from core.manager import Widget
@@ -199,7 +200,7 @@ class Settings(QWidget):
         self.update_spinbox.setMaximum(86400000)
         self.update_spinbox.setValue(main._update)
         # setup round label
-        self.round_label = QLabel(self.lang['round_label'])
+        self.round_label = QLabel(self.lang['round_label'], self)
         self.round_label.setToolTip(self.lang['round_label_tt'])
         # setup round spinbox
         self.round_spinbox = QSpinBox(self)
@@ -235,28 +236,23 @@ class Settings(QWidget):
         self.cancel_button = QPushButton(self.lang['cancel_button'], self)
         self.cancel_button.setToolTip(self.lang['cancel_button_tt'])
         self.cancel_button.clicked.connect(self.close)
-        # setup update h box layout
+        # setup h box layout
         self.h_box = QHBoxLayout()
-        self.h_box.addWidget(self.update_label)
-        self.h_box.addWidget(self.update_spinbox)
-        # setup round h box layout
-        self.h_box2 = QHBoxLayout()
-        self.h_box2.addWidget(self.round_label)
-        self.h_box2.addWidget(self.round_spinbox)
-        # setup buttons h box layout
-        self.h_box3 = QHBoxLayout()
-        self.h_box3.addWidget(self.save_button)
-        self.h_box3.addWidget(self.cancel_button)
-        # setup v box layout
-        self.v_box = QVBoxLayout(self)
-        self.v_box.addLayout(self.h_box)
-        self.v_box.addLayout(self.h_box2)
-        self.v_box.addWidget(self.percpu_checkbox)
-        self.v_box.addWidget(self.percent_checkbox)
-        self.v_box.addWidget(self.freq_checkbox)
-        self.v_box.addWidget(self.labels_checkbox)
-        self.v_box.addWidget(self.text_checkbox)
-        self.v_box.addLayout(self.h_box3)
+        self.h_box.addWidget(self.save_button)
+        self.h_box.addWidget(self.cancel_button)
+        # setup layout
+        self.grid = QGridLayout(self)
+        self.grid.addWidget(self.update_label, 0, 0)
+        self.grid.addWidget(self.update_spinbox, 0, 1)
+        self.grid.addWidget(self.round_label, 1, 0)
+        self.grid.addWidget(self.round_spinbox, 1, 1)
+        self.grid.addWidget(self.percpu_checkbox, 2, 0, 1, 2)
+        self.grid.addWidget(self.percent_checkbox, 3, 0, 1, 2)
+        self.grid.addWidget(self.freq_checkbox, 4, 0, 1, 2)
+        self.grid.addWidget(self.labels_checkbox, 5, 0, 1, 2)
+        self.grid.addWidget(self.text_checkbox, 6, 0, 1, 2)
+        self.grid.addLayout(self.h_box, 7, 0, 1, 2)
+        self.setLayout(self.grid)
         # show
         self.show()
 

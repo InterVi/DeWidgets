@@ -6,6 +6,7 @@ import traceback
 from distutils.util import strtobool
 from configparser import ConfigParser
 from importlib.machinery import SourceFileLoader
+from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 import widgets as w
@@ -23,6 +24,7 @@ class Widget:
     def __init__(self, widget_manager):
         self.widget_manager = widget_manager
         self.NAME = 'none'
+        self.VERSION = '1.0'
         self.DESCRIPTION = 'none'
         self.HELP = 'none'
         self.AUTHOR = 'none'
@@ -144,6 +146,10 @@ class WidgetManager:
                 del sys.modules[name]
                 return
             widget = mod.Main(self)
+            if not isinstance(widget, Widget) or\
+                    not isinstance(widget, QWidget):
+                del sys.modules[name]
+                return
             widget.load()
             widget.setWindowFlags(Qt.CustomizeWindowHint |
                                   Qt.WindowStaysOnBottomHint | Qt.Tool)
@@ -235,6 +241,16 @@ class WidgetManager:
         for name in list(self.widgets.keys()):
             if self.widgets[name].isHidden():
                 self.unload(name)
+
+    def is_placed(self) -> bool:
+        """Check the presence of widgets on the desktop.
+
+        :return: True if at least one placed
+        """
+        for widget in self.widgets.values():
+            if widget.isVisible():
+                return True
+        return False
 
     def edit_mode(self, mode, name=None) -> bool:
         """Call widget event and save config.
