@@ -52,7 +52,7 @@ class DTime(QWidget):
     def __init__(self, main, index):
         """
 
-        :param main: Main class
+        :param main: Main object
         :param index: int, index in lists
         """
         # init
@@ -316,7 +316,7 @@ class Settings(QWidget):
     def __init__(self, main):
         """
 
-        :param main: Main class
+        :param main: Main object
         """
         QWidget.__init__(self)
         self.main = main
@@ -521,7 +521,7 @@ class TimeEdit(QWidget):
     def __init__(self, settings, element):
         """
 
-        :param settings: Settings class
+        :param settings: Settings object
         :param element: int, index in lists
         """
         # init

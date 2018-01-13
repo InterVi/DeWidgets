@@ -219,9 +219,9 @@ class ShowMore(TextViewer):
             self.__info_buffer['brand'] = ''
             self.__info_buffer['plugins'] = ''
             config = self.main.widget_manager.config.config
-            if 'servers' not in config[self.main.NAME]:
+            if 'servers' not in config[self.main.info.NAME]:
                 return
-            servers = json.loads(config[self.main.NAME]['servers'])
+            servers = json.loads(config[self.main.info.NAME]['servers'])
             if not servers:
                 return
             addr = servers[self.main.list.currentRow()]
@@ -383,8 +383,8 @@ class Settings(QWidget):
                 self.main.update_timer.start(self.main.timer_interval)
             else:
                 self.main.timer_interval = 0
-            self.main.widget_manager.config.config[self.main.NAME]['timer'] =\
-                str(self.main.timer_interval)
+            self.main.widget_manager.config.config[
+                self.main.info.NAME]['timer'] = str(self.main.timer_interval)
             self.main.widget_manager.config.save()
         except:
             print(traceback.format_exc())
@@ -400,7 +400,7 @@ class Settings(QWidget):
                 row += 1
             else:
                 return
-            self.main.widget_manager.config.config[self.main.NAME][
+            self.main.widget_manager.config.config[self.main.info.NAME][
                 'servers'] = json.dumps(self.main.servers)
             self.main.widget_manager.config.save()
             self.main._list_fill()
@@ -436,7 +436,7 @@ class Settings(QWidget):
                               ['confirm_cancel_button_tt'])
             if mbox.exec() == QMessageBox.Ok:
                 del self.main.servers[self.list.currentRow()]
-                self.main.widget_manager.config.config[self.main.NAME][
+                self.main.widget_manager.config.config[self.main.info.NAME][
                     'servers'] = json.dumps(self.main.servers)
                 self.main.widget_manager.config.save()
                 self.main._list_fill()
@@ -462,8 +462,8 @@ class Settings(QWidget):
                     self._show_error()
                 else:
                     self.main.servers.append(text)
-                    self.main.widget_manager.config.config[self.main.NAME][
-                        'servers'] = json.dumps(self.main.servers)
+                    self.main.widget_manager.config.config[
+                        self.main.info.NAME]['servers'] = json.dumps(self.main.servers)
                     self.main.widget_manager.config.save()
                     self.main._list_fill()
                     self._list_fill()

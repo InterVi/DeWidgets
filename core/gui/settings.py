@@ -17,7 +17,7 @@ class Settings(QWidget):
         """
 
         :param lang: dict, current locale
-        :param main: core.gui.gui.Main class
+        :param main: core.gui.gui.Main object
         :param settings: dict, current settings
         """
         super().__init__()

@@ -25,11 +25,11 @@ lang = ConfigParser()
 c_lang = ConfigParser()
 """ConfigParser, locale dict for custom widgets"""
 manager = WidgetManager(lang, c_lang, sys.modules[__name__])
-"""WidgetManager"""
+"""WidgetManager object"""
 app = None
-"""QApplication"""
+"""QApplication object"""
 main = None
-"""Main class"""
+"""Main object"""
 
 
 def __init__(main_app):
@@ -62,7 +62,7 @@ def __init__(main_app):
     main = Main()
     add_new.__init__(lang, main)
     # load widgets
-    if settings['MAIN']['load_placed'].lower() in ('true', 'yes', 'on'):
+    if bool(strtobool(settings['MAIN']['load_placed'])):
         manager.load_placed()  # placed only
     else:
         manager.load_all()  # all widgets
@@ -207,12 +207,6 @@ class Main(QMainWindow):
         try:
             # change item font
             item = self.list.currentItem()
-            if not item:  # check selected
-                self.statusBar().showMessage(lang['STATUS']['noselect'])
-                return
-            if manager.config.is_placed(item.text()):  # check exists
-                self.statusBar().showMessage(lang['STATUS']['exists'])
-                return
             font = item.font()
             font.setBold(True)
             item.setFont(font)
@@ -257,23 +251,15 @@ class Main(QMainWindow):
 
     def _list_double_click(self):
         try:
-            item = self.list.currentItem()
-            if not item:  # check selected
-                self.statusBar().showMessage(lang['STATUS']['noselect'])
-                return
-            self.item_info = ItemInfo(item.text())
+            self.item_info = ItemInfo(self.list.currentItem())
         except:
             print(traceback.format_exc())
 
     def _list_click(self):
         try:
             self.__change_enabled()
-            item = self.list.currentItem()
-            if not item:  # check selected
-                self.statusBar().showMessage(lang['STATUS']['noselect'])
-                return
             self.statusBar().showMessage(
-                manager.info[item.text()].DESCRIPTION)
+                manager.info[self.list.currentItem().text()].DESCRIPTION)
         except:
             print(traceback.format_exc())
 
@@ -325,12 +311,6 @@ class Main(QMainWindow):
         try:
             # check item
             item = self.list.currentItem()
-            if not item:  # check selected
-                self.statusBar().showMessage(lang['STATUS']['noselect'])
-                return
-            if not manager.config.is_placed(item.text()):  # check exists
-                self.statusBar().showMessage(lang['STATUS']['noset'])
-                return
             # setup box
             mbox = QMessageBox(QMessageBox.Question, lang['DELETE']['title'],
                                lang['DELETE']['question'], QMessageBox.Yes |
@@ -367,27 +347,14 @@ class Main(QMainWindow):
 
     def _show_widget_settings(self):
         try:
-            item = self.list.currentItem()
-            if not item:  # check selected
-                self.statusBar().showMessage(lang['STATUS']['noselect'])
-                return
-            if not manager.config.is_placed(item.text()):  # check exists
-                self.statusBar().showMessage(lang['STATUS']['noset'])
-                return
-            manager.widgets[item.text()].show_settings()
+            manager.widgets[self.list.currentItem().text()].show_settings()
         except:
             print(traceback.format_exc())
 
     def _show_move(self):
         try:
-            item = self.list.currentItem()
-            if not item:  # check selected
-                self.statusBar().showMessage(lang['STATUS']['noselect'])
-                return
-            if not manager.config.is_placed(item.text()):  # check exists
-                self.statusBar().showMessage(lang['STATUS']['noset'])
-                return
-            self.move_window = Move(manager.widgets[item.text()], manager)
+            self.move_window = Move(
+                manager.widgets[self.list.currentItem().text()], manager)
         except:
             print(traceback.format_exc())
 
@@ -401,16 +368,15 @@ class Main(QMainWindow):
     def _hide_widgets(self):
         try:
             for name in manager.widgets:
-                if manager.config.is_placed(name):
-                    try:
-                        if manager.widgets[name].isHidden():
-                            manager.widgets[name].hide_event(False)
-                            manager.widgets[name].setHidden(False)
-                        else:
-                            manager.widgets[name].hide_event(True)
-                            manager.widgets[name].setHidden(True)
-                    except:
-                        print(traceback.format_exc())
+                try:
+                    if manager.widgets[name].isHidden():
+                        manager.widgets[name].hide_event(False)
+                        manager.widgets[name].setHidden(False)
+                    else:
+                        manager.widgets[name].hide_event(True)
+                        manager.widgets[name].setHidden(True)
+                except:
+                    print(traceback.format_exc())
         except:
             print(traceback.format_exc())
 

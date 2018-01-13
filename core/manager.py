@@ -20,7 +20,7 @@ CUSTOM_WIDGETS = SourceFileLoader('__init__',
 
 
 class WidgetInfo:
-    """widget information (mandatory inheritance for Main class)"""
+    """widget information"""
     def __init__(self, lang):
         """
 
@@ -40,6 +40,11 @@ class WidgetInfo:
 class Widget:
     """the class is inherited by widgets"""
     def __init__(self, widget_manager, info):
+        """
+
+        :param widget_manager: WidgetManager object
+        :param info: WidgetInfo object
+        """
         self.widget_manager = widget_manager
         self.info = info
 
@@ -104,15 +109,15 @@ class WidgetManager:
         self.c_lang = c_lang
         """ConfigParser dict, current locale for custom widgets"""
         self.widgets = {}
-        """Widgets dict, key - name, value - widget object (Main class)."""
+        """Widgets dict, key - name, value - widget object (Main object)."""
         self.info = {}
-        """WidgetInfo dict, key - name, value - WidgetInfo class"""
+        """WidgetInfo dict, key - name, value - WidgetInfo object"""
         self.custom_widgets = []
         """Custom widgets names list."""
         self.paths = {}
         """Paths to widget files. Keys - names, values - paths to files."""
         self.config = ConfigManager(self)
-        """ConfigManager class"""
+        """ConfigManager object"""
         self.main_gui = main
         """core.gui.gui module"""
 
@@ -151,11 +156,12 @@ class WidgetManager:
             if name not in sys.modules:
                 self.load(name)
 
-    def load(self, name, only_info=True):
+    def load(self, name, only_info=True) -> bool:
         """Load widget from module.
 
         :param name: str, module name
         :param only_info: bool, if True - load only WidgetInfo classes
+        :return: True if load correctly
         """
         try:
             if name in sys.modules:  # get module
@@ -165,18 +171,18 @@ class WidgetManager:
             # validate
             if 'not_loading' in mod.__dict__ and mod.__dict__['not_loading']:
                 del sys.modules[name]
-                return
+                return False
             if 'Main' not in mod.__dict__ or not callable(mod.Main):
                 del sys.modules[name]
-                return
+                return False
             if 'Info' not in mod.__dict__ or not callable(mod.WidgetInfo):
                 del sys.modules[name]
-                return
+                return False
             # get and validate WidgetInfo
             info = mod.Info(self.lang)
             if not isinstance(info, WidgetInfo):
                 del sys.modules[name]
-                return
+                return False
             # fill data
             if os.path.dirname(mod.__file__) == C_WIDGETS and\
                     info.NAME not in self.custom_widgets:
@@ -184,13 +190,13 @@ class WidgetManager:
             self.info[info.NAME] = info
             self.paths[info.NAME] = mod.__file__
             if only_info and not self.config.is_placed(info.NAME):
-                return
+                return True
             # validate Widget
             widget = mod.Main(self, info)
             if not isinstance(widget, Widget) or\
                     not isinstance(widget, QWidget):
                 del sys.modules[name]
-                return
+                return False
             # load Main class
             widget.load()
             widget.setWindowFlags(Qt.CustomizeWindowHint |
@@ -199,10 +205,12 @@ class WidgetManager:
             widget.setWindowIcon(info.ICON)
             self.widgets[info.NAME] = widget
             self.config.load(info.NAME)
+            return True
         except:
             print(traceback.format_exc())
             if name in sys.modules:
                 del sys.modules[name]
+            return False
 
     def remove(self, name, reminconf=False):
         """Remove widget from desktop.
@@ -328,8 +336,6 @@ class WidgetManager:
         """
         def save(widget):
             try:
-                if widget.isHidden():
-                    return
                 widget.edit_mode(mode)
                 if not mode:
                     self.config.add(widget.info.NAME)

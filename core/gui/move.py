@@ -13,7 +13,7 @@ class Move(QWidget):
         """
 
         :param window: QWidget
-        :param manager: WidgetManager class
+        :param manager: WidgetManager object
         """
         super().__init__()
         # vars

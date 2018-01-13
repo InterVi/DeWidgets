@@ -34,7 +34,7 @@ class Delete(QWidget):
         """
 
         :param locale: dict, current locale
-        :param manager: WidgetManager class
+        :param manager: WidgetManager object
         """
         # init
         QWidget.__init__(self)
@@ -104,20 +104,14 @@ class Delete(QWidget):
     def _list_click(self):
         try:
             self.__change_enabled()
-            item = self.w_list.currentItem()
-            if not item:
-                self.h_label.setText(self.lang['no_select'])
-                return
-            self.h_label.setText(self.manager.info[item.text()].DESCRIPTION)
+            self.h_label.setText(
+                self.manager.info[self.w_list.currentItem().text()].DESCRIPTION)
         except:
             print(traceback.format_exc())
 
     def _list_double_click(self):
         try:
             item = self.w_list.currentItem()
-            if not item:
-                self.h_label.setText(self.lang['no_select'])
-                return
             self.item_info = sys.modules['core.gui.gui'].ItemInfo(item.text())
         except:
             print(traceback.format_exc())
@@ -126,9 +120,6 @@ class Delete(QWidget):
         try:
             # check item
             item = self.w_list.currentItem()
-            if not item:  # check selected
-                self.h_label.setText(self.lang['no_select'])
-                return
             # create message box
             mbox = QMessageBox(QMessageBox.Question,
                                self.lang['del_mbox_title'],
@@ -160,9 +151,9 @@ class ArchDelete(QWidget):
     def __init__(self, main, locale, manager):
         """
 
-        :param main: Delete class
+        :param main: Delete object
         :param locale: dict, current locale
-        :param manager: WidgetManager class
+        :param manager: WidgetManager object
         """
         # init
         QWidget.__init__(self)
@@ -224,20 +215,13 @@ class ArchDelete(QWidget):
     def _list_click(self):
         try:
             self.__change_enabled()
-            item = self.w_list.currentItem()
-            if not item:
-                self.h_label.setText(self.lang['no_select'])
-                return
-            self.h_label.setText(item.toolTip())
+            self.h_label.setText(self.w_list.currentItem().toolTip())
         except:
             print(traceback.format_exc())
 
     def _list_double_click(self):
         try:
             item = self.w_list.currentItem()
-            if not item:
-                self.h_label.setText(self.lang['no_select'])
-                return
             self.arch_info = ArchInfo(self.locale, item.toolTip(),
                                       self.archives[item.toolTip()])
         except:
@@ -246,9 +230,6 @@ class ArchDelete(QWidget):
     def _delete(self):
         try:
             item = self.w_list.currentItem()
-            if not item:
-                self.h_label.setText(self.lang['no_select'])
-                return
             # create message box
             mbox = QMessageBox(QMessageBox.Question,
                                self.lang['del_mbox_title'],

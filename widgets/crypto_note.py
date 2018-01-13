@@ -268,7 +268,7 @@ class Note(QWidget):
     def __init__(self, main, password=None, hexpass=None):
         """
 
-        :param main: Main class
+        :param main: Main object
         :param password: str, raw text password
         :param hexpass: str, sha256 hex from text password
         """
@@ -384,7 +384,7 @@ class Settings(QWidget):
     def __init__(self, main):
         """
 
-        :param main: Main class
+        :param main: Main object
         """
         # init
         QWidget.__init__(self)
