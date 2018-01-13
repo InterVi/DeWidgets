@@ -25,6 +25,7 @@ class Settings(QWidget):
         self.main = main
         self.settings = settings
         self._items = {}
+        self._changed = False
         # setup window
         self.setWindowTitle(lang['SETTINGS']['title'])
         self.setWindowIcon(QIcon(SETTINGS))
@@ -34,13 +35,14 @@ class Settings(QWidget):
         # setup languages list
         self.language = QComboBox(self)
         self.language.setToolTip(lang['SETTINGS']['language_tt'])
-        self.language.activated.connect(self._item_select)
+        self.language.activated.connect(self._change_settings)
         self._box_fill()
         # setup 'Load placed' checkbox
         self.load_placed = QCheckBox(lang['SETTINGS']['load_placed'], self)
         self.load_placed.setToolTip(lang['SETTINGS']['load_placed_tt'])
         if settings['MAIN']['load_placed'].lower() in ('true', 'yes', 'on'):
             self.load_placed.setChecked(True)
+        self.load_placed.stateChanged.connect(self._change_settings)
         # setup 'Languages' lebel
         self.label = QLabel(lang['SETTINGS']['label'], self)
         self.label.setAlignment(Qt.AlignCenter)
@@ -72,6 +74,9 @@ class Settings(QWidget):
         # show
         self.show()
 
+    def _change_settings(self):
+        self._changed = True
+
     def _box_fill(self):
         for name in os.listdir(LANGS):
             try:
@@ -98,13 +103,6 @@ class Settings(QWidget):
             except:
                 print(traceback.format_exc())
 
-    def _item_select(self):
-        try:
-            # item = self._items[self.language.currentText()]
-            pass
-        except:
-            print(traceback.format_exc())
-
     def _save(self):
         try:
             self.settings['MAIN']['locale'] =\
@@ -113,7 +111,8 @@ class Settings(QWidget):
                 str(self.load_placed.isChecked())
             with open(CONF_SETTINGS, 'w') as file:
                 self.settings.write(file)
-            self._show_warn()
+            if self._changed:
+                self._show_warn()
             self.main._list_fill()
             # strange bug: open from tray (main win hide),
             # call self.close() -> exit app
