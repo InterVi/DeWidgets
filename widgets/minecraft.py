@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QMenu, QPushButton, QMessageBox, QGridLayout
 from PyQt5.QtWidgets import QInputDialog, QSpinBox, QLabel
 from PyQt5.QtGui import QIcon, QPixmap, QImage
 from PyQt5.QtCore import Qt, QSize, QTimer
-from core.manager import Widget
+from core.manager import Widget, WidgetInfo
 from core.gui.help import TextViewer
 from core.paths import RES, RELOAD, SETTINGS, ERROR, DELETE, HELP
 
@@ -25,14 +25,10 @@ def get_description(desc) -> str:
     return result
 
 
-class Main(Widget, QWidget):
-    def __init__(self, widget_manager):
-        Widget.__init__(self, widget_manager)
-        QWidget.__init__(self)
-        self.servers = []
-        self.timer_interval = 30000
-        self.lang = widget_manager.lang['MINECRAFT']
-        # setup widget
+class Info(WidgetInfo):
+    def __init__(self, lang):
+        WidgetInfo.__init__(self, lang)
+        self.lang = lang['MINECRAFT']
         self.NAME = 'Minecraft Servers Monitoring'
         self.DESCRIPTION = self.lang['description']
         self.HELP = self.lang['help']
@@ -41,6 +37,15 @@ class Main(Widget, QWidget):
         self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(sys.path[0], 'res', 'minecraft',
                                        'minecraft.png'))
+
+
+class Main(Widget, QWidget):
+    def __init__(self, widget_manager, info):
+        Widget.__init__(self, widget_manager, info)
+        QWidget.__init__(self)
+        self.servers = []
+        self.timer_interval = 30000
+        self.lang = info.lang
         # setup stylesheet
         with open(os.path.join(RES, 'minecraft', 'style.css'), encoding='utf-8'
                   ) as file:
@@ -124,7 +129,7 @@ class Main(Widget, QWidget):
                 print(traceback.format_exc())
 
     def _fill_settings(self):
-        section = self.widget_manager.config.config[self.NAME]
+        section = self.widget_manager.get_config(self.info.NAME)
         if 'servers' in section:
             self.servers = json.loads(section['servers'])
         if 'timer' in section:

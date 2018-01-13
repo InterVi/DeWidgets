@@ -96,11 +96,11 @@ class Main(QMainWindow):
         load_action = self.list_menu.addAction(QIcon(LOAD),
                                                lang['LIST_MENU']['load'])
         load_action.setToolTip(lang['LIST_MENU']['load_tt'])
-        load_action.triggered.connect(self._load_hidden)
+        load_action.triggered.connect(self._load_not_placed)
         unload_action = self.list_menu.addAction(QIcon(UNLOAD),
                                                  lang['LIST_MENU']['unload'])
         unload_action.setToolTip(lang['LIST_MENU']['unload_tt'])
-        unload_action.triggered.connect(self._unload_hidden)
+        unload_action.triggered.connect(self._unload_not_placed)
         self.list_menu.addSeparator()
         reload_action = self.list_menu.addAction(QIcon(RELOAD),
                                                  lang['LIST_MENU']['reload'])
@@ -210,7 +210,7 @@ class Main(QMainWindow):
             if not item:  # check selected
                 self.statusBar().showMessage(lang['STATUS']['noselect'])
                 return
-            if not manager.widgets[item.text()].isHidden():  # check exists
+            if manager.config.is_placed(item.text()):  # check exists
                 self.statusBar().showMessage(lang['STATUS']['exists'])
                 return
             font = item.font()
@@ -218,13 +218,15 @@ class Main(QMainWindow):
             item.setFont(font)
             # setup widget
             manager.config.create(item.text())
+            manager.load(os.path.basename(manager.paths[item.text()])[:-3],
+                         False)
             widget = manager.widgets[item.text()]
             widget.place()
             widget.setWindowFlags(Qt.CustomizeWindowHint |
                                   Qt.WindowStaysOnBottomHint | Qt.Tool)
             widget.show()
             # edit config
-            manager.config.add(widget.NAME)
+            manager.config.add(widget.info.NAME)
             manager.config.save()
             # changing enabled
             self.__change_enabled()
@@ -239,13 +241,13 @@ class Main(QMainWindow):
 
     def _list_fill(self):
         self.list.clear()
-        for widget in manager.widgets.values():
+        for info in manager.info.values():
             try:
                 item = QListWidgetItem(self.list)
-                item.setIcon(widget.ICON)
-                item.setText(widget.NAME)
-                item.setToolTip(widget.DESCRIPTION)
-                if manager.config.is_placed(widget.NAME):
+                item.setIcon(info.ICON)
+                item.setText(info.NAME)
+                item.setToolTip(info.DESCRIPTION)
+                if manager.config.is_placed(info.NAME):
                     font = item.font()
                     font.setBold(True)
                     item.setFont(font)
@@ -271,7 +273,7 @@ class Main(QMainWindow):
                 self.statusBar().showMessage(lang['STATUS']['noselect'])
                 return
             self.statusBar().showMessage(
-                manager.widgets[item.text()].DESCRIPTION)
+                manager.info[item.text()].DESCRIPTION)
         except:
             print(traceback.format_exc())
 
@@ -326,7 +328,7 @@ class Main(QMainWindow):
             if not item:  # check selected
                 self.statusBar().showMessage(lang['STATUS']['noselect'])
                 return
-            if manager.widgets[item.text()].isHidden():  # check exists
+            if not manager.config.is_placed(item.text()):  # check exists
                 self.statusBar().showMessage(lang['STATUS']['noset'])
                 return
             # setup box
@@ -369,7 +371,7 @@ class Main(QMainWindow):
             if not item:  # check selected
                 self.statusBar().showMessage(lang['STATUS']['noselect'])
                 return
-            if manager.widgets[item.text()].isHidden():  # check exists
+            if not manager.config.is_placed(item.text()):  # check exists
                 self.statusBar().showMessage(lang['STATUS']['noset'])
                 return
             manager.widgets[item.text()].show_settings()
@@ -382,7 +384,7 @@ class Main(QMainWindow):
             if not item:  # check selected
                 self.statusBar().showMessage(lang['STATUS']['noselect'])
                 return
-            if manager.widgets[item.text()].isHidden():  # check exists
+            if not manager.config.is_placed(item.text()):  # check exists
                 self.statusBar().showMessage(lang['STATUS']['noset'])
                 return
             self.move_window = Move(manager.widgets[item.text()], manager)
@@ -398,17 +400,17 @@ class Main(QMainWindow):
 
     def _hide_widgets(self):
         try:
-            conf = manager.config.config
-            for name in conf:
-                if name == 'DEFAULT':
-                    continue
+            for name in manager.widgets:
                 if manager.config.is_placed(name):
-                    if manager.widgets[name].isHidden():
-                        manager.widgets[name].hide_event(False)
-                        manager.widgets[name].setHidden(False)
-                    else:
-                        manager.widgets[name].hide_event(True)
-                        manager.widgets[name].setHidden(True)
+                    try:
+                        if manager.widgets[name].isHidden():
+                            manager.widgets[name].hide_event(False)
+                            manager.widgets[name].setHidden(False)
+                        else:
+                            manager.widgets[name].hide_event(True)
+                            manager.widgets[name].setHidden(True)
+                    except:
+                        print(traceback.format_exc())
         except:
             print(traceback.format_exc())
 
@@ -418,15 +420,15 @@ class Main(QMainWindow):
         except:
             print(traceback.format_exc())
 
-    def _unload_hidden(self):
+    def _unload_not_placed(self):
         try:
-            manager.unload_hidden()
+            manager.del_data_no_placed()
             self._list_fill()
             self.__change_enabled()
         except:
             print(traceback.format_exc())
 
-    def _load_hidden(self):
+    def _load_not_placed(self):
         try:
             manager.load_placed(False)
             self._list_fill()
@@ -460,12 +462,12 @@ class ItemInfo(TextViewer):
         super().__init__(name, lang['ITEM']['exit_button'],
                          lang['ITEM']['exit_button_tt'])
         # setup
-        widget = manager.widgets[name]
-        self.setWindowIcon(widget.ICON)
+        info = manager.info[name]
+        self.setWindowIcon(info.ICON)
         kwargs = {
-            'name': name, 'version': widget.VERSION,
-            'description': widget.DESCRIPTION, 'author': widget.AUTHOR,
-            'email': widget.EMAIL, 'link': widget.URL, 'help': widget.HELP
+            'name': name, 'version': info.VERSION,
+            'description': info.DESCRIPTION, 'author': info.AUTHOR,
+            'email': info.EMAIL, 'link': info.URL, 'help': info.HELP
         }
         self.text.setHtml(lang['ITEM']['html'].format(**kwargs))
         # show

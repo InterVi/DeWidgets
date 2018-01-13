@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QColorDialog, QMessageBox
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout
 from PyQt5.QtGui import QIcon, QColor, QPalette
 from PyQt5.QtCore import Qt, QTimer
-from core.manager import Widget
+from core.manager import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, SUCCESS, DELETE
 
@@ -75,9 +75,8 @@ class DTime(QWidget):
     def _init(self):
         try:
             name = self.main.names[self.index]
-            self.setWindowIcon(self.main.ICON)
+            self.setWindowIcon(self.main.info.ICON)
             if self.index > 0:
-                self.NAME = name
                 self.setWindowTitle(name)
                 if len(self.main.sizes) >= self.index:
                     size = self.main.sizes[self.index-1]
@@ -122,14 +121,10 @@ class DTime(QWidget):
             print(traceback.format_exc())
 
 
-class Main(Widget, DTime):
-    def __init__(self, widget_manager):
-        # init
-        Widget.__init__(self, widget_manager)
-        DTime.__init__(self, self, 0)
-        self.lang = widget_manager.lang['DIGITAL_TIME']
-        self.conf = None
-        # setup widget
+class Info(WidgetInfo):
+    def __init__(self, lang):
+        WidgetInfo.__init__(self, lang)
+        self.lang = lang['DIGITAL_TIME']
         self.NAME = 'Digital Time'
         self.DESCRIPTION = self.lang['description']
         self.HELP = self.lang['help']
@@ -137,6 +132,15 @@ class Main(Widget, DTime):
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(RES, 'dtime', 'icon.png'))
+
+
+class Main(Widget, DTime):
+    def __init__(self, widget_manager, info):
+        # init
+        Widget.__init__(self, widget_manager, info)
+        DTime.__init__(self, self, 0)
+        self.conf = {}
+        self.lang = info.lang
         # setup timer
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._timeout)
@@ -159,7 +163,7 @@ class Main(Widget, DTime):
 
     def _load_settings(self):
         try:
-            self.conf = self.widget_manager.config.config[self.NAME]
+            self.conf = self.widget_manager.get_config(self.info.NAME)
             if 'times' in self.conf:
                 self.times = json.loads(
                     base64.b64decode(self.conf['times']).decode('utf-8'))

@@ -7,18 +7,14 @@ from PyQt5.QtWidgets import QCheckBox, QSpinBox
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer
-from core.manager import Widget
+from core.manager import Widget, WidgetInfo
 from core.paths import RES, SETTINGS
 
 
-class Main(Widget, QWidget):
-    def __init__(self, widget_manager):
-        # init
-        Widget.__init__(self, widget_manager)
-        QWidget.__init__(self)
-        self.lang = widget_manager.lang['CPU_INFO']
-        self.conf = {}
-        # setup widget
+class Info(WidgetInfo):
+    def __init__(self, lang):
+        WidgetInfo.__init__(self, lang)
+        self.lang = lang['CPU_INFO']
         self.NAME = 'CPU Info'
         self.DESCRIPTION = self.lang['description']
         self.HELP = self.lang['help']
@@ -26,6 +22,15 @@ class Main(Widget, QWidget):
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(RES, 'cpu', 'icon.png'))
+
+
+class Main(Widget, QWidget):
+    def __init__(self, widget_manager, info):
+        # init
+        Widget.__init__(self, widget_manager, info)
+        QWidget.__init__(self)
+        self.conf = {}
+        self.lang = info.lang
         # setup stylesheet
         with open(os.path.join(RES, 'cpu', 'style.css'), encoding='utf-8'
                   ) as file:
@@ -113,7 +118,7 @@ class Main(Widget, QWidget):
 
     def _load_settings(self):
         try:
-            self.conf = self.widget_manager.config.config[self.NAME]
+            self.conf = self.widget_manager.get_config(self.info.NAME)
             if 'update' in self.conf:
                 self._update = int(self.conf['update'])
             if 'round' in self.conf:

@@ -83,15 +83,15 @@ class Delete(QWidget):
     def _list_fill(self):
         try:
             self.w_list.clear()
-            for widget in self.manager.widgets.values():
+            for info in self.manager.info.values():
                 try:
-                    if widget.NAME not in self.manager.custom_widgets:
+                    if info.NAME not in self.manager.custom_widgets:
                         continue
                     item = QListWidgetItem(self.w_list)
-                    item.setIcon(widget.ICON)
-                    item.setText(widget.NAME)
-                    item.setToolTip(widget.DESCRIPTION)
-                    if self.manager.config.is_placed(widget.NAME):
+                    item.setIcon(info.ICON)
+                    item.setText(info.NAME)
+                    item.setToolTip(info.DESCRIPTION)
+                    if self.manager.config.is_placed(info.NAME):
                         font = item.font()
                         font.setBold(True)
                         item.setFont(font)
@@ -108,7 +108,7 @@ class Delete(QWidget):
             if not item:
                 self.h_label.setText(self.lang['no_select'])
                 return
-            self.h_label.setText(self.manager.widgets[item.text()].DESCRIPTION)
+            self.h_label.setText(self.manager.info[item.text()].DESCRIPTION)
         except:
             print(traceback.format_exc())
 

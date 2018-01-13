@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QListWidgetItem, QCheckBox, QMessageBox, QComboBox
 from PyQt5.QtWidgets import QLabel, QGridLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
-from core.manager import Widget
+from core.manager import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, DELETE, SUCCESS
 
@@ -18,13 +18,10 @@ class Note(QWidget):
         self.main = main
         self.index = index
         # setup window
-        self.setWindowIcon(main.ICON)
+        self.setWindowIcon(main.info.ICON)
         if index > 0:
             self.setWindowFlags(Qt.CustomizeWindowHint |
                                 Qt.WindowStaysOnBottomHint | Qt.Tool)
-            self.NAME = 'Note'
-        else:
-            self.NAME = main.NAME
         # setup text edit
         self.text_edit = QTextEdit(self)
         self.text_edit.textChanged.connect(self._text_changed)
@@ -47,9 +44,7 @@ class Note(QWidget):
                 self.text_edit.setPlainText(self.main.notes[self.index])
                 self.setWindowTitle(self.text_edit.toPlainText()[:40].strip())
             else:
-                self.setWindowTitle(self.main.NAME)
-            if self.index:
-                self.NAME = self.windowTitle()
+                self.setWindowTitle(self.main.info.NAME)
         except:
             print(traceback.format_exc())
 
@@ -63,14 +58,10 @@ class Note(QWidget):
             print(traceback.format_exc())
 
 
-class Main(Widget, Note):
-    def __init__(self, widget_manager):
-        # init
-        Widget.__init__(self, widget_manager)
-        Note.__init__(self, self, 0)
-        self.lang = widget_manager.lang['NOTES']
-        self.conf = None
-        # setup widget
+class Info(WidgetInfo):
+    def __init__(self, lang):
+        WidgetInfo.__init__(self, lang)
+        self.lang = lang['NOTES']
         self.NAME = 'Simple Notes'
         self.DESCRIPTION = self.lang['description']
         self.HELP = self.lang['help']
@@ -78,6 +69,15 @@ class Main(Widget, Note):
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(RES, 'notes', 'icon.png'))
+
+
+class Main(Widget, Note):
+    def __init__(self, widget_manager, info):
+        # init
+        Widget.__init__(self, widget_manager, info)
+        Note.__init__(self, self, 0)
+        self.conf = {}
+        self.lang = info.lang
         # setup vars
         self.__setup_vars()
 
@@ -125,7 +125,7 @@ class Main(Widget, Note):
 
     def _load_settings(self):
         try:
-            self.conf = self.widget_manager.config.config[self.NAME]
+            self.conf = self.widget_manager.get_config(self.info.NAME)
             if 'notes' in self.conf:
                 self.notes.clear()
                 b_notes = json.loads(self.conf['notes'])
@@ -345,7 +345,7 @@ class Settings(QWidget):
                 self.main.widgets[0].destroy()
                 del self.main.widgets[0]
                 self.main.show()
-                self.main.widget_manager.edit_mode(False, self.main.NAME)
+                self.main.widget_manager.edit_mode(False, self.main.info.NAME)
             else:  # remove child win
                 del self.main.notes[row]
                 del self.main.styles[row]
@@ -392,7 +392,7 @@ class NoteSettings(QWidget):
         # setup window
         self.setWindowTitle(main.lang['item_title'].format(settings.list.item(
             settings.list.currentRow()).text()))
-        self.setWindowIcon(main.ICON)
+        self.setWindowIcon(main.info.ICON)
         self.resize(400, 400)
         # setup text edit
         self.text_edit = QTextEdit(self)

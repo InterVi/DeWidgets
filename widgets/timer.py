@@ -10,21 +10,14 @@ from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, Qt, QUrl
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from core.manager import Widget
+from core.manager import Widget, WidgetInfo
 from core.paths import RES, SETTINGS, PLAY, PAUSE, STOP, SUCCESS
 
 
-class Main(Widget, QWidget):
-    def __init__(self, widget_manager):
-        # init
-        Widget.__init__(self, widget_manager)
-        QWidget.__init__(self)
-        self.lang = widget_manager.lang['TIMER']
-        if self.NAME in widget_manager.config.config:
-            self.conf = widget_manager.config.config[self.NAME]
-        else:
-            self.conf = None
-        # setup widget
+class Info(WidgetInfo):
+    def __init__(self, lang):
+        WidgetInfo.__init__(self, lang)
+        self.lang = lang['TIMER']
         self.NAME = 'Timer'
         self.DESCRIPTION = self.lang['description']
         self.HELP = self.lang['help']
@@ -32,6 +25,15 @@ class Main(Widget, QWidget):
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(RES, 'timer', 'icon.png'))
+
+
+class Main(Widget, QWidget):
+    def __init__(self, widget_manager, info):
+        # init
+        Widget.__init__(self, widget_manager, info)
+        QWidget.__init__(self)
+        self.conf = {}
+        self.lang = info.lang
         # setup window
         with open(os.path.join(RES, 'timer', 'style.css'),
                   encoding='utf-8') as file:
@@ -225,9 +227,7 @@ class Main(Widget, QWidget):
 
     def _setup_conf(self):
         try:
-            if self.NAME not in self.widget_manager.config.config:
-                return
-            self.conf = self.widget_manager.config.config[self.NAME]
+            self.conf = self.widget_manager.get_config(self.info.NAME)
             if 'alarm' not in self.conf:
                 self.conf['alarm'] = 'true'
             if 'alert' not in self.conf:
@@ -291,12 +291,14 @@ class Main(Widget, QWidget):
 
 class Timeout(QMessageBox):
     def __init__(self, main, timer):
+        QMessageBox.__init__(self)
         QMessageBox.__init__(self, QMessageBox.Information,
                              main.lang['success_title'],
                              main.lang['success_text'].format(timer),
-                             QMessageBox.NoButton, self)
+                             QMessageBox.NoButton, main)
         self.main = main
         # setup window
+        self.setStandardButtons(QMessageBox.NoButton)
         self.setWindowIcon(QIcon(SUCCESS))
         self.setWindowFlags(Qt.WindowMinimizeButtonHint |
                             Qt.WindowStaysOnTopHint | Qt.Tool)

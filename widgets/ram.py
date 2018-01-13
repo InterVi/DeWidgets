@@ -6,18 +6,14 @@ from PyQt5.QtWidgets import QWidget, QLabel, QProgressBar, QPushButton
 from PyQt5.QtWidgets import QCheckBox, QHBoxLayout, QVBoxLayout, QSpinBox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer
-from core.manager import Widget
+from core.manager import Widget, WidgetInfo
 from core.paths import RES, SETTINGS
 
 
-class Main(Widget, QWidget):
-    def __init__(self, widget_manager):
-        # init
-        Widget.__init__(self, widget_manager)
-        QWidget.__init__(self)
-        self.lang = widget_manager.lang['RAM_INFO']
-        self.conf = {}
-        # setup widget
+class Info(WidgetInfo):
+    def __init__(self, lang):
+        WidgetInfo.__init__(self, lang)
+        self.lang = lang['RAM_INFO']
         self.NAME = 'RAM Info'
         self.DESCRIPTION = self.lang['description']
         self.HELP = self.lang['help']
@@ -25,6 +21,15 @@ class Main(Widget, QWidget):
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(RES, 'ram', 'icon.png'))
+
+
+class Main(Widget, QWidget):
+    def __init__(self, widget_manager, info):
+        # init
+        Widget.__init__(self, widget_manager, info)
+        QWidget.__init__(self)
+        self.conf = {}
+        self.lang = info.lang
         # setup stylesheet
         with open(os.path.join(RES, 'ram', 'style.css'), encoding='utf-8'
                   ) as file:
@@ -101,7 +106,7 @@ class Main(Widget, QWidget):
 
     def _load_settings(self):
         try:
-            self.conf = self.widget_manager.config.config[self.NAME]
+            self.conf = self.widget_manager.get_config(self.info.NAME)
             if 'update' in self.conf:
                 self._update = int(self.conf['update'])
             if 'round' in self.conf:

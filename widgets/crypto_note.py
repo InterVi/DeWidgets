@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QPushButton, QCheckBox, QMessageBox, QInputDialog
 from PyQt5.QtWidgets import QGridLayout, QHBoxLayout
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QRect
-from core.manager import Widget
+from core.manager import Widget, WidgetInfo
 from core.paths import RES, SETTINGS, ERROR
 
 ICON_PIXMAP = QPixmap(os.path.join(RES, 'cnote', 'icon.png'))
@@ -91,15 +91,10 @@ class AESCip:
             cip.decrypt(b[AES.block_size:]))).decode('utf-8')
 
 
-class Main(Widget, QWidget):
-    def __init__(self, widget_manager):
-        # init
-        Widget.__init__(self, widget_manager)
-        QWidget.__init__(self)
-        self.lang = widget_manager.lang['CRYPTO_NOTE']
-        self.conf = {}
-        self.note_win = None
-        # setup widget
+class Info(WidgetInfo):
+    def __init__(self, lang):
+        WidgetInfo.__init__(self, lang)
+        self.lang = lang['CRYPTO_NOTE']
         self.NAME = 'Crypto Note'
         self.DESCRIPTION = self.lang['description']
         self.HELP = self.lang['help']
@@ -107,6 +102,16 @@ class Main(Widget, QWidget):
         self.EMAIL = 'intervionly@gmail.com'
         self.URL = 'https://github.com/InterVi/DeWidgets'
         self.ICON = QIcon(os.path.join(RES, 'cnote', 'icon.png'))
+
+
+class Main(Widget, QWidget):
+    def __init__(self, widget_manager, info):
+        # init
+        Widget.__init__(self, widget_manager, info)
+        QWidget.__init__(self)
+        self.conf = {}
+        self.lang = info.lang
+        self.note_win = None
         # setup image
         self.image = QLabel(self)
         self.image.setScaledContents(True)
@@ -147,7 +152,7 @@ class Main(Widget, QWidget):
 
     def _load_settings(self):
         try:
-            self.conf = self.widget_manager.config.config[self.NAME]
+            self.conf = self.widget_manager.get_config(self.info.NAME)
             if 'session' in self.conf:
                 self._session = int(self.conf['session'])
             if 'hot_save' in self.conf:

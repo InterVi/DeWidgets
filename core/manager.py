@@ -19,10 +19,14 @@ CUSTOM_WIDGETS = SourceFileLoader('__init__',
 """Custom widgets module for *use get_widgets(path)* function."""
 
 
-class Widget:
-    """the class is inherited by widgets"""
-    def __init__(self, widget_manager):
-        self.widget_manager = widget_manager
+class WidgetInfo:
+    """widget information (mandatory inheritance for Main class)"""
+    def __init__(self, lang):
+        """
+
+        :param lang: ConfigParser locale dict
+        """
+        self.lang = lang
         self.NAME = 'none'
         self.VERSION = '1.0'
         self.DESCRIPTION = 'none'
@@ -31,6 +35,13 @@ class Widget:
         self.EMAIL = 'none'
         self.URL = 'none'
         self.ICON = QIcon(WIDGET)
+
+
+class Widget:
+    """the class is inherited by widgets"""
+    def __init__(self, widget_manager, info):
+        self.widget_manager = widget_manager
+        self.info = info
 
     def load(self):
         """load widget event (before setup window flags and other)"""
@@ -67,7 +78,7 @@ class Widget:
         pass
 
     def remove(self):
-        """remove widget from desktop (before call destroy)."""
+        """remove widget from desktop (before call destroy and unload)."""
         pass
 
     def purge(self):
@@ -94,6 +105,8 @@ class WidgetManager:
         """ConfigParser dict, current locale for custom widgets"""
         self.widgets = {}
         """Widgets dict, key - name, value - widget object (Main class)."""
+        self.info = {}
+        """WidgetInfo dict, key - name, value - WidgetInfo class"""
         self.custom_widgets = []
         """Custom widgets names list."""
         self.paths = {}
@@ -115,12 +128,18 @@ class WidgetManager:
 
         :param placed: bool, True - only placed, False - only hidden
         """
+        if not placed:
+            for name in w.get_widgets():
+                if name not in self.paths:
+                    self.load(name)
+            for name in CUSTOM_WIDGETS.get_widgets():
+                if name not in self.paths:
+                    self.load(name)
+            return
         for name in self.config.config:
             if name == 'DEFAULT' or name in self.widgets:
                 continue
-            if placed and self.config.is_placed(name):
-                self.load(self.config.config[name]['file'])
-            elif not placed and not self.config.is_placed(name):
+            if self.config.is_placed(name):
                 self.load(self.config.config[name]['file'])
 
     def load_new(self):
@@ -132,36 +151,58 @@ class WidgetManager:
             if name not in sys.modules:
                 self.load(name)
 
-    def load(self, name):
+    def load(self, name, only_info=True):
         """Load widget from module.
 
         :param name: str, module name
+        :param only_info: bool, if True - load only WidgetInfo classes
         """
         try:
-            mod = __import__(name)
-            if 'Main' not in mod.__dict__ or not callable(mod.Main):
-                del sys.modules[name]
-                return
+            if name in sys.modules:  # get module
+                mod = sys.modules[name]
+            else:  # import module
+                mod = __import__(name)
+            # validate
             if 'not_loading' in mod.__dict__ and mod.__dict__['not_loading']:
                 del sys.modules[name]
                 return
-            widget = mod.Main(self)
+            if 'Main' not in mod.__dict__ or not callable(mod.Main):
+                del sys.modules[name]
+                return
+            if 'Info' not in mod.__dict__ or not callable(mod.WidgetInfo):
+                del sys.modules[name]
+                return
+            # get and validate WidgetInfo
+            info = mod.Info(self.lang)
+            if not isinstance(info, WidgetInfo):
+                del sys.modules[name]
+                return
+            # fill data
+            if os.path.dirname(mod.__file__) == C_WIDGETS and\
+                    info.NAME not in self.custom_widgets:
+                self.custom_widgets.append(info.NAME)
+            self.info[info.NAME] = info
+            self.paths[info.NAME] = mod.__file__
+            if only_info and not self.config.is_placed(info.NAME):
+                return
+            # validate Widget
+            widget = mod.Main(self, info)
             if not isinstance(widget, Widget) or\
                     not isinstance(widget, QWidget):
                 del sys.modules[name]
                 return
+            # load Main class
             widget.load()
             widget.setWindowFlags(Qt.CustomizeWindowHint |
                                   Qt.WindowStaysOnBottomHint | Qt.Tool)
-            widget.setWindowTitle(widget.NAME)
-            widget.setWindowIcon(widget.ICON)
-            self.widgets[widget.NAME] = widget
-            self.config.load(widget.NAME)
-            self.paths[widget.NAME] = mod.__file__
-            if os.path.dirname(mod.__file__) == C_WIDGETS:
-                self.custom_widgets.append(widget.NAME)
+            widget.setWindowTitle(info.NAME)
+            widget.setWindowIcon(info.ICON)
+            self.widgets[info.NAME] = widget
+            self.config.load(info.NAME)
         except:
             print(traceback.format_exc())
+            if name in sys.modules:
+                del sys.modules[name]
 
     def remove(self, name, reminconf=False):
         """Remove widget from desktop.
@@ -183,6 +224,7 @@ class WidgetManager:
                 self.config.add(name)
             self.widgets[name].hide()
             self.widgets[name].destroy()
+            self.unload(name)
             self.config.set_placed(name, False)
             if reminconf:
                 self.config.remove(name)
@@ -209,7 +251,19 @@ class WidgetManager:
                 print(traceback.format_exc())
             self.unload(name)
             self.config.remove(name)  # warranty
+            self.del_from_dicts(name)
             os.remove(path)
+        except:
+            print(traceback.format_exc())
+
+    def del_from_dicts(self, name):
+        """Remove data from info and paths dict.
+
+        :param name: str, widget name
+        """
+        try:
+            del self.info[name]
+            del self.paths[name]
         except:
             print(traceback.format_exc())
 
@@ -231,16 +285,21 @@ class WidgetManager:
         except:
             print(traceback.format_exc())
 
-    def unload_all(self):
-        """Unload all loaded widgets."""
+    def unload_all(self, del_from_dicts=True):
+        """Unload all loaded widgets.
+
+        :param del_from_dicts: bool, if True - call del_from_dicts"""
         for name in list(self.widgets.keys()):
             self.unload(name)
+        if del_from_dicts:
+            self.info.clear()
+            self.paths.clear()
 
-    def unload_hidden(self):
-        """Unload only hidden (not placed) widgets."""
-        for name in list(self.widgets.keys()):
-            if self.widgets[name].isHidden():
-                self.unload(name)
+    def del_data_no_placed(self):
+        """Remove data (from info and paths) only not placed widgets."""
+        for name in list(self.info.keys()):
+            if name not in self.widgets:
+                self.del_from_dicts(name)
 
     def is_placed(self) -> bool:
         """Check the presence of widgets on the desktop.
@@ -251,6 +310,14 @@ class WidgetManager:
             if widget.isVisible():
                 return True
         return False
+
+    def get_config(self, name) -> dict:
+        """Get config section for widget.
+
+        :param name: str, widget name
+        :return: dict, config section for widget in ConfigParser
+        """
+        return self.config.config[name]
 
     def edit_mode(self, mode, name=None) -> bool:
         """Call widget event and save config.
@@ -265,7 +332,7 @@ class WidgetManager:
                     return
                 widget.edit_mode(mode)
                 if not mode:
-                    self.config.add(widget.NAME)
+                    self.config.add(widget.info.NAME)
             except:
                 print(traceback.format_exc())
 
