@@ -91,7 +91,9 @@ class Widget:
         pass
 
     def delete_widget(self):
-        """remove widget files (before call purge and unload)"""
+        """Remove widget files (before call purge and unload or only unload).
+        If widget not placed, load will not calling - only this before unload.
+        """
         pass
 
 
@@ -263,6 +265,34 @@ class WidgetManager:
             os.remove(path)
         except:
             print(traceback.format_exc())
+
+    def call_delete_widget(self, module) -> bool:
+        """Call widget API (delete_widget and unload). Load -> call -> unload.
+
+        :param module: str, module name
+        :return: bool, True if success
+        """
+        try:
+            if module not in sys.modules:
+                return False
+            mod = sys.modules[module]
+            # simple validation
+            if 'not_loading' in mod.__dict__ and mod.__dict__['not_loading']:
+                return False
+            if 'Main' not in mod.__dict__ or not callable(mod.Main):
+                return False
+            if 'Info' not in mod.__dict__ or not callable(mod.WidgetInfo):
+                return False
+            widget = mod.Main(self, mod.Info(self.lang))
+            if not isinstance(widget, Widget):
+                return False
+            # calling
+            widget.delete_widget()
+            widget.unload()
+            return True
+        except:
+            print(traceback.format_exc())
+            return False
 
     def del_from_dicts(self, name):
         """Remove data from info, paths dict and custom_widgets.

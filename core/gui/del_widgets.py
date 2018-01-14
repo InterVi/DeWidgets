@@ -141,6 +141,7 @@ class Delete(QWidget):
                     self.del_widget(item.text())
                 else:
                     py = self.manager.paths[item.text()]
+                    self.manager.call_delete_widget(os.path.basename(py)[:-3])
                     os.remove(py)
                     self.manager.del_from_dicts(item.text())
                     self.manager.config.remove(item.text())
@@ -290,6 +291,7 @@ class ArchDelete(QWidget):
                     if name in self.manager.widgets:
                         self.del_widget(name)
                     else:
+                        self.manager.call_delete_widget(module)
                         os.remove(self.manager.paths[name])
                         self.manager.del_from_dicts(name)
                         self.manager.config.remove(name)
