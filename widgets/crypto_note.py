@@ -112,6 +112,7 @@ class Main(Widget, QWidget):
         self.conf = {}
         self.lang = info.lang
         self.note_win = None
+        self.settings_win = None
         # setup image
         self.image = QLabel(self)
         self.image.setScaledContents(True)

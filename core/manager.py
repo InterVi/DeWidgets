@@ -242,7 +242,7 @@ class WidgetManager:
 
     def delete_widget(self, name):
         """Remove widget file (after remove widget data from config
-        and unload.
+        and unload). For only placed widgets.
 
         :param name: str, widget name
         """
@@ -265,13 +265,15 @@ class WidgetManager:
             print(traceback.format_exc())
 
     def del_from_dicts(self, name):
-        """Remove data from info and paths dict.
+        """Remove data from info, paths dict and custom_widgets.
 
         :param name: str, widget name
         """
         try:
             del self.info[name]
             del self.paths[name]
+            if name in self.custom_widgets:
+                self.custom_widgets.remove(name)
         except:
             print(traceback.format_exc())
 
@@ -296,12 +298,13 @@ class WidgetManager:
     def unload_all(self, del_from_dicts=True):
         """Unload all loaded widgets.
 
-        :param del_from_dicts: bool, if True - call del_from_dicts"""
+        :param del_from_dicts: bool, if True - like del_from_dicts"""
         for name in list(self.widgets.keys()):
             self.unload(name)
         if del_from_dicts:
             self.info.clear()
             self.paths.clear()
+            self.custom_widgets.clear()
 
     def del_data_no_placed(self):
         """Remove data (from info and paths) only not placed widgets."""
@@ -382,6 +385,8 @@ class ConfigManager:
             if name not in self.config or name not in self.wm.widgets:
                 return
             prop = self.config[name]
+            if not prop:
+                return
             widget = self.wm.widgets[name]
             widget.resize(int(prop['width']), int(prop['height']))
             widget.move(int(prop['x']), int(prop['y']))
@@ -474,5 +479,14 @@ class ConfigManager:
         try:
             if name not in self.config:
                 self.config[name] = {}
+        except:
+            print(traceback.format_exc())
+
+    def save_positions(self):
+        """Save widget positions to config file."""
+        try:
+            for name in self.wm.widgets:
+                self.add(name)
+            self.save()
         except:
             print(traceback.format_exc())

@@ -83,6 +83,10 @@ class Main(QMainWindow):
         self.setWindowFlags(Qt.WindowMinimizeButtonHint |
                             Qt.WindowCloseButtonHint)
         self.setWindowIcon(icon)
+        # setup vars
+        self.help_window = None
+        self.settings_win = None
+        self.move_window = None
         # setup list
         self.list = QListWidget(self)
         self.list.setGeometry(QRect(0, 0, 281, 231))
@@ -251,7 +255,7 @@ class Main(QMainWindow):
 
     def _list_double_click(self):
         try:
-            self.item_info = ItemInfo(self.list.currentItem())
+            self.item_info = ItemInfo(self.list.currentItem().text())
         except:
             print(traceback.format_exc())
 

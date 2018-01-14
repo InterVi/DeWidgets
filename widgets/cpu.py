@@ -31,6 +31,7 @@ class Main(Widget, QWidget):
         QWidget.__init__(self)
         self.conf = {}
         self.lang = info.lang
+        self.settings_win = None
         # setup stylesheet
         with open(os.path.join(RES, 'cpu', 'style.css'), encoding='utf-8'
                   ) as file:
@@ -159,6 +160,7 @@ class Main(Widget, QWidget):
             self.save_settings()
 
     def place(self):
+        self.resize(200, 200)
         self._load_settings()
 
     def boot(self):

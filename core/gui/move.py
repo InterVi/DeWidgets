@@ -27,7 +27,7 @@ class Move(QWidget):
         self.opacity_win = window.windowOpacity()
         screen = manager.main_gui.app.desktop().screenGeometry()
         # setup window
-        self.setWindowTitle(lang['MOVE']['title'].format(window.NAME))
+        self.setWindowTitle(lang['MOVE']['title'].format(window.windowTitle()))
         self.resize(230, 220)
         self.setWindowFlags(Qt.WindowMinimizeButtonHint)
         self.setWindowIcon(QIcon(MOVE))
@@ -108,7 +108,7 @@ class Move(QWidget):
 
     def _save(self):
         try:
-            self.manager.edit_mode(False, self.window.NAME)
+            self.manager.edit_mode(False)
             self.close()
         except:
             print(traceback.format_exc())

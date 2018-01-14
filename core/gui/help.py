@@ -12,6 +12,8 @@ class Help(QWidget):
     def __init__(self, lang):
         super().__init__()
         self.lang = lang
+        self.license_window = None
+        self.author_window = None
         # setup window
         self.setWindowTitle(lang['HELP']['title'])
         self.resize(400, 450)

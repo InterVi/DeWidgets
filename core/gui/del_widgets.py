@@ -41,6 +41,8 @@ class Delete(QWidget):
         self.locale = locale
         self.manager = manager
         self.lang = locale['DEL_WIDGETS']
+        self.arch_del_win = None
+        # setup window
         self.setWindowTitle(self.lang['title'])
         self.setFixedSize(410, 330)
         self.setWindowIcon(QIcon(DEL_WIDGETS))
@@ -83,10 +85,11 @@ class Delete(QWidget):
     def _list_fill(self):
         try:
             self.w_list.clear()
-            for info in self.manager.info.values():
+            for name in self.manager.custom_widgets:
                 try:
-                    if info.NAME not in self.manager.custom_widgets:
+                    if name not in self.manager.info:
                         continue
+                    info = self.manager.info[name]
                     item = QListWidgetItem(self.w_list)
                     item.setIcon(info.ICON)
                     item.setText(info.NAME)
@@ -103,7 +106,7 @@ class Delete(QWidget):
 
     def _list_click(self):
         try:
-            self.__change_enabled()
+            self._change_enabled()
             self.h_label.setText(
                 self.manager.info[self.w_list.currentItem().text()].DESCRIPTION)
         except:
@@ -134,9 +137,16 @@ class Delete(QWidget):
             no.setToolTip(self.lang['del_mbox_no_button_tt'])
             # process
             if mbox.exec() == QMessageBox.Yes:
-                self.manager.delete_widget(item.text())
+                if item.text() in self.manager.widgets:
+                    self.del_widget(item.text())
+                else:
+                    py = self.manager.paths[item.text()]
+                    os.remove(py)
+                    self.manager.del_from_dicts(item.text())
+                    self.manager.config.remove(item.text())
+                    del sys.modules[os.path.basename(py)[:-3]]
                 self._list_fill()
-                self.__change_enabled()
+                self._change_enabled()
         except:
             print(traceback.format_exc())
 
@@ -245,9 +255,11 @@ class ArchDelete(QWidget):
             # process
             if mbox.exec() == QMessageBox.Yes:
                 for py in self.archives[item.toolTip()]['py']:
-                    self.del_widget(os.path.basename(py))
+                    if os.path.isfile(py):
+                        self.del_widget(py)
                 for res in self.archives[item.toolTip()]['res']:
-                    os.remove(res)
+                    if os.path.isfile(res):
+                        os.remove(res)
                 for res in self.archives[item.toolTip()]['res']:
                     d = os.path.dirname(res)
                     if os.path.isdir(d):
@@ -267,12 +279,21 @@ class ArchDelete(QWidget):
     def del_widget(self, module):
         """Delete widget.
 
-        :param module: filename (no path)
+        :param module: path or name module
         """
         try:
+            module = os.path.basename(module)
+            if module[-3:] == '.py':
+                module = module[:-3]
             for name in self.manager.paths:
-                if os.path.basename(self.manager.paths[name]) == module:
-                    self.manager.delete_widget(name)
+                if os.path.basename(self.manager.paths[name])[:-3] == module:
+                    if name in self.manager.widgets:
+                        self.del_widget(name)
+                    else:
+                        os.remove(self.manager.paths[name])
+                        self.manager.del_from_dicts(name)
+                        self.manager.config.remove(name)
+                        del sys.modules[module]
                     return
         except:
             print(traceback.format_exc())

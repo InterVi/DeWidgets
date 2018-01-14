@@ -26,6 +26,7 @@ class Settings(QWidget):
         self.settings = settings
         self._items = {}
         self._changed = False
+        self.del_widgets_win = None
         # setup window
         self.setWindowTitle(lang['SETTINGS']['title'])
         self.setWindowIcon(QIcon(SETTINGS))

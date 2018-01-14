@@ -79,6 +79,7 @@ class Main(Widget, Note):
         self.conf = {}
         self.lang = info.lang
         # setup vars
+        self.settings_win = None
         self.__setup_vars()
 
     def __setup_vars(self):
@@ -212,6 +213,7 @@ class Settings(QWidget):
     def __init__(self, main):
         QWidget.__init__(self)
         self.main = main
+        self.note_settings = None
         # setup window
         self.setWindowIcon(QIcon(SETTINGS))
         self.setWindowTitle(main.lang['settings_title'])
@@ -389,6 +391,7 @@ class NoteSettings(QWidget):
         QWidget.__init__(self)
         self.main = main
         self.settings = settings
+        self.move_win = None
         # setup window
         self.setWindowTitle(main.lang['item_title'].format(settings.list.item(
             settings.list.currentRow()).text()))

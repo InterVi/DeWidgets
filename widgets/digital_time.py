@@ -141,6 +141,7 @@ class Main(Widget, DTime):
         DTime.__init__(self, self, 0)
         self.conf = {}
         self.lang = info.lang
+        self.settings_win = None
         # setup timer
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._timeout)
@@ -321,6 +322,7 @@ class Settings(QWidget):
         QWidget.__init__(self)
         self.main = main
         self.lang = main.lang
+        self.time_edit = None
         # setup window
         self.setWindowIcon(QIcon(SETTINGS))
         self.setWindowTitle(main.lang['settings_title'])
@@ -527,6 +529,7 @@ class TimeEdit(QWidget):
         # init
         QWidget.__init__(self)
         # setup vars
+        self.move_win = None
         self.settings = settings
         self.main = settings.main
         self.element = element

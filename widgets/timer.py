@@ -34,6 +34,7 @@ class Main(Widget, QWidget):
         QWidget.__init__(self)
         self.conf = {}
         self.lang = info.lang
+        self.settings_win = None
         # setup window
         with open(os.path.join(RES, 'timer', 'style.css'),
                   encoding='utf-8') as file:
@@ -324,6 +325,7 @@ class Settings(QWidget):
     def __init__(self, main):
         self.main = main
         QWidget.__init__(self)
+        self.ts_win = None
         # setup window
         self.setWindowIcon(QIcon(SETTINGS))
         self.setWindowTitle(main.lang['settings_title'])

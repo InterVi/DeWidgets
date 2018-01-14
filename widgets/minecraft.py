@@ -46,6 +46,8 @@ class Main(Widget, QWidget):
         self.servers = []
         self.timer_interval = 30000
         self.lang = info.lang
+        self.show_more = None
+        self.settings_win = None
         # setup stylesheet
         with open(os.path.join(RES, 'minecraft', 'style.css'), encoding='utf-8'
                   ) as file:
