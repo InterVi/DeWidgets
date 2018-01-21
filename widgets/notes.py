@@ -185,8 +185,7 @@ class Main(Widget, Note):
             print(traceback.format_exc())
 
     def unload(self):
-        if self.isVisible():
-            self.save_conf()
+        self.save_conf()
 
     def remove(self):
         try:

@@ -247,6 +247,7 @@ class Main(Widget, DTime):
         self._load_widgets()
 
     def place(self):
+        self.resize(100, 100)
         self._load_settings()
         self._load_widgets()
 
@@ -273,8 +274,7 @@ class Main(Widget, DTime):
             print(traceback.format_exc())
 
     def unload(self):
-        if self.isVisible():
-            self.save_settings()
+        self.save_settings()
 
     def remove(self):
         try:

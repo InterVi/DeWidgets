@@ -156,8 +156,7 @@ class Main(Widget, QWidget):
             print(traceback.format_exc())
 
     def unload(self):
-        if self.isVisible():
-            self.save_settings()
+        self.save_settings()
 
     def place(self):
         self.resize(200, 200)
