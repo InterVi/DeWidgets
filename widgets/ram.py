@@ -55,7 +55,7 @@ class Main(Widget, QWidget):
 
     def __set_info(self, swap=False):
         mem = psutil.swap_memory() if swap else psutil.virtual_memory()
-        p = pow(10, 6) if self._mb else pow(10, 9)
+        p = pow(2, 20) if self._mb else pow(2, 30)
         total = round(mem.total / p, self._round)
         used = round(mem.used / p if swap else (mem.total - mem.available) / p,
                      self._round)
