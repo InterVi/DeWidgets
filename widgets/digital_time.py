@@ -442,6 +442,7 @@ class Settings(QWidget):
             self.main.colors.append('#000')
             dtime = DTime(self.main, len(self.main.times) - 1)
             dtime._init()
+            dtime.resize(100, 100)
             dtime.show()
             self.main.widgets.append(dtime)
             self.main.save_settings()
