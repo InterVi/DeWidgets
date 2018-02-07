@@ -209,15 +209,13 @@ class Main(QMainWindow):
 
     def _add_widget(self):
         try:
-            # change item font
             item = self.list.currentItem()
-            font = item.font()
-            font.setBold(True)
-            item.setFont(font)
             # setup widget
             manager.config.create(item.text())
-            manager.load(os.path.basename(manager.paths[item.text()])[:-3],
-                         False)
+            r = manager.load(os.path.basename(manager.paths[item.text()])[:-3],
+                             False)
+            if not r:
+                return
             widget = manager.widgets[item.text()]
             widget.place()
             widget.setWindowFlags(Qt.CustomizeWindowHint |
@@ -226,6 +224,10 @@ class Main(QMainWindow):
             # edit config
             manager.config.add(widget.info.NAME)
             manager.config.save()
+            # change item font
+            font = item.font()
+            font.setBold(True)
+            item.setFont(font)
             # changing enabled
             self.__change_enabled()
         except:

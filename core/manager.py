@@ -232,8 +232,10 @@ class WidgetManager:
                 except:
                     print(traceback.format_exc())
                 self.config.add(name)
-            self.widgets[name].hide()
-            self.widgets[name].destroy()
+            try:
+                self.widgets[name].hide()
+            except:
+                print(traceback.format_exc())
             self.unload(name)
             self.config.set_placed(name, False)
             if reminconf:
@@ -496,7 +498,7 @@ class ConfigManager:
         :param name: str, widget name
         :return: bool, True - if widget placed to desktop
         """
-        if name in self.config:
+        if name in self.config and 'placed' in self.config[name]:
             return bool(strtobool(self.config[name]['placed']))
         else:
             return False
