@@ -21,8 +21,9 @@ def get_description(desc) -> str:
     if desc['text']:
         return desc['text']
     result = ''
-    for part in desc['extra']:
-        result += part['text']
+    if 'extra' in desc:
+        for part in desc['extra']:
+            result += part['text']
     return result
 
 
@@ -156,7 +157,9 @@ class Main(Widget, QWidget):
     def _pool_ping(self):
         def ping(addr):
             status = MinecraftServer.lookup(addr).status()
-            favicon = status.favicon[status.favicon.find(',') + 1:]
+            favicon = ''
+            if status.favicon:
+                favicon = status.favicon[status.favicon.find(',') + 1:]
             tooltip = ''
             if status.players.sample:
                 for player in status.players.sample:
