@@ -91,8 +91,6 @@ class Main(Widget, QWidget):
             for w in self._widgets:
                 self.layout().removeWidget(w)
                 w.deleteLater()
-            self.layout().update()
-            self.update()
             self._widgets.clear()
         # setup elements
         if self._ram:
@@ -101,7 +99,6 @@ class Main(Widget, QWidget):
             self.__set_info(True)
         # set layout
         self.layout().update()
-        self.update()
 
     @try_except
     def _load_settings(self):

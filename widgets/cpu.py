@@ -63,8 +63,6 @@ class Main(Widget, QWidget):
             for w in self._widgets:
                 self.layout().removeWidget(w)
                 w.deleteLater()
-            self.layout().update()
-            self.update()
             self._widgets.clear()
         # setup elements
         for i in range(psutil.cpu_count() if self._percpu else 1):
@@ -113,7 +111,6 @@ class Main(Widget, QWidget):
                     self.layout().addWidget(label)
         # set layout
         self.layout().update()
-        self.update()
 
     @try_except
     def _load_settings(self):

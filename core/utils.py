@@ -4,6 +4,7 @@ import traceback
 
 def try_except(func, except_func=None, ex_args=(), ex_kwargs={}):
     """Wrap try-except block. Stacktrace will printed to stdout (log file).
+    func or except_func will return original value.
 
     :param func: function for try-except block
     :param except_func: call if exception
@@ -13,12 +14,12 @@ def try_except(func, except_func=None, ex_args=(), ex_kwargs={}):
     """
     def wrapper(*args, **kwargs):
         try:
-            func(*args, **kwargs)
+            return func(*args, **kwargs)
         except:
             print(traceback.format_exc())
             if except_func:
                 try:
-                    except_func(*ex_args, **ex_kwargs)
+                    return except_func(*ex_args, **ex_kwargs)
                 except:
                     print(traceback.format_exc())
                     print('Except args: ' + str(ex_args))

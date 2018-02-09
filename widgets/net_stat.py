@@ -118,8 +118,6 @@ class Main(Widget, QWidget):
             for w in self._widgets:
                 self.layout().removeWidget(w)
                 w.deleteLater()
-            self.layout().update()
-            self.update()
             self._widgets.clear()
         # setup elements
         if not self._labels:
@@ -146,7 +144,6 @@ class Main(Widget, QWidget):
         self.__setup_con()
         # set layout
         self.layout().update()
-        self.update()
 
     def get_rate_locale(self, rate) -> str:
         if rate == Rate.B:

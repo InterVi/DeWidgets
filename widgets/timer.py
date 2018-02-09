@@ -2,6 +2,7 @@ import os
 import time
 import math
 import json
+from distutils.util import strtobool
 from PyQt5.QtWidgets import QWidget, QLCDNumber, QVBoxLayout, QHBoxLayout
 from PyQt5.QtWidgets import QLabel, QListWidget, QSpinBox, QPushButton, QMenu
 from PyQt5.QtWidgets import QCheckBox, QSlider, QMessageBox, QSystemTrayIcon
@@ -136,7 +137,7 @@ class Main(Widget, QWidget):
 
     @try_except
     def _sec_sound(self):
-        if self.conf['seconds'] != 'true':
+        if not bool(strtobool(self.conf['seconds'])):
             return
         volume = int(self.conf['seconds_volume'])
         if int(math.floor(time.time())) % 2 == 0:
@@ -146,11 +147,11 @@ class Main(Widget, QWidget):
 
     @try_except
     def _alarm(self, index):
-        if self.conf['alarm'] == 'true':
+        if bool(strtobool(self.conf['alarm'])):
             self._play(self.ALARM, int(self.conf['alarm_volume']))
-        if self.conf['alert'] == 'true':
+        if bool(strtobool(self.conf['alert'])):
             self._show_timeout(index)
-        if self.conf['notify'] == 'true':
+        if bool(strtobool(self.conf['notify'])):
             self.widget_manager.main_gui.main.tray.showMessage(
                 self.lang['notify_title'],
                 self.lang['notify_mess'].format(self.get_timer_text(index)),
@@ -201,15 +202,15 @@ class Main(Widget, QWidget):
     def _setup_conf(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'alarm' not in self.conf:
-            self.conf['alarm'] = 'true'
+            self.conf['alarm'] = 'True'
         if 'alert' not in self.conf:
-            self.conf['alert'] = 'true'
+            self.conf['alert'] = 'True'
         if 'notify' not in self.conf:
-            self.conf['notify'] = 'true'
+            self.conf['notify'] = 'True'
         if 'notify_msec' not in self.conf:
             self.conf['notify_msec'] = str(10000)
         if 'seconds' not in self.conf:
-            self.conf['seconds'] = 'true'
+            self.conf['seconds'] = 'True'
         if 'alarm_volume' not in self.conf:
             self.conf['alarm_volume'] = str(100)
         if 'seconds_volume' not in self.conf:
@@ -242,7 +243,6 @@ class Main(Widget, QWidget):
         index = int(event.pos().y()/(self.height()/(len(self.list))))
         self._turn_enabled(index, not self.list[index][3])
 
-    @try_except
     def get_timer_text(self, index) -> str:
         timer = str(self.list[index][4][0]) + ':'
         timer += str(self.list[index][4][1]) + ':'
@@ -299,27 +299,29 @@ class Settings(QWidget):
         self.alert_checkbox.setToolTip(main.lang['alert_checkbox_tt'])
         self.alert_checkbox.stateChanged.connect(self._alert_checkbox_changed)
         if 'alert' in main.conf:
-            self.alert_checkbox.setChecked(json.loads(main.conf['alert']))
+            self.alert_checkbox.setChecked(bool(strtobool(main.conf['alert'])))
         # setup 'Notify' checkbox
         self.notify_checkbox = QCheckBox(main.lang['notify_checkbox'], self)
         self.notify_checkbox.setToolTip(main.lang['notify_checkbox_tt'])
         self.notify_checkbox.stateChanged.connect(
             self._notify_checkbox_changed)
         if 'notify' in main.conf:
-            self.notify_checkbox.setChecked(json.loads(main.conf['notify']))
+            self.notify_checkbox.setChecked(bool(strtobool(
+                main.conf['notify'])))
         # setup 'Alarm' checkbox
         self.alarm_checkbox = QCheckBox(main.lang['alarm_checkbox'], self)
         self.alarm_checkbox.setToolTip(main.lang['alarm_checkbox_tt'])
         self.alarm_checkbox.stateChanged.connect(self._alarm_checkbox_changed)
         if 'alarm' in main.conf:
-            self.alarm_checkbox.setChecked(json.loads(main.conf['alarm']))
+            self.alarm_checkbox.setChecked(bool(strtobool(main.conf['alarm'])))
         # setup 'Seconds' checkbox
         self.seconds_checkbox = QCheckBox(main.lang['seconds_checkbox'], self)
         self.seconds_checkbox.setToolTip(main.lang['seconds_checkbox_tt'])
         self.seconds_checkbox.stateChanged.connect(
             self._seconds_checkbox_changed)
         if 'seconds' in main.conf:
-            self.seconds_checkbox.setChecked(json.loads(main.conf['seconds']))
+            self.seconds_checkbox.setChecked(bool(strtobool(
+                main.conf['seconds'])))
         # setup 'Alarm volume' slider
         self.alarm_slider = QSlider(Qt.Horizontal, self)
         self.alarm_slider.setToolTip(main.lang['alarm_slider_tt'])
@@ -416,21 +418,19 @@ class Settings(QWidget):
 
     @try_except
     def _alert_checkbox_changed(self, state):
-        self.main.conf['alert'] = str(self.alert_checkbox.isChecked()).lower()
+        self.main.conf['alert'] = str(self.alert_checkbox.isChecked())
 
     @try_except
     def _alarm_checkbox_changed(self, state):
-        self.main.conf['alarm'] = str(self.alarm_checkbox.isChecked()).lower()
+        self.main.conf['alarm'] = str(self.alarm_checkbox.isChecked())
 
     @try_except
     def _notify_checkbox_changed(self, state):
-        self.main.conf['notify'] = str(self.notify_checkbox.isChecked()
-                                       ).lower()
+        self.main.conf['notify'] = str(self.notify_checkbox.isChecked())
 
     @try_except
     def _seconds_checkbox_changed(self, state):
-        self.main.conf['seconds'] = str(self.seconds_checkbox.isChecked()
-                                        ).lower()
+        self.main.conf['seconds'] = str(self.seconds_checkbox.isChecked())
 
     @try_except
     def _alarm_volume_changed(self, value):
