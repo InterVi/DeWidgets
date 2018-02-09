@@ -13,6 +13,7 @@ Require Python >= **3.5** version.
 * **Crypto Note** - low secure note as passowrd (AES-256)
 * **CPU Info** - show SPU information (load and freq)
 * **RAM Info** - show RAM and swap information
+* **NET Stat** - inet statistics
 
 ## Commandline arguments
 
