@@ -1,7 +1,6 @@
 import os
 import json
 import base64
-import traceback
 from PyQt5.QtWidgets import QWidget, QTextEdit, QPushButton, QListWidget
 from PyQt5.QtWidgets import QListWidgetItem, QCheckBox, QMessageBox, QComboBox
 from PyQt5.QtWidgets import QLabel, QGridLayout
@@ -10,6 +9,7 @@ from PyQt5.QtCore import Qt
 from core.manager import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, DELETE, SUCCESS
+from core.utils import try_except
 
 
 class Note(QWidget):
@@ -31,31 +31,27 @@ class Note(QWidget):
         self.grid.addWidget(self.text_edit)
         self.setLayout(self.grid)
 
+    @try_except
     def _init(self):
-        try:
-            self.setStyleSheet(self.main.get_style(self.index))
-            if self.index:
-                if len(self.main.sizes) >= self.index:
-                    size = self.main.sizes[self.index-1]
-                    self.resize(size['width'], size['height'])
-                    self.move(size['x'], size['y'])
-                    self.setWindowOpacity(size['opacity'])
-            if len(self.main.notes) >= self.index+1:
-                self.text_edit.setPlainText(self.main.notes[self.index])
-                self.setWindowTitle(self.text_edit.toPlainText()[:40].strip())
-            else:
-                self.setWindowTitle(self.main.info.NAME)
-        except:
-            print(traceback.format_exc())
+        self.setStyleSheet(self.main.get_style(self.index))
+        if self.index:
+            if len(self.main.sizes) >= self.index:
+                size = self.main.sizes[self.index - 1]
+                self.resize(size['width'], size['height'])
+                self.move(size['x'], size['y'])
+                self.setWindowOpacity(size['opacity'])
+        if len(self.main.notes) >= self.index + 1:
+            self.text_edit.setPlainText(self.main.notes[self.index])
+            self.setWindowTitle(self.text_edit.toPlainText()[:40].strip())
+        else:
+            self.setWindowTitle(self.main.info.NAME)
 
+    @try_except
     def _text_changed(self):
-        try:
-            if self.main.notes[self.index] == self.text_edit.toPlainText():
-                return
-            self.main.notes[self.index] = self.text_edit.toPlainText()
-            self.main.save_conf()
-        except:
-            print(traceback.format_exc())
+        if self.main.notes[self.index] == self.text_edit.toPlainText():
+            return
+        self.main.notes[self.index] = self.text_edit.toPlainText()
+        self.main.save_conf()
 
 
 class Info(WidgetInfo):
@@ -93,66 +89,57 @@ class Main(Widget, Note):
         for item in self.style_names.items():
             self.style_keys[item[1]] = item[0]
 
+    @try_except
     def save_conf(self):
-        try:
-            b_notes = []
-            for note in self.notes:
-                b_notes.append(base64.b64encode(note.encode('utf-8')
-                                                ).decode('ASCII'))
-            self.conf['notes'] = json.dumps(b_notes)
-            self.conf['styles'] = json.dumps(self.styles)
-            self.sizes.clear()
-            for widget in self.widgets:
-                size = {
-                    'width': widget.width(), 'height': widget.height(),
-                    'x': widget.x(), 'y': widget.y(),
-                    'opacity': widget.windowOpacity()
-                }
-                self.sizes.append(size)
-            self.conf['sizes'] = json.dumps(self.sizes)
-            self.conf['editable'] = json.dumps(self.editable)
-            if 'hot_saves' in self.conf and self.conf['hot_saves'] == 'true':
-                self.widget_manager.config.save()
-        except:
-            print(traceback.format_exc())
+        b_notes = []
+        for note in self.notes:
+            b_notes.append(base64.b64encode(note.encode('utf-8')
+                                            ).decode('ASCII'))
+        self.conf['notes'] = json.dumps(b_notes)
+        self.conf['styles'] = json.dumps(self.styles)
+        self.sizes.clear()
+        for widget in self.widgets:
+            size = {
+                'width': widget.width(), 'height': widget.height(),
+                'x': widget.x(), 'y': widget.y(),
+                'opacity': widget.windowOpacity()
+            }
+            self.sizes.append(size)
+        self.conf['sizes'] = json.dumps(self.sizes)
+        self.conf['editable'] = json.dumps(self.editable)
+        if 'hot_saves' in self.conf and self.conf['hot_saves'] == 'true':
+            self.widget_manager.config.save()
 
     def get_style(self, index=0) -> str:
-        try:
-            path = os.path.join(RES, 'notes', 'css', self.styles[index])
-            with open(path, encoding='utf-8') as file:
-                return file.read()
-        except:
-            print(traceback.format_exc())
+        path = os.path.join(RES, 'notes', 'css', self.styles[index])
+        with open(path, encoding='utf-8') as file:
+            return file.read()
 
+    @try_except
     def _load_settings(self):
-        try:
-            self.conf = self.widget_manager.get_config(self.info.NAME)
-            if 'notes' in self.conf:
-                self.notes.clear()
-                b_notes = json.loads(self.conf['notes'])
-                for b_note in b_notes:
-                    self.notes.append(base64.b64decode(b_note).decode('utf-8'))
-            if 'styles' in self.conf:
-                self.styles = json.loads(self.conf['styles'])
-            if 'sizes' in self.conf:
-                self.sizes = json.loads(self.conf['sizes'])
-            if 'editable' in self.conf:
-                self.editable = json.loads(self.conf['editable'])
-            self._init()
-        except:
-            print(traceback.format_exc())
+        self.conf = self.widget_manager.get_config(self.info.NAME)
+        if 'notes' in self.conf:
+            self.notes.clear()
+            b_notes = json.loads(self.conf['notes'])
+            for b_note in b_notes:
+                self.notes.append(base64.b64decode(b_note).decode('utf-8'))
+        if 'styles' in self.conf:
+            self.styles = json.loads(self.conf['styles'])
+        if 'sizes' in self.conf:
+            self.sizes = json.loads(self.conf['sizes'])
+        if 'editable' in self.conf:
+            self.editable = json.loads(self.conf['editable'])
+        self._init()
 
+    @try_except
     def _load_widgets(self):
-        try:
-            for i in range(len(self.notes)):
-                if i == 0:
-                    continue
-                note = Note(self, i)
-                note._init()
-                note.show()
-                self.widgets.append(note)
-        except:
-            print(traceback.format_exc())
+        for i in range(len(self.notes)):
+            if i == 0:
+                continue
+            note = Note(self, i)
+            note._init()
+            note.show()
+            self.widgets.append(note)
 
     def boot(self):
         self._load_settings()
@@ -162,50 +149,40 @@ class Main(Widget, Note):
         self._load_settings()
         self._load_widgets()
 
+    @try_except
     def hide_event(self, state):
-        try:
-            for widget in self.widgets:
-                widget.setHidden(state)
-        except:
-            print(traceback.format_exc())
+        for widget in self.widgets:
+            widget.setHidden(state)
 
+    @try_except
     def edit_mode(self, mode):
-        try:
-            for widget in self.widgets:
-                if mode:
-                    widget.setWindowFlags(Qt.WindowMinimizeButtonHint |
-                                          Qt.WindowStaysOnBottomHint | Qt.Tool)
-                    widget.show()
-                else:
-                    widget.setWindowFlags(Qt.CustomizeWindowHint |
-                                          Qt.WindowStaysOnBottomHint | Qt.Tool)
-                    widget.show()
-            self.save_conf()
-        except:
-            print(traceback.format_exc())
+        for widget in self.widgets:
+            if mode:
+                widget.setWindowFlags(Qt.WindowMinimizeButtonHint |
+                                      Qt.WindowStaysOnBottomHint | Qt.Tool)
+                widget.show()
+            else:
+                widget.setWindowFlags(Qt.CustomizeWindowHint |
+                                      Qt.WindowStaysOnBottomHint | Qt.Tool)
+                widget.show()
+        self.save_conf()
 
     def unload(self):
         self.save_conf()
 
+    @try_except
     def remove(self):
-        try:
-            for widget in self.widgets:
-                widget.destroy()
-        except:
-            print(traceback.format_exc())
+        for widget in self.widgets:
+            widget.destroy()
 
+    @try_except
     def purge(self):
-        try:
-            self.remove()
-            self.__setup_vars()
-        except:
-            print(traceback.format_exc())
+        self.remove()
+        self.__setup_vars()
 
+    @try_except
     def show_settings(self):
-        try:
-            self.settings_win = Settings(self)
-        except:
-            print(traceback.format_exc())
+        self.settings_win = Settings(self)
 
 
 class Settings(QWidget):
@@ -267,122 +244,110 @@ class Settings(QWidget):
         else:
             self.delete_button.setEnabled(False)
 
+    @try_except
     def _list_fill(self):
-        try:
-            self.list.clear()
+        self.list.clear()
+        item = QListWidgetItem(
+            self.main.text_edit.toPlainText()[:40].strip(), self.list
+        )
+        if not item.text():
+            item.setText('-')
+        self.list.addItem(item)
+        for widget in self.main.widgets:
             item = QListWidgetItem(
-                self.main.text_edit.toPlainText()[:40].strip(), self.list
+                widget.text_edit.toPlainText()[:40].strip(), self.list
             )
             if not item.text():
                 item.setText('-')
             self.list.addItem(item)
-            for widget in self.main.widgets:
-                item = QListWidgetItem(
-                    widget.text_edit.toPlainText()[:40].strip(), self.list
-                )
-                if not item.text():
-                    item.setText('-')
-                self.list.addItem(item)
-        except:
-            print(traceback.format_exc())
 
-    def _list_double_click(self):
-        try:
-            self.note_settings = NoteSettings(self.main, self)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _list_double_click(self, checked):
+        self.note_settings = NoteSettings(self.main, self)
 
-    def _editable_changed(self):
-        try:
-            self.main.editable = self.editable.isChecked()
-            self.main.save_conf()
-            self.main.text_edit.setEnabled(self.main.editable)
-            for widget in self.main.widgets:
-                widget.setEnabled(self.main.editable)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _editable_changed(self, state):
+        self.main.editable = self.editable.isChecked()
+        self.main.save_conf()
+        self.main.text_edit.setEnabled(self.main.editable)
+        for widget in self.main.widgets:
+            widget.setEnabled(self.main.editable)
 
-    def _save_changed(self):
-        try:
-            self.main.conf['hot_saves'] = json.dumps(self.hot_save.isChecked())
-            self.main.save_conf()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _save_changed(self, state):
+        self.main.conf['hot_saves'] = json.dumps(self.hot_save.isChecked())
+        self.main.save_conf()
 
-    def _delete(self):
-        try:
-            if self.list.count() <= 1:
-                return
-            # confirm dialog
-            mbox = QMessageBox(QMessageBox.Question,
-                               self.main.lang['delete_title'],
-                               self.main.lang['delete_text'],
-                               QMessageBox.Yes | QMessageBox.No, self)
-            mbox.setWindowIcon(QIcon(DELETE))
-            mbox.setInformativeText(self.main.lang['delete_inf'].format(
-                self.list.currentItem().text()))
-            yes = mbox.button(QMessageBox.Yes)
-            yes.setText(self.main.lang['delete_yes_button'])
-            yes.setToolTip(self.main.lang['delete_yes_button_tt'])
-            no = mbox.button(QMessageBox.No)
-            no.setText(self.main.lang['delete_no_button'])
-            no.setToolTip(self.main.lang['delete_no_button_tt'])
-            if mbox.exec() != QMessageBox.Yes:
-                return
-            # deleting process
-            row = self.list.currentRow()
-            if row == 0:  # change main win
-                self.main.notes[0] = self.main.notes[1]
-                del self.main.notes[1]
-                self.main.text_edit.setPlainText(self.main.notes[0])
-                self.main.styles[0] = self.main.styles[1]
-                del self.main.styles[1]
-                self.main.setStyleSheet(self.main.get_style(0))
-                size = self.main.sizes[0]
-                self.main.resize(size['width'], size['height'])
-                self.main.move(size['x'], size['y'])
-                self.main.setWindowOpacity(size['opacity'])
-                del self.main.sizes[0]
-                self.main.widgets[0].destroy()
-                del self.main.widgets[0]
-                self.main.show()
-                self.main.widget_manager.edit_mode(False, self.main.info.NAME)
-            else:  # remove child win
-                del self.main.notes[row]
-                del self.main.styles[row]
-                del self.main.sizes[row-1]
-                self.main.widgets[row-1].destroy()
-                del self.main.widgets[row-1]
-            self.main.save_conf()
-            self._list_fill()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _delete(self, checked):
+        if self.list.count() <= 1:
+            return
+        # confirm dialog
+        mbox = QMessageBox(QMessageBox.Question,
+                           self.main.lang['delete_title'],
+                           self.main.lang['delete_text'],
+                           QMessageBox.Yes | QMessageBox.No, self)
+        mbox.setWindowIcon(QIcon(DELETE))
+        mbox.setInformativeText(self.main.lang['delete_inf'].format(
+            self.list.currentItem().text()))
+        yes = mbox.button(QMessageBox.Yes)
+        yes.setText(self.main.lang['delete_yes_button'])
+        yes.setToolTip(self.main.lang['delete_yes_button_tt'])
+        no = mbox.button(QMessageBox.No)
+        no.setText(self.main.lang['delete_no_button'])
+        no.setToolTip(self.main.lang['delete_no_button_tt'])
+        if mbox.exec() != QMessageBox.Yes:
+            return
+        # deleting process
+        row = self.list.currentRow()
+        if row == 0:  # change main win
+            self.main.notes[0] = self.main.notes[1]
+            del self.main.notes[1]
+            self.main.text_edit.setPlainText(self.main.notes[0])
+            self.main.styles[0] = self.main.styles[1]
+            del self.main.styles[1]
+            self.main.setStyleSheet(self.main.get_style(0))
+            size = self.main.sizes[0]
+            self.main.resize(size['width'], size['height'])
+            self.main.move(size['x'], size['y'])
+            self.main.setWindowOpacity(size['opacity'])
+            del self.main.sizes[0]
+            self.main.widgets[0].destroy()
+            del self.main.widgets[0]
+            self.main.show()
+            self.main.widget_manager.edit_mode(False, self.main.info.NAME)
+        else:  # remove child win
+            del self.main.notes[row]
+            del self.main.styles[row]
+            del self.main.sizes[row - 1]
+            self.main.widgets[row - 1].destroy()
+            del self.main.widgets[row - 1]
+        self.main.save_conf()
+        self._list_fill()
 
-    def _add(self):
-        try:
-            # adding
-            self.main.notes.append(self.main.lang['note'])
-            self.main.styles.append('white.css')
-            note = Note(self.main, self.list.count())
-            note._init()
-            note.show()
-            self.main.widgets.append(note)
-            self.list.addItem(QListWidgetItem(self.main.lang['note'],
-                                              self.list))
-            self.list.setCurrentRow(self.list.count()-1)
-            self.main.save_conf()
-            # show success alert
-            mbox = QMessageBox(QMessageBox.Information,
-                               self.main.lang['success_title'],
-                               self.main.lang['success_text'], QMessageBox.Ok,
-                               self)
-            mbox.setWindowIcon(QIcon(SUCCESS))
-            ok = mbox.button(QMessageBox.Ok)
-            ok.setText(self.main.lang['success_ok_button'])
-            ok.setToolTip(self.main.lang['success_ok_button_tt'])
-            mbox.exec()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _add(self, checked):
+        # adding
+        self.main.notes.append(self.main.lang['note'])
+        self.main.styles.append('white.css')
+        note = Note(self.main, self.list.count())
+        note._init()
+        note.show()
+        self.main.widgets.append(note)
+        self.list.addItem(QListWidgetItem(self.main.lang['note'],
+                                          self.list))
+        self.list.setCurrentRow(self.list.count() - 1)
+        self.main.save_conf()
+        # show success alert
+        mbox = QMessageBox(QMessageBox.Information,
+                           self.main.lang['success_title'],
+                           self.main.lang['success_text'], QMessageBox.Ok,
+                           self)
+        mbox.setWindowIcon(QIcon(SUCCESS))
+        ok = mbox.button(QMessageBox.Ok)
+        ok.setText(self.main.lang['success_ok_button'])
+        ok.setToolTip(self.main.lang['success_ok_button_tt'])
+        mbox.exec()
 
 
 class NoteSettings(QWidget):
@@ -434,39 +399,33 @@ class NoteSettings(QWidget):
         # show
         self.show()
 
+    @try_except
     def _text_changed(self):
-        try:
-            if self.row == 0:
-                self.main.text_edit.setPlainText(self.text_edit.toPlainText())
-            else:
-                self.main.widgets[self.row-1].text_edit.setPlainText(
-                    self.text_edit.toPlainText())
-            self.main.save_conf()
-            self.settings._list_fill()
-        except:
-            print(traceback.format_exc())
+        if self.row == 0:
+            self.main.text_edit.setPlainText(self.text_edit.toPlainText())
+        else:
+            self.main.widgets[self.row - 1].text_edit.setPlainText(
+                self.text_edit.toPlainText())
+        self.main.save_conf()
+        self.settings._list_fill()
 
-    def _style_select(self):
-        try:
-            self.main.styles[self.row] =\
-                self.main.style_keys[self.styles_list.currentText()]
-            style = self.main.get_style(self.row)
-            if self.row == 0:
-                self.main.setStyleSheet(style)
-                self.main.show()
-            else:
-                self.main.widgets[self.row-1].setStyleSheet(style)
-                self.main.widgets[self.row-1].show()
-            self.main.save_conf()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _style_select(self, index):
+        self.main.styles[self.row] = \
+            self.main.style_keys[self.styles_list.currentText()]
+        style = self.main.get_style(self.row)
+        if self.row == 0:
+            self.main.setStyleSheet(style)
+            self.main.show()
+        else:
+            self.main.widgets[self.row - 1].setStyleSheet(style)
+            self.main.widgets[self.row - 1].show()
+        self.main.save_conf()
 
-    def _show_move(self):
-        try:
-            if self.row == 0:
-                win = self.main
-            else:
-                win = self.main.widgets[self.row-1]
-            self.move_win = Move(win, self.main.widget_manager)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_move(self, checked):
+        if self.row == 0:
+            win = self.main
+        else:
+            win = self.main.widgets[self.row - 1]
+        self.move_win = Move(win, self.main.widget_manager)

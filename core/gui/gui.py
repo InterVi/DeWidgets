@@ -17,6 +17,7 @@ from core.gui.help import Help, TextViewer
 from core.gui.move import Move
 from core.gui.settings import Settings
 from core.manager import WidgetManager
+from core.utils import try_except
 
 settings = ConfigParser()
 """ConfigParser, settings dict"""
@@ -207,37 +208,33 @@ class Main(QMainWindow):
         elif manager.is_placed():
             self.edit_mode_checkbox.setEnabled(True)
 
-    def _add_widget(self):
-        try:
-            item = self.list.currentItem()
-            # setup widget
-            manager.config.create(item.text())
-            r = manager.load(os.path.basename(manager.paths[item.text()])[:-3],
-                             False)
-            if not r:
-                return
-            widget = manager.widgets[item.text()]
-            widget.place()
-            widget.setWindowFlags(Qt.CustomizeWindowHint |
-                                  Qt.WindowStaysOnBottomHint | Qt.Tool)
-            widget.show()
-            # edit config
-            manager.config.add(widget.info.NAME)
-            manager.config.save()
-            # change item font
-            font = item.font()
-            font.setBold(True)
-            item.setFont(font)
-            # changing enabled
-            self.__change_enabled()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _add_widget(self, checked):
+        item = self.list.currentItem()
+        # setup widget
+        manager.config.create(item.text())
+        r = manager.load(os.path.basename(manager.paths[item.text()])[:-3],
+                         False)
+        if not r:
+            return
+        widget = manager.widgets[item.text()]
+        widget.place()
+        widget.setWindowFlags(Qt.CustomizeWindowHint |
+                              Qt.WindowStaysOnBottomHint | Qt.Tool)
+        widget.show()
+        # edit config
+        manager.config.add(widget.info.NAME)
+        manager.config.save()
+        # change item font
+        font = item.font()
+        font.setBold(True)
+        item.setFont(font)
+        # changing enabled
+        self.__change_enabled()
 
-    def _show_help(self):
-        try:
-            self.help_window = Help(lang)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_help(self, checked):
+        self.help_window = Help(lang)
 
     def _list_fill(self):
         self.list.clear()
@@ -255,41 +252,33 @@ class Main(QMainWindow):
             except:
                 print(traceback.format_exc())
 
-    def _list_double_click(self):
-        try:
-            self.item_info = ItemInfo(self.list.currentItem().text())
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _list_double_click(self, item):
+        self.item_info = ItemInfo(item.text())
 
-    def _list_click(self):
-        try:
-            self.__change_enabled()
-            self.statusBar().showMessage(
-                manager.info[self.list.currentItem().text()].DESCRIPTION)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _list_click(self, item):
+        self.__change_enabled()
+        self.statusBar().showMessage(manager.info[item.text()].DESCRIPTION)
 
-    def _show_add_new(self):
-        try:
-            names = add_new.install()
-            for name in names:
-                try:
-                    manager.load(name)
-                except:
-                    print(traceback.format_exc())
-            if names:
-                self._list_fill()
-            self.__change_enabled()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_add_new(self, checked):
+        names = add_new.install()
+        for name in names:
+            try:
+                manager.load(name)
+            except:
+                print(traceback.format_exc())
+        if names:
+            self._list_fill()
+        self.__change_enabled()
 
-    def _show_settings(self):
-        try:
-            self.settings_win = Settings(lang, self, settings)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_settings(self, checked):
+        self.settings_win = Settings(lang, self, settings)
 
-    def _edit_mode(self):
+    @try_except
+    def _edit_mode(self, checked):
         for widget in manager.widgets.values():
             try:
                 if widget.isHidden():
@@ -306,64 +295,57 @@ class Main(QMainWindow):
                     self.statusBar().showMessage(lang['STATUS']['first'])
             except:
                 print(traceback.format_exc())
-        try:  # save
-            manager.edit_mode(self.edit_mode_checkbox.isChecked())
-            if not self.edit_mode_checkbox.isChecked():
-                manager.config.save()
-        except:
-            print(traceback.format_exc())
+        # save
+        manager.edit_mode(self.edit_mode_checkbox.isChecked())
+        if not self.edit_mode_checkbox.isChecked():
+            manager.config.save()
 
-    def _show_del(self):
-        try:
-            # check item
-            item = self.list.currentItem()
-            # setup box
-            mbox = QMessageBox(QMessageBox.Question, lang['DELETE']['title'],
-                               lang['DELETE']['question'], QMessageBox.Yes |
-                               QMessageBox.No | QMessageBox.Cancel, self)
-            mbox.setWindowIcon(QIcon(DELETE))
-            # setup 'Yes' button
-            yes = mbox.button(QMessageBox.Yes)
-            yes.setText(lang['DELETE']['yes'])
-            yes.setToolTip(lang['DELETE']['yes_tt'])
-            # setup 'No' button
-            no = mbox.button(QMessageBox.No)
-            no.setText(lang['DELETE']['no'])
-            no.setToolTip(lang['DELETE']['no_tt'])
-            # setup 'Cancel' button
-            cancel = mbox.button(QMessageBox.Cancel)
-            cancel.setText(lang['DELETE']['cancel'])
-            cancel.setToolTip(lang['DELETE']['cancel_tt'])
-            # deleting
-            key = mbox.exec()
-            if key == QMessageBox.Yes:
-                manager.remove(item.text(), True)
-            elif key == QMessageBox.No:
-                manager.remove(item.text())
-            else:
-                return
-            # change item font
-            font = item.font()
-            font.setBold(False)
-            item.setFont(font)
-            # changing enabled
-            self.__change_enabled()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_del(self, checked):
+        # check item
+        item = self.list.currentItem()
+        # setup box
+        mbox = QMessageBox(QMessageBox.Question, lang['DELETE']['title'],
+                           lang['DELETE']['question'], QMessageBox.Yes |
+                           QMessageBox.No | QMessageBox.Cancel, self)
+        mbox.setWindowIcon(QIcon(DELETE))
+        # setup 'Yes' button
+        yes = mbox.button(QMessageBox.Yes)
+        yes.setText(lang['DELETE']['yes'])
+        yes.setToolTip(lang['DELETE']['yes_tt'])
+        # setup 'No' button
+        no = mbox.button(QMessageBox.No)
+        no.setText(lang['DELETE']['no'])
+        no.setToolTip(lang['DELETE']['no_tt'])
+        # setup 'Cancel' button
+        cancel = mbox.button(QMessageBox.Cancel)
+        cancel.setText(lang['DELETE']['cancel'])
+        cancel.setToolTip(lang['DELETE']['cancel_tt'])
+        # deleting
+        key = mbox.exec()
+        if key == QMessageBox.Yes:
+            manager.remove(item.text(), True)
+        elif key == QMessageBox.No:
+            manager.remove(item.text())
+        else:
+            return
+        # change item font
+        font = item.font()
+        font.setBold(False)
+        item.setFont(font)
+        # changing enabled
+        self.__change_enabled()
 
-    def _show_widget_settings(self):
-        try:
-            manager.widgets[self.list.currentItem().text()].show_settings()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_widget_settings(self, checked):
+        manager.widgets[self.list.currentItem().text()].show_settings()
 
-    def _show_move(self):
-        try:
-            self.move_window = Move(
-                manager.widgets[self.list.currentItem().text()], manager)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_move(self, checked):
+        self.move_window = Move(
+            manager.widgets[self.list.currentItem().text()], manager)
 
+    @try_except
     def _visible(self, reason):
         if reason == QSystemTrayIcon.Trigger:
             if self.isHidden():
@@ -371,55 +353,46 @@ class Main(QMainWindow):
             else:
                 self.setHidden(True)
 
-    def _hide_widgets(self):
-        try:
-            for name in manager.widgets:
-                try:
-                    if manager.widgets[name].isHidden():
-                        manager.widgets[name].hide_event(False)
-                        manager.widgets[name].setHidden(False)
-                    else:
-                        manager.widgets[name].hide_event(True)
-                        manager.widgets[name].setHidden(True)
-                except:
-                    print(traceback.format_exc())
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _hide_widgets(self, checked):
+        for name in manager.widgets:
+            try:
+                if manager.widgets[name].isHidden():
+                    manager.widgets[name].hide_event(False)
+                    manager.widgets[name].setHidden(False)
+                else:
+                    manager.widgets[name].hide_event(True)
+                    manager.widgets[name].setHidden(True)
+            except:
+                print(traceback.format_exc())
 
+    @try_except
     def _show_list_menu(self, point):
-        try:
-            self.list_menu.exec(self.list.mapToGlobal(point))
-        except:
-            print(traceback.format_exc())
+        self.list_menu.exec(self.list.mapToGlobal(point))
 
-    def _unload_not_placed(self):
-        try:
-            manager.del_data_no_placed()
-            self._list_fill()
-            self.__change_enabled()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _unload_not_placed(self, point):
+        manager.del_data_no_placed()
+        self._list_fill()
+        self.__change_enabled()
 
-    def _load_not_placed(self):
-        try:
-            manager.load_placed(False)
-            self._list_fill()
-            self.__change_enabled()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _load_not_placed(self, point):
+        manager.load_placed(False)
+        self._list_fill()
+        self.__change_enabled()
 
-    def _reload(self):
-        try:
-            manager.unload_all()
-            if bool(strtobool(settings['MAIN']['load_placed'])):
-                manager.load_placed()
-            else:
-                manager.load_all()
-            self._list_fill()
-            self.__change_enabled()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _reload(self, point):
+        manager.unload_all()
+        if bool(strtobool(settings['MAIN']['load_placed'])):
+            manager.load_placed()
+        else:
+            manager.load_all()
+        self._list_fill()
+        self.__change_enabled()
 
+    @try_except
     def changeEvent(self, event):
         if event.type() == QEvent.WindowStateChange:
             if self.windowState() and Qt.WindowMinimized:

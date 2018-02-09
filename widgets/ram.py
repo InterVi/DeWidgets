@@ -1,5 +1,4 @@
 import os
-import traceback
 from distutils.util import strtobool
 import psutil
 from PyQt5.QtWidgets import QWidget, QLabel, QProgressBar, QPushButton
@@ -8,6 +7,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer
 from core.manager import Widget, WidgetInfo
 from core.paths import RES, SETTINGS
+from core.utils import try_except
 
 
 class Info(WidgetInfo):
@@ -31,6 +31,9 @@ class Main(Widget, QWidget):
         self.conf = {}
         self.lang = info.lang
         self.settings_win = None
+        # setup layout
+        self.setLayout(QVBoxLayout(self))
+        self.layout().setContentsMargins(0, 0, 0, 0)
         # setup stylesheet
         with open(os.path.join(RES, 'ram', 'style.css'), encoding='utf-8'
                   ) as file:
@@ -82,66 +85,55 @@ class Main(Widget, QWidget):
             self._widgets.append(label)
             self.layout().addWidget(label)
 
+    @try_except
     def setup_ui(self):
-        try:
-            if self.layout():  # clear
-                for w in self._widgets:
-                    self.layout().removeWidget(w)
-                    w.deleteLater()
-                self.layout().update()
-                self.update()
-                self._widgets.clear()
-            else:  # setup v box layout
-                self.setLayout(QVBoxLayout(self))
-                self.layout().setContentsMargins(0, 0, 0, 0)
-            # setup elements
-            if self._ram:
-                self.__set_info()
-            if self._swap:
-                self.__set_info(True)
-            # set layout
+        if self._widgets:  # clear
+            for w in self._widgets:
+                self.layout().removeWidget(w)
+                w.deleteLater()
             self.layout().update()
             self.update()
-        except:
-            print(traceback.format_exc())
+            self._widgets.clear()
+        # setup elements
+        if self._ram:
+            self.__set_info()
+        if self._swap:
+            self.__set_info(True)
+        # set layout
+        self.layout().update()
+        self.update()
 
+    @try_except
     def _load_settings(self):
-        try:
-            self.conf = self.widget_manager.get_config(self.info.NAME)
-            if 'update' in self.conf:
-                self._update = int(self.conf['update'])
-            if 'round' in self.conf:
-                self._round = int(self.conf['round'])
-            if 'labels' in self.conf:
-                self._labels = bool(strtobool(self.conf['labels']))
-            if 'text' in self.conf:
-                self._text = bool(strtobool(self.conf['text']))
-            if 'mb' in self.conf:
-                self._mb = bool(strtobool(self.conf['mb']))
-            if 'ram' in self.conf:
-                self._ram = bool(strtobool(self.conf['ram']))
-            if 'swap' in self.conf:
-                self._swap = bool(strtobool(self.conf['swap']))
-        except:
-            print(traceback.format_exc())
+        self.conf = self.widget_manager.get_config(self.info.NAME)
+        if 'update' in self.conf:
+            self._update = int(self.conf['update'])
+        if 'round' in self.conf:
+            self._round = int(self.conf['round'])
+        if 'labels' in self.conf:
+            self._labels = bool(strtobool(self.conf['labels']))
+        if 'text' in self.conf:
+            self._text = bool(strtobool(self.conf['text']))
+        if 'mb' in self.conf:
+            self._mb = bool(strtobool(self.conf['mb']))
+        if 'ram' in self.conf:
+            self._ram = bool(strtobool(self.conf['ram']))
+        if 'swap' in self.conf:
+            self._swap = bool(strtobool(self.conf['swap']))
 
+    @try_except
     def save_settings(self):
-        try:
-            self.conf['update'] = str(self._update)
-            self.conf['round'] = str(self._round)
-            self.conf['labels'] = str(self._labels)
-            self.conf['text'] = str(self._text)
-            self.conf['mb'] = str(self._mb)
-            self.conf['ram'] = str(self._ram)
-            self.conf['swap'] = str(self._swap)
-        except:
-            print(traceback.format_exc())
+        self.conf['update'] = str(self._update)
+        self.conf['round'] = str(self._round)
+        self.conf['labels'] = str(self._labels)
+        self.conf['text'] = str(self._text)
+        self.conf['mb'] = str(self._mb)
+        self.conf['ram'] = str(self._ram)
+        self.conf['swap'] = str(self._swap)
 
+    @try_except
     def show_settings(self):
-        try:
-            self.settings_win = Settings(self)
-        except:
-            print(traceback.format_exc())
+        self.settings_win = Settings(self)
 
     def unload(self):
         self.save_settings()
@@ -160,18 +152,14 @@ class Main(Widget, QWidget):
         self.timer.stop()
         self._setup_vars()
 
+    @try_except
     def showEvent(self, event):
-        try:
-            self.setup_ui()
-            self.timer.start(self._update)
-        except:
-            print(traceback.format_exc())
+        self.setup_ui()
+        self.timer.start(self._update)
 
+    @try_except
     def hideEvent(self, event):
-        try:
-            self.timer.stop()
-        except:
-            print(traceback.format_exc())
+        self.timer.stop()
 
 
 class Settings(QWidget):
@@ -255,18 +243,16 @@ class Settings(QWidget):
         # show
         self.show()
 
-    def _save(self):
-        try:
-            self.main._update = self.update_spinbox.value()
-            self.main._round = self.round_spinbox.value()
-            self.main._ram = self.ram_checkbox.isChecked()
-            self.main._swap = self.swap_checkbox.isChecked()
-            self.main._mb = self.mb_checkbox.isChecked()
-            self.main._labels = self.labels_checkbox.isChecked()
-            self.main._text = self.text_checkbox.isChecked()
-            self.main.save_settings()
-            self.main.timer.stop()
-            self.main.timer.start(self.main._update)
-            self.close()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _save(self, checked):
+        self.main._update = self.update_spinbox.value()
+        self.main._round = self.round_spinbox.value()
+        self.main._ram = self.ram_checkbox.isChecked()
+        self.main._swap = self.swap_checkbox.isChecked()
+        self.main._mb = self.mb_checkbox.isChecked()
+        self.main._labels = self.labels_checkbox.isChecked()
+        self.main._text = self.text_checkbox.isChecked()
+        self.main.save_settings()
+        self.main.timer.stop()
+        self.main.timer.start(self.main._update)
+        self.close()

@@ -1,5 +1,4 @@
 import os
-import traceback
 from distutils.util import strtobool
 import psutil
 from PyQt5.QtWidgets import QWidget, QLabel, QProgressBar, QPushButton
@@ -9,6 +8,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer
 from core.manager import Widget, WidgetInfo
 from core.paths import RES, SETTINGS
+from core.utils import try_except
 
 
 class Info(WidgetInfo):
@@ -32,6 +32,9 @@ class Main(Widget, QWidget):
         self.conf = {}
         self.lang = info.lang
         self.settings_win = None
+        # setup layout
+        self.setLayout(QVBoxLayout(self))
+        self.layout().setContentsMargins(0, 0, 0, 0)
         # setup stylesheet
         with open(os.path.join(RES, 'cpu', 'style.css'), encoding='utf-8'
                   ) as file:
@@ -54,106 +57,95 @@ class Main(Widget, QWidget):
         self._labels = True
         self._text = True
 
+    @try_except
     def setup_ui(self):
-        try:
-            if self.layout():  # clear
-                for w in self._widgets:
-                    self.layout().removeWidget(w)
-                    w.deleteLater()
-                self.layout().update()
-                self.update()
-                self._widgets.clear()
-            else:  # setup v box layout
-                self.setLayout(QVBoxLayout(self))
-                self.layout().setContentsMargins(0, 0, 0, 0)
-            # setup elements
-            for i in range(psutil.cpu_count() if self._percpu else 1):
-                if self._percent:  # percents
-                    pc = psutil.cpu_percent(percpu=self._percpu)
-                    if self._labels:  # titles
-                        text = self.lang['proc']
-                        if self._percpu:
-                            text = self.lang['core'].format(str(i))
-                        label = QLabel(text, self)
-                        label.setAlignment(Qt.AlignCenter)
-                        self._widgets.append(label)
-                        self.layout().addWidget(label)
-                    bar = QProgressBar(self)
-                    bar.setMinimum(0)
-                    bar.setMaximum(100)
-                    bar.setValue(int(pc[i]) if self._percpu else int(pc))
-                    self._widgets.append(bar)
-                    self.layout().addWidget(bar)
-                if self._freq:  # freqs
-                    pf = psutil.cpu_freq(self._percpu)
-                    if self._labels:  # titles
-                        text = self.lang['freq']
-                        if self._percpu:
-                            text = self.lang['core_freq'].format(str(i))
-                        label = QLabel(text, self)
-                        label.setAlignment(Qt.AlignCenter)
-                        self._widgets.append(label)
-                        self.layout().addWidget(label)
-                    bar = QProgressBar(self)
-                    bar.setMinimum(int(pf[i].min) if self._percpu else
-                                   int(pf.min))
-                    bar.setMaximum(int(pf[i].max) if self._percpu else
-                                   int(pf.max))
-                    bar.setValue(int(pf[i].current) if self._percpu else
-                                 int(pf.current))
-                    self._widgets.append(bar)
-                    self.layout().addWidget(bar)
-                    if self._text:  # text info
-                        text = str(round(pf[i].current, self._round)) if\
-                            self._percpu else\
-                            str(round(pf.current, self._round))
-                        label = QLabel(self.lang['freq_text'].format(text))
-                        label.setAlignment(Qt.AlignCenter)
-                        self._widgets.append(label)
-                        self.layout().addWidget(label)
-            # set layout
+        if self._widgets:  # clear
+            for w in self._widgets:
+                self.layout().removeWidget(w)
+                w.deleteLater()
             self.layout().update()
             self.update()
-        except:
-            print(traceback.format_exc())
+            self._widgets.clear()
+        # setup elements
+        for i in range(psutil.cpu_count() if self._percpu else 1):
+            if self._percent:  # percents
+                pc = psutil.cpu_percent(percpu=self._percpu)
+                if self._labels:  # titles
+                    text = self.lang['proc']
+                    if self._percpu:
+                        text = self.lang['core'].format(str(i))
+                    label = QLabel(text, self)
+                    label.setAlignment(Qt.AlignCenter)
+                    self._widgets.append(label)
+                    self.layout().addWidget(label)
+                bar = QProgressBar(self)
+                bar.setMinimum(0)
+                bar.setMaximum(100)
+                bar.setValue(int(pc[i]) if self._percpu else int(pc))
+                self._widgets.append(bar)
+                self.layout().addWidget(bar)
+            if self._freq:  # freqs
+                pf = psutil.cpu_freq(self._percpu)
+                if self._labels:  # titles
+                    text = self.lang['freq']
+                    if self._percpu:
+                        text = self.lang['core_freq'].format(str(i))
+                    label = QLabel(text, self)
+                    label.setAlignment(Qt.AlignCenter)
+                    self._widgets.append(label)
+                    self.layout().addWidget(label)
+                bar = QProgressBar(self)
+                bar.setMinimum(int(pf[i].min) if self._percpu else
+                               int(pf.min))
+                bar.setMaximum(int(pf[i].max) if self._percpu else
+                               int(pf.max))
+                bar.setValue(int(pf[i].current) if self._percpu else
+                             int(pf.current))
+                self._widgets.append(bar)
+                self.layout().addWidget(bar)
+                if self._text:  # text info
+                    text = str(round(pf[i].current, self._round)) if \
+                        self._percpu else \
+                        str(round(pf.current, self._round))
+                    label = QLabel(self.lang['freq_text'].format(text))
+                    label.setAlignment(Qt.AlignCenter)
+                    self._widgets.append(label)
+                    self.layout().addWidget(label)
+        # set layout
+        self.layout().update()
+        self.update()
 
+    @try_except
     def _load_settings(self):
-        try:
-            self.conf = self.widget_manager.get_config(self.info.NAME)
-            if 'update' in self.conf:
-                self._update = int(self.conf['update'])
-            if 'round' in self.conf:
-                self._round = int(self.conf['round'])
-            if 'percpu' in self.conf:
-                self._percpu = bool(strtobool(self.conf['percpu']))
-            if 'percent' in self.conf:
-                self._percent = bool(strtobool(self.conf['percent']))
-            if 'freq' in self.conf:
-                self._freq = bool(strtobool(self.conf['freq']))
-            if 'labels' in self.conf:
-                self._labels = bool(strtobool(self.conf['labels']))
-            if 'text' in self.conf:
-                self._text = bool(strtobool(self.conf['text']))
-        except:
-            print(traceback.format_exc())
+        self.conf = self.widget_manager.get_config(self.info.NAME)
+        if 'update' in self.conf:
+            self._update = int(self.conf['update'])
+        if 'round' in self.conf:
+            self._round = int(self.conf['round'])
+        if 'percpu' in self.conf:
+            self._percpu = bool(strtobool(self.conf['percpu']))
+        if 'percent' in self.conf:
+            self._percent = bool(strtobool(self.conf['percent']))
+        if 'freq' in self.conf:
+            self._freq = bool(strtobool(self.conf['freq']))
+        if 'labels' in self.conf:
+            self._labels = bool(strtobool(self.conf['labels']))
+        if 'text' in self.conf:
+            self._text = bool(strtobool(self.conf['text']))
 
+    @try_except
     def save_settings(self):
-        try:
-            self.conf['update'] = str(self._update)
-            self.conf['round'] = str(self._round)
-            self.conf['percpu'] = str(self._percpu)
-            self.conf['percent'] = str(self._percent)
-            self.conf['freq'] = str(self._freq)
-            self.conf['labels'] = str(self._labels)
-            self.conf['text'] = str(self._text)
-        except:
-            print(traceback.format_exc())
+        self.conf['update'] = str(self._update)
+        self.conf['round'] = str(self._round)
+        self.conf['percpu'] = str(self._percpu)
+        self.conf['percent'] = str(self._percent)
+        self.conf['freq'] = str(self._freq)
+        self.conf['labels'] = str(self._labels)
+        self.conf['text'] = str(self._text)
 
+    @try_except
     def show_settings(self):
-        try:
-            self.settings_win = Settings(self)
-        except:
-            print(traceback.format_exc())
+        self.settings_win = Settings(self)
 
     def unload(self):
         self.save_settings()
@@ -172,18 +164,14 @@ class Main(Widget, QWidget):
         self.timer.stop()
         self._setup_vars()
 
+    @try_except
     def showEvent(self, event):
-        try:
-            self.setup_ui()
-            self.timer.start(self._update)
-        except:
-            print(traceback.format_exc())
+        self.setup_ui()
+        self.timer.start(self._update)
 
+    @try_except
     def hideEvent(self, event):
-        try:
-            self.timer.stop()
-        except:
-            print(traceback.format_exc())
+        self.timer.stop()
 
 
 class Settings(QWidget):
@@ -262,18 +250,16 @@ class Settings(QWidget):
         # show
         self.show()
 
-    def _save(self):
-        try:
-            self.main._update = self.update_spinbox.value()
-            self.main._round = self.round_spinbox.value()
-            self.main._percpu = self.percpu_checkbox.isChecked()
-            self.main._percent = self.percent_checkbox.isChecked()
-            self.main._freq = self.freq_checkbox.isChecked()
-            self.main._labels = self.labels_checkbox.isChecked()
-            self.main._text = self.text_checkbox.isChecked()
-            self.main.save_settings()
-            self.main.timer.stop()
-            self.main.timer.start(self.main._update)
-            self.close()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _save(self, checked):
+        self.main._update = self.update_spinbox.value()
+        self.main._round = self.round_spinbox.value()
+        self.main._percpu = self.percpu_checkbox.isChecked()
+        self.main._percent = self.percent_checkbox.isChecked()
+        self.main._freq = self.freq_checkbox.isChecked()
+        self.main._labels = self.labels_checkbox.isChecked()
+        self.main._text = self.text_checkbox.isChecked()
+        self.main.save_settings()
+        self.main.timer.stop()
+        self.main.timer.start(self.main._update)
+        self.close()

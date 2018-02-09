@@ -1,6 +1,5 @@
 import os
 import json
-import traceback
 from enum import IntEnum
 from distutils.util import strtobool
 import psutil
@@ -11,6 +10,7 @@ from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt, QTimer
 from core.manager import Widget, WidgetInfo
 from core.paths import RES, SETTINGS
+from core.utils import try_except
 
 
 class Rate(IntEnum):
@@ -112,44 +112,41 @@ class Main(Widget, QWidget):
         self._max_recv_speed = 0
         self._max_sent_speed = 0
 
+    @try_except
     def setup_ui(self):
-        try:
-            if self._widgets:  # clear
-                for w in self._widgets:
-                    self.layout().removeWidget(w)
-                    w.deleteLater()
-                self.layout().update()
-                self.update()
-                self._widgets.clear()
-            # setup elements
-            if not self._labels:
-                self._add_label(self.lang['net'])
-            counters = psutil.net_io_counters(self._pername)
-            speed = False
-            if self._old_counters and type(counters) == \
-                    type(self._old_counters):
-                speed = True
-            else:
-                self._old_counters = counters
-            names = self._names if self._pername else [None]
-            for name in names:
-                if name:
-                    if name not in counters:
-                        return
-                    if self._labels:
-                        self._add_label(self.lang['net_name'].format(name))
-                if speed:
-                    self.__setup_speed(counters, name)
-                self.__setup_total(counters, name)
-                self.__setup_packets(counters, name)
-                self.__setup_errors(counters, name)
-                self.__setup_drops(counters, name)
-            self.__setup_con()
-            # set layout
+        if self._widgets:  # clear
+            for w in self._widgets:
+                self.layout().removeWidget(w)
+                w.deleteLater()
             self.layout().update()
             self.update()
-        except:
-            print(traceback.format_exc())
+            self._widgets.clear()
+        # setup elements
+        if not self._labels:
+            self._add_label(self.lang['net'])
+        counters = psutil.net_io_counters(self._pername)
+        speed = False
+        if self._old_counters and type(counters) == type(self._old_counters):
+            speed = True
+        else:
+            self._old_counters = counters
+        names = self._names if self._pername else [None]
+        for name in names:
+            if name:
+                if name not in counters:
+                    return
+                if self._labels:
+                    self._add_label(self.lang['net_name'].format(name))
+            if speed:
+                self.__setup_speed(counters, name)
+            self.__setup_total(counters, name)
+            self.__setup_packets(counters, name)
+            self.__setup_errors(counters, name)
+            self.__setup_drops(counters, name)
+        self.__setup_con()
+        # set layout
+        self.layout().update()
+        self.update()
 
     def get_rate_locale(self, rate) -> str:
         if rate == Rate.B:
@@ -271,82 +268,76 @@ class Main(Widget, QWidget):
             con = str(len(psutil.net_connections(self._kind)))
             self._add_label(self.lang['connections'].format(con))
 
+    @try_except
     def _load_settings(self):
-        try:
-            self.conf = self.widget_manager.get_config(self.info.NAME)
-            if 'update' in self.conf:
-                self._update = int(self.conf['update'])
-            if 'round' in self.conf:
-                self._round = int(self.conf['round'])
-            if 'labels' in self.conf:
-                self._labels = bool(strtobool(self.conf['labels']))
-            if 'pername' in self.conf:
-                self._pername = bool(strtobool(self.conf['pername']))
-            if 'names' in self.conf:
-                self._names = json.loads(self.conf['names'])
-            if 'bar' in self.conf:
-                self._bar = bool(strtobool(self.conf['bar']))
-            if 'text' in self.conf:
-                self._text = bool(strtobool(self.conf['text']))
-            if 'srecv' in self.conf:
-                self._srecv = bool(strtobool(self.conf['srecv']))
-            if 'ssent' in self.conf:
-                self._ssent = bool(strtobool(self.conf['ssent']))
-            if 'trecv' in self.conf:
-                self._trecv = bool(strtobool(self.conf['trecv']))
-            if 'tsent' in self.conf:
-                self._tsent = bool(strtobool(self.conf['tsent']))
-            if 'precv' in self.conf:
-                self._precv = bool(strtobool(self.conf['precv']))
-            if 'psent' in self.conf:
-                self._psent = bool(strtobool(self.conf['psent']))
-            if 'errin' in self.conf:
-                self._errin = bool(strtobool(self.conf['errin']))
-            if 'errout' in self.conf:
-                self._errout = bool(strtobool(self.conf['errout']))
-            if 'dropin' in self.conf:
-                self._dropin = bool(strtobool(self.conf['dropin']))
-            if 'dropout' in self.conf:
-                self._dropout = bool(strtobool(self.conf['dropout']))
-            if 'con' in self.conf:
-                self._con = bool(strtobool(self.conf['con']))
-            if 'kind' in self.conf:
-                self._kind = self.conf['kind']
-            if 'mbit' in self.conf:
-                self._mbit = bool(strtobool(self.conf['mbit']))
-        except:
-            print(traceback.format_exc())
+        self.conf = self.widget_manager.get_config(self.info.NAME)
+        if 'update' in self.conf:
+            self._update = int(self.conf['update'])
+        if 'round' in self.conf:
+            self._round = int(self.conf['round'])
+        if 'labels' in self.conf:
+            self._labels = bool(strtobool(self.conf['labels']))
+        if 'pername' in self.conf:
+            self._pername = bool(strtobool(self.conf['pername']))
+        if 'names' in self.conf:
+            self._names = json.loads(self.conf['names'])
+        if 'bar' in self.conf:
+            self._bar = bool(strtobool(self.conf['bar']))
+        if 'text' in self.conf:
+            self._text = bool(strtobool(self.conf['text']))
+        if 'srecv' in self.conf:
+            self._srecv = bool(strtobool(self.conf['srecv']))
+        if 'ssent' in self.conf:
+            self._ssent = bool(strtobool(self.conf['ssent']))
+        if 'trecv' in self.conf:
+            self._trecv = bool(strtobool(self.conf['trecv']))
+        if 'tsent' in self.conf:
+            self._tsent = bool(strtobool(self.conf['tsent']))
+        if 'precv' in self.conf:
+            self._precv = bool(strtobool(self.conf['precv']))
+        if 'psent' in self.conf:
+            self._psent = bool(strtobool(self.conf['psent']))
+        if 'errin' in self.conf:
+            self._errin = bool(strtobool(self.conf['errin']))
+        if 'errout' in self.conf:
+            self._errout = bool(strtobool(self.conf['errout']))
+        if 'dropin' in self.conf:
+            self._dropin = bool(strtobool(self.conf['dropin']))
+        if 'dropout' in self.conf:
+            self._dropout = bool(strtobool(self.conf['dropout']))
+        if 'con' in self.conf:
+            self._con = bool(strtobool(self.conf['con']))
+        if 'kind' in self.conf:
+            self._kind = self.conf['kind']
+        if 'mbit' in self.conf:
+            self._mbit = bool(strtobool(self.conf['mbit']))
 
+    @try_except
     def save_settings(self):
-        try:
-            self.conf['update'] = str(self._update)
-            self.conf['round'] = str(self._round)
-            self.conf['labels'] = str(self._labels)
-            self.conf['pername'] = str(self._pername)
-            self.conf['names'] = json.dumps(self._names)
-            self.conf['bar'] = str(self._bar)
-            self.conf['text'] = str(self._text)
-            self.conf['srecv'] = str(self._srecv)
-            self.conf['ssent'] = str(self._ssent)
-            self.conf['trecv'] = str(self._trecv)
-            self.conf['tsent'] = str(self._tsent)
-            self.conf['precv'] = str(self._precv)
-            self.conf['psent'] = str(self._psent)
-            self.conf['errin'] = str(self._errin)
-            self.conf['errout'] = str(self._errout)
-            self.conf['dropin'] = str(self._dropin)
-            self.conf['dropout'] = str(self._dropout)
-            self.conf['con'] = str(self._con)
-            self.conf['kind'] = self._kind
-            self.conf['mbit'] = str(self._mbit)
-        except:
-            print(traceback.format_exc())
+        self.conf['update'] = str(self._update)
+        self.conf['round'] = str(self._round)
+        self.conf['labels'] = str(self._labels)
+        self.conf['pername'] = str(self._pername)
+        self.conf['names'] = json.dumps(self._names)
+        self.conf['bar'] = str(self._bar)
+        self.conf['text'] = str(self._text)
+        self.conf['srecv'] = str(self._srecv)
+        self.conf['ssent'] = str(self._ssent)
+        self.conf['trecv'] = str(self._trecv)
+        self.conf['tsent'] = str(self._tsent)
+        self.conf['precv'] = str(self._precv)
+        self.conf['psent'] = str(self._psent)
+        self.conf['errin'] = str(self._errin)
+        self.conf['errout'] = str(self._errout)
+        self.conf['dropin'] = str(self._dropin)
+        self.conf['dropout'] = str(self._dropout)
+        self.conf['con'] = str(self._con)
+        self.conf['kind'] = self._kind
+        self.conf['mbit'] = str(self._mbit)
 
+    @try_except
     def show_settings(self):
-        try:
-            self.settings_win = Settings(self)
-        except:
-            print(traceback.format_exc())
+        self.settings_win = Settings(self)
 
     def unload(self):
         self.save_settings()
@@ -365,18 +356,14 @@ class Main(Widget, QWidget):
         self.timer.stop()
         self._setup_vars()
 
+    @try_except
     def showEvent(self, event):
-        try:
-            self.setup_ui()
-            self.timer.start(self._update)
-        except:
-            print(traceback.format_exc())
+        self.setup_ui()
+        self.timer.start(self._update)
 
+    @try_except
     def hideEvent(self, event):
-        try:
-            self.timer.stop()
-        except:
-            print(traceback.format_exc())
+        self.timer.stop()
 
 
 class Settings(QWidget):
@@ -531,37 +518,35 @@ class Settings(QWidget):
         # show
         self.show()
 
-    def _save(self):
-        try:
-            self.main._update = self.update_spinbox.value()
-            self.main._round = self.round_spinbox.value()
-            self.main._labels = self.labels_checkbox.isChecked()
-            self.main._pername = self.pername_checkbox.isChecked()
-            self.main._bar = self.bar_checkbox.isChecked()
-            self.main._text = self.text_checkbox.isChecked()
-            self.main._srecv = self.srecv_checkbox.isChecked()
-            self.main._ssent = self.ssent_checkbox.isChecked()
-            self.main._trecv = self.trecv_checkbox.isChecked()
-            self.main._tsent = self.tsent_checkbox.isChecked()
-            self.main._precv = self.precv_checkbox.isChecked()
-            self.main._psent = self.psent_checkbox.isChecked()
-            self.main._errin = self.errin_checkbox.isChecked()
-            self.main._errout = self.errout_checkbox.isChecked()
-            self.main._dropin = self.dropin_checkbox.isChecked()
-            self.main._dropout = self.dropout_checkbox.isChecked()
-            self.main._con = self.con_checkbox.isChecked()
-            self.main._kind = self.kind_cbox.currentText()
-            names = []
-            i = 0
-            for name in self.stats:
-                ind = self.ifaces_list.model().index(i, 0)
-                if self.ifaces_list.model().data(ind, Qt.CheckStateRole):
-                    names.append(name)
-                i += 1
-            self.main._names = names
-            self.main.save_settings()
-            self.main.timer.stop()
-            self.main.timer.start(self.main._update)
-            self.close()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _save(self, checked):
+        self.main._update = self.update_spinbox.value()
+        self.main._round = self.round_spinbox.value()
+        self.main._labels = self.labels_checkbox.isChecked()
+        self.main._pername = self.pername_checkbox.isChecked()
+        self.main._bar = self.bar_checkbox.isChecked()
+        self.main._text = self.text_checkbox.isChecked()
+        self.main._srecv = self.srecv_checkbox.isChecked()
+        self.main._ssent = self.ssent_checkbox.isChecked()
+        self.main._trecv = self.trecv_checkbox.isChecked()
+        self.main._tsent = self.tsent_checkbox.isChecked()
+        self.main._precv = self.precv_checkbox.isChecked()
+        self.main._psent = self.psent_checkbox.isChecked()
+        self.main._errin = self.errin_checkbox.isChecked()
+        self.main._errout = self.errout_checkbox.isChecked()
+        self.main._dropin = self.dropin_checkbox.isChecked()
+        self.main._dropout = self.dropout_checkbox.isChecked()
+        self.main._con = self.con_checkbox.isChecked()
+        self.main._kind = self.kind_cbox.currentText()
+        names = []
+        i = 0
+        for name in self.stats:
+            ind = self.ifaces_list.model().index(i, 0)
+            if self.ifaces_list.model().data(ind, Qt.CheckStateRole):
+                names.append(name)
+            i += 1
+        self.main._names = names
+        self.main.save_settings()
+        self.main.timer.stop()
+        self.main.timer.start(self.main._update)
+        self.close()

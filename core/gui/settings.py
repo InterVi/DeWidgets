@@ -9,6 +9,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from core.gui.del_widgets import Delete
 from core.paths import SETTINGS, SUCCESS, LANGS, CONF_SETTINGS
+from core.utils import try_except
 
 
 class Settings(QWidget):
@@ -104,29 +105,25 @@ class Settings(QWidget):
             except:
                 print(traceback.format_exc())
 
-    def _save(self):
-        try:
-            self.settings['MAIN']['locale'] =\
-                self._items[self.language.currentText()]
-            self.settings['MAIN']['load_placed'] =\
-                str(self.load_placed.isChecked())
-            with open(CONF_SETTINGS, 'w') as file:
-                self.settings.write(file)
-            if self._changed:
-                self._show_warn()
-            self.main._list_fill()
-            # strange bug: open from tray (main win hide),
-            # call self.close() -> exit app
-            self.destroy()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _save(self, checked):
+        self.settings['MAIN']['locale'] = \
+            self._items[self.language.currentText()]
+        self.settings['MAIN']['load_placed'] = \
+            str(self.load_placed.isChecked())
+        with open(CONF_SETTINGS, 'w') as file:
+            self.settings.write(file)
+        if self._changed:
+            self._show_warn()
+        self.main._list_fill()
+        # strange bug: open from tray (main win hide),
+        # call self.close() -> exit app
+        self.destroy()
 
-    def _cancel(self):
-        try:
-            self.main._list_fill()
-            self.destroy()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _cancel(self, checked):
+        self.main._list_fill()
+        self.destroy()
 
     def _show_warn(self):
         mbox = QMessageBox(QMessageBox.Warning,
@@ -139,9 +136,7 @@ class Settings(QWidget):
         ok.setToolTip(self.lang['SETTINGS']['warn_ok_button_tt'])
         mbox.exec()
 
-    def _show_del_widgets(self):
-        try:
-            self.del_widgets_win = Delete(self.lang,
-                                          sys.modules['core.gui.gui'].manager)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_del_widgets(self, checked):
+        self.del_widgets_win = Delete(self.lang,
+                                      sys.modules['core.gui.gui'].manager)

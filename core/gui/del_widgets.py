@@ -10,6 +10,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QRect, Qt
 from core.gui.help import TextViewer
 from core.paths import CONF_INSTALL, DELETE, ZIP, DEL_WIDGETS, DEL_ARCHIVES
+from core.utils import try_except
 
 
 def del_in_conf(path, sections):
@@ -82,80 +83,67 @@ class Delete(QWidget):
         else:
             self.del_button.setEnabled(False)
 
+    @try_except
     def _list_fill(self):
-        try:
-            self.w_list.clear()
-            for name in self.manager.custom_widgets:
-                try:
-                    if name not in self.manager.info:
-                        continue
-                    info = self.manager.info[name]
-                    item = QListWidgetItem(self.w_list)
-                    item.setIcon(info.ICON)
-                    item.setText(info.NAME)
-                    item.setToolTip(info.DESCRIPTION)
-                    if self.manager.config.is_placed(info.NAME):
-                        font = item.font()
-                        font.setBold(True)
-                        item.setFont(font)
-                    self.w_list.addItem(item)
-                except:
-                    print(traceback.format_exc())
-        except:
-            print(traceback.format_exc())
+        self.w_list.clear()
+        for name in self.manager.custom_widgets:
+            try:
+                if name not in self.manager.info:
+                    continue
+                info = self.manager.info[name]
+                item = QListWidgetItem(self.w_list)
+                item.setIcon(info.ICON)
+                item.setText(info.NAME)
+                item.setToolTip(info.DESCRIPTION)
+                if self.manager.config.is_placed(info.NAME):
+                    font = item.font()
+                    font.setBold(True)
+                    item.setFont(font)
+                self.w_list.addItem(item)
+            except:
+                print(traceback.format_exc())
 
-    def _list_click(self):
-        try:
+    @try_except
+    def _list_click(self, item):
+        self._change_enabled()
+        self.h_label.setText(self.manager.info[item.text()].DESCRIPTION)
+
+    @try_except
+    def _list_double_click(self, item):
+        self.item_info = sys.modules['core.gui.gui'].ItemInfo(item.text())
+
+    @try_except
+    def _delete(self, checked):
+        # check item
+        item = self.w_list.currentItem()
+        # create message box
+        mbox = QMessageBox(QMessageBox.Question, self.lang['del_mbox_title'],
+                           self.lang['del_mbox_text'].format(item.text()),
+                           QMessageBox.Yes | QMessageBox.No, self)
+        mbox.setWindowIcon(QIcon(DELETE))
+        yes = mbox.button(QMessageBox.Yes)
+        yes.setText(self.lang['del_mbox_yes_button'])
+        yes.setToolTip(self.lang['del_mbox_yes_button_tt'])
+        no = mbox.button(QMessageBox.No)
+        no.setText(self.lang['del_mbox_no_button'])
+        no.setToolTip(self.lang['del_mbox_no_button_tt'])
+        # process
+        if mbox.exec() == QMessageBox.Yes:
+            if item.text() in self.manager.widgets:
+                self.del_widget(item.text())
+            else:
+                py = self.manager.paths[item.text()]
+                self.manager.call_delete_widget(os.path.basename(py)[:-3])
+                os.remove(py)
+                self.manager.del_from_dicts(item.text())
+                self.manager.config.remove(item.text())
+                del sys.modules[os.path.basename(py)[:-3]]
+            self._list_fill()
             self._change_enabled()
-            self.h_label.setText(
-                self.manager.info[self.w_list.currentItem().text()].DESCRIPTION)
-        except:
-            print(traceback.format_exc())
 
-    def _list_double_click(self):
-        try:
-            item = self.w_list.currentItem()
-            self.item_info = sys.modules['core.gui.gui'].ItemInfo(item.text())
-        except:
-            print(traceback.format_exc())
-
-    def _delete(self):
-        try:
-            # check item
-            item = self.w_list.currentItem()
-            # create message box
-            mbox = QMessageBox(QMessageBox.Question,
-                               self.lang['del_mbox_title'],
-                               self.lang['del_mbox_text'].format(item.text()),
-                               QMessageBox.Yes | QMessageBox.No, self)
-            mbox.setWindowIcon(QIcon(DELETE))
-            yes = mbox.button(QMessageBox.Yes)
-            yes.setText(self.lang['del_mbox_yes_button'])
-            yes.setToolTip(self.lang['del_mbox_yes_button_tt'])
-            no = mbox.button(QMessageBox.No)
-            no.setText(self.lang['del_mbox_no_button'])
-            no.setToolTip(self.lang['del_mbox_no_button_tt'])
-            # process
-            if mbox.exec() == QMessageBox.Yes:
-                if item.text() in self.manager.widgets:
-                    self.del_widget(item.text())
-                else:
-                    py = self.manager.paths[item.text()]
-                    self.manager.call_delete_widget(os.path.basename(py)[:-3])
-                    os.remove(py)
-                    self.manager.del_from_dicts(item.text())
-                    self.manager.config.remove(item.text())
-                    del sys.modules[os.path.basename(py)[:-3]]
-                self._list_fill()
-                self._change_enabled()
-        except:
-            print(traceback.format_exc())
-
-    def _arch_delete(self):
-        try:
-            self.arch_del_win = ArchDelete(self, self.locale, self.manager)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _arch_delete(self, checked):
+        self.arch_del_win = ArchDelete(self, self.locale, self.manager)
 
 
 class ArchDelete(QWidget):
@@ -207,98 +195,86 @@ class ArchDelete(QWidget):
         else:
             self.del_button.setEnabled(False)
 
+    @try_except
     def _list_fill(self):
-        try:
-            if not os.path.isfile(CONF_INSTALL):
-                return
-            with open(CONF_INSTALL, encoding='utf-8') as file:
-                self.archives = json.loads(file.read())
-            self.w_list.clear()
-            for arch in self.archives:
-                item = QListWidgetItem(self.w_list)
-                item.setIcon(QIcon(ZIP))
-                item.setText(os.path.basename(arch))
-                item.setToolTip(arch)
-                self.w_list.addItem(item)
-        except:
-            print(traceback.format_exc())
+        if not os.path.isfile(CONF_INSTALL):
+            return
+        with open(CONF_INSTALL, encoding='utf-8') as file:
+            self.archives = json.loads(file.read())
+        self.w_list.clear()
+        for arch in self.archives:
+            item = QListWidgetItem(self.w_list)
+            item.setIcon(QIcon(ZIP))
+            item.setText(os.path.basename(arch))
+            item.setToolTip(arch)
+            self.w_list.addItem(item)
 
-    def _list_click(self):
-        try:
+    @try_except
+    def _list_click(self, item):
+        self.__change_enabled()
+        self.h_label.setText(item.toolTip())
+
+    @try_except
+    def _list_double_click(self, item):
+        self.arch_info = ArchInfo(self.locale, item.toolTip(),
+                                  self.archives[item.toolTip()])
+
+    @try_except
+    def _delete(self, checked):
+        item = self.w_list.currentItem()
+        # create message box
+        mbox = QMessageBox(QMessageBox.Question, self.lang['del_mbox_title'],
+                           self.lang['del_mbox_text'].format(item.text()),
+                           QMessageBox.Yes | QMessageBox.No, self)
+        mbox.setWindowIcon(QIcon(DELETE))
+        yes = mbox.button(QMessageBox.Yes)
+        yes.setText(self.lang['del_mbox_yes_button'])
+        yes.setToolTip(self.lang['del_mbox_yes_button_tt'])
+        no = mbox.button(QMessageBox.No)
+        no.setText(self.lang['del_mbox_no_button'])
+        no.setToolTip(self.lang['del_mbox_no_button_tt'])
+        # process
+        if mbox.exec() == QMessageBox.Yes:
+            for py in self.archives[item.toolTip()]['py']:
+                if os.path.isfile(py):
+                    self.del_widget(py)
+            for res in self.archives[item.toolTip()]['res']:
+                if os.path.isfile(res):
+                    os.remove(res)
+            for res in self.archives[item.toolTip()]['res']:
+                d = os.path.dirname(res)
+                if os.path.isdir(d):
+                    os.rmdir(d)
+            for lang in self.archives[item.toolTip()]['langs']:
+                del_in_conf(lang[0], lang[1])
+            del self.archives[item.toolTip()]
+            with open(CONF_INSTALL, 'w') as file:
+                file.write(json.dumps(self.archives))
+            self._list_fill()
+            self.main._list_fill()
             self.__change_enabled()
-            self.h_label.setText(self.w_list.currentItem().toolTip())
-        except:
-            print(traceback.format_exc())
+            self.main._change_enabled()
 
-    def _list_double_click(self):
-        try:
-            item = self.w_list.currentItem()
-            self.arch_info = ArchInfo(self.locale, item.toolTip(),
-                                      self.archives[item.toolTip()])
-        except:
-            print(traceback.format_exc())
-
-    def _delete(self):
-        try:
-            item = self.w_list.currentItem()
-            # create message box
-            mbox = QMessageBox(QMessageBox.Question,
-                               self.lang['del_mbox_title'],
-                               self.lang['del_mbox_text'].format(item.text()),
-                               QMessageBox.Yes | QMessageBox.No, self)
-            mbox.setWindowIcon(QIcon(DELETE))
-            yes = mbox.button(QMessageBox.Yes)
-            yes.setText(self.lang['del_mbox_yes_button'])
-            yes.setToolTip(self.lang['del_mbox_yes_button_tt'])
-            no = mbox.button(QMessageBox.No)
-            no.setText(self.lang['del_mbox_no_button'])
-            no.setToolTip(self.lang['del_mbox_no_button_tt'])
-            # process
-            if mbox.exec() == QMessageBox.Yes:
-                for py in self.archives[item.toolTip()]['py']:
-                    if os.path.isfile(py):
-                        self.del_widget(py)
-                for res in self.archives[item.toolTip()]['res']:
-                    if os.path.isfile(res):
-                        os.remove(res)
-                for res in self.archives[item.toolTip()]['res']:
-                    d = os.path.dirname(res)
-                    if os.path.isdir(d):
-                        os.rmdir(d)
-                for lang in self.archives[item.toolTip()]['langs']:
-                    del_in_conf(lang[0], lang[1])
-                del self.archives[item.toolTip()]
-                with open(CONF_INSTALL, 'w') as file:
-                    file.write(json.dumps(self.archives))
-                self._list_fill()
-                self.main._list_fill()
-                self.__change_enabled()
-                self.main._change_enabled()
-        except:
-            print(traceback.format_exc())
-
+    @try_except
     def del_widget(self, module):
         """Delete widget.
 
         :param module: path or name module
         """
-        try:
-            module = os.path.basename(module)
-            if module[-3:] == '.py':
-                module = module[:-3]
-            for name in self.manager.paths:
-                if os.path.basename(self.manager.paths[name])[:-3] == module:
-                    if name in self.manager.widgets:
-                        self.del_widget(name)
-                    else:
-                        self.manager.call_delete_widget(module)
-                        os.remove(self.manager.paths[name])
-                        self.manager.del_from_dicts(name)
-                        self.manager.config.remove(name)
-                        del sys.modules[module]
-                    return
-        except:
-            print(traceback.format_exc())
+        module = os.path.basename(module)
+        if module[-3:] == '.py':
+            module = module[:-3]
+        for name in self.manager.paths:
+            if os.path.basename(self.manager.paths[name])[:-3] == module:
+                if name in self.manager.widgets:
+                    self.del_widget(name)
+                else:
+                    self.manager.call_delete_widget(module)
+                    os.remove(self.manager.paths[name])
+                    self.manager.del_from_dicts(name)
+                    self.manager.config.remove(name)
+                    del sys.modules[module]
+                return
 
 
 class ArchInfo(TextViewer):

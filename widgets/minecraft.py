@@ -14,6 +14,7 @@ from PyQt5.QtCore import Qt, QSize, QTimer
 from core.manager import Widget, WidgetInfo
 from core.gui.help import TextViewer
 from core.paths import RES, RELOAD, SETTINGS, ERROR, DELETE, HELP
+from core.utils import try_except
 
 
 def get_description(desc) -> str:
@@ -101,13 +102,11 @@ class Main(Widget, QWidget):
         self.update_timer.stop()
         self._kill_procs()
 
+    @try_except
     def show_settings(self):
-        try:
-            self.settings_win = Settings(self)
-        except:
-            print(traceback.format_exc())
+        self.settings_win = Settings(self)
 
-    def _list_fill(self):
+    def _list_fill(self, checked=False):
         self._pool_ping()
         self.list.clear()
         for addr in self.servers:
@@ -139,26 +138,20 @@ class Main(Widget, QWidget):
             if self.timer_interval > 0:
                 self.update_timer.start(self.timer_interval)
 
+    @try_except
     def _show_list_menu(self, point):
-        try:
-            self.list_menu.exec(self.list.mapToGlobal(point))
-        except:
-            print(traceback.format_exc())
+        self.list_menu.exec(self.list.mapToGlobal(point))
 
-    def _list_double_click(self):
-        try:
-            self.show_more = ShowMore(self)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _list_double_click(self, item):
+        self.show_more = ShowMore(self)
 
+    @try_except
     def _kill_procs(self):
-        try:
-            for p in self.__procs:
-                if p and p.is_alive():
-                    p.terminate()
-            self.__procs.clear()
-        except:
-            print(traceback.format_exc())
+        for p in self.__procs:
+            if p and p.is_alive():
+                p.terminate()
+        self.__procs.clear()
 
     def _pool_ping(self):
         def ping(addr):
@@ -271,18 +264,16 @@ class ShowMore(TextViewer):
         if self.__proc and self.__proc.is_alive():
             self.timer.start(100)
 
-    def close(self):
+    @try_except
+    def close(self, checked=False):
+        self.timer.stop()
         try:
-            self.timer.stop()
-            try:
-                if self.__proc and self.__proc.is_alive():
-                    self.__proc.terminate()
-                    self.__proc = None
-            except:
-                print(traceback.format_exc())
-            super().setHidden(True)  # app close bug -> call close or destroy
+            if self.__proc and self.__proc.is_alive():
+                self.__proc.terminate()
+                self.__proc = None
         except:
             print(traceback.format_exc())
+        super().setHidden(True)  # app close bug -> call close or destroy
 
 
 class Settings(QWidget):
@@ -361,127 +352,108 @@ class Settings(QWidget):
             self.up_button.setEnabled(False)
             self.down_button.setEnabled(False)
 
+    @try_except
     def _list_fill(self):
-        try:
-            self.list.clear()
-            for i in range(self.main.list.count()):
-                m_item = self.main.list.item(i)
-                item = QListWidgetItem(self.list)
-                item.setText(m_item.text())
-                item.setIcon(m_item.icon())
-                self.list.addItem(item)
-        except:
-            print(traceback.format_exc())
+        self.list.clear()
+        for i in range(self.main.list.count()):
+            m_item = self.main.list.item(i)
+            item = QListWidgetItem(self.list)
+            item.setText(m_item.text())
+            item.setIcon(m_item.icon())
+            self.list.addItem(item)
 
-    def _time_changed(self):
-        try:
-            self.main.update_timer.stop()
-            if self.time_edit.value():
-                value = self.time_edit.value()
-            else:
-                value = 0
-            if value > 0:
-                self.main.timer_interval = value*1000
-                self.main.update_timer.start(self.main.timer_interval)
-            else:
-                self.main.timer_interval = 0
-            self.main.widget_manager.config.config[
-                self.main.info.NAME]['timer'] = str(self.main.timer_interval)
-            self.main.widget_manager.config.save()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _time_changed(self, value):
+        self.main.update_timer.stop()
+        if value > 0:
+            self.main.timer_interval = value * 1000
+            self.main.update_timer.start(self.main.timer_interval)
+        else:
+            self.main.timer_interval = 0
+        self.main.widget_manager.config.config[
+            self.main.info.NAME]['timer'] = str(self.main.timer_interval)
+        self.main.widget_manager.config.save()
 
+    @try_except
     def _move(self, up=True):
-        try:
-            row = self.list.currentRow()
-            if up and row-1 >= 0:
-                self.main.servers.insert(row-1, self.main.servers.pop(row))
-                row -= 1
-            elif not up and row+1 < self.list.count():
-                self.main.servers.insert(row+1, self.main.servers.pop(row))
-                row += 1
-            else:
-                return
+        row = self.list.currentRow()
+        if up and row - 1 >= 0:
+            self.main.servers.insert(row - 1, self.main.servers.pop(row))
+            row -= 1
+        elif not up and row + 1 < self.list.count():
+            self.main.servers.insert(row + 1, self.main.servers.pop(row))
+            row += 1
+        else:
+            return
+        self.main.widget_manager.config.config[self.main.info.NAME][
+            'servers'] = json.dumps(self.main.servers)
+        self.main.widget_manager.config.save()
+        self.main._list_fill()
+        self._list_fill()
+        self.list.setCurrentRow(row)
+
+    def _up(self, checked):
+        self._move()
+
+    def _down(self, checked):
+        self._move(False)
+
+    @try_except
+    def _delete(self, checked):
+        if not self.list.count():
+            return
+        mbox = QMessageBox(QMessageBox.Question, self.lang['confirm_title'],
+                           self.lang['confirm_text'],
+                           QMessageBox.Ok | QMessageBox.Cancel, self)
+        mbox.setWindowIcon(QIcon(DELETE))
+        mbox.setInformativeText(self.lang['confirm_inf'].format(
+            self.list.currentItem().text()))
+        ok = mbox.button(QMessageBox.Ok)
+        ok.setText(self.lang['confirm_ok_button'])
+        ok.setToolTip(self.lang['confirm_ok_button_tt'])
+        cancel = mbox.button(QMessageBox.Cancel)
+        cancel.setText(self.lang['confirm_cancel_button'])
+        cancel.setToolTip(self.lang['confirm_cancel_button_tt'])
+        if mbox.exec() == QMessageBox.Ok:
+            del self.main.servers[self.list.currentRow()]
             self.main.widget_manager.config.config[self.main.info.NAME][
                 'servers'] = json.dumps(self.main.servers)
             self.main.widget_manager.config.save()
             self.main._list_fill()
             self._list_fill()
-            self.list.setCurrentRow(row)
-        except:
-            print(traceback.format_exc())
+            self.__change_enabeld()
 
-    def _up(self):
-        self._move()
-
-    def _down(self):
-        self._move(False)
-
-    def _delete(self):
-        try:
-            if not self.list.count():
-                return
-            mbox = QMessageBox(QMessageBox.Question,
-                               self.lang['confirm_title'],
-                               self.lang['confirm_text'],
-                               QMessageBox.Ok | QMessageBox.Cancel, self)
-            mbox.setWindowIcon(QIcon(DELETE))
-            mbox.setInformativeText(
-                self.lang['confirm_inf'].format(
-                    self.list.currentItem().text()))
-            ok = mbox.button(QMessageBox.Ok)
-            ok.setText(self.lang['confirm_ok_button'])
-            ok.setToolTip(self.lang['confirm_ok_button_tt'])
-            cancel = mbox.button(QMessageBox.Cancel)
-            cancel.setText(self.lang['confirm_cancel_button'])
-            cancel.setToolTip(self.lang
-                              ['confirm_cancel_button_tt'])
-            if mbox.exec() == QMessageBox.Ok:
-                del self.main.servers[self.list.currentRow()]
-                self.main.widget_manager.config.config[self.main.info.NAME][
-                    'servers'] = json.dumps(self.main.servers)
+    @try_except
+    def _add(self, checked):
+        id = QInputDialog(self)
+        id.setWindowIcon(QIcon(HELP))
+        id.setWindowTitle(self.lang['input_title'])
+        id.setLabelText(self.lang['input_text'])
+        id.setTextValue('s.vomine.ru:25565')
+        id.setOkButtonText(self.lang['input_ok_button'])
+        id.setCancelButtonText(self.lang['input_cancel_button'])
+        if id.exec() == QInputDialog.Accepted:
+            text = id.textValue()
+            if not text or len(text.split(':')) != 2 \
+                    or not text.split(':')[1].isdigit():
+                self._show_error()
+            else:
+                self.main.servers.append(text)
+                self.main.widget_manager.config.config[
+                    self.main.info.NAME]['servers'] = json.dumps(
+                    self.main.servers)
                 self.main.widget_manager.config.save()
                 self.main._list_fill()
                 self._list_fill()
                 self.__change_enabeld()
-        except:
-            print(traceback.format_exc())
+                self.list.setCurrentRow(self.list.count() - 1)
 
-    def _add(self):
-        try:
-            id = QInputDialog(self)
-            id.setWindowIcon(QIcon(HELP))
-            id.setWindowTitle(self.lang['input_title'])
-            id.setLabelText(self.lang['input_text'])
-            id.setTextValue('s.vomine.ru:25565')
-            id.setOkButtonText(self.lang['input_ok_button'])
-            id.setCancelButtonText(
-                self.lang['input_cancel_button'])
-            if id.exec() == QInputDialog.Accepted:
-                text = id.textValue()
-                if not text or len(text.split(':')) != 2\
-                        or not text.split(':')[1].isdigit():
-                    self._show_error()
-                else:
-                    self.main.servers.append(text)
-                    self.main.widget_manager.config.config[
-                        self.main.info.NAME]['servers'] = json.dumps(self.main.servers)
-                    self.main.widget_manager.config.save()
-                    self.main._list_fill()
-                    self._list_fill()
-                    self.__change_enabeld()
-                    self.list.setCurrentRow(self.list.count()-1)
-        except:
-            print(traceback.format_exc())
-
+    @try_except
     def _show_error(self):
-        try:
-            mbox = QMessageBox(QMessageBox.Critical, self.lang['error_title'],
-                               self.lang['error_text'], QMessageBox.Ok, self)
-            mbox.setWindowIcon(QIcon(ERROR))
-            ok = mbox.button(QMessageBox.Ok)
-            ok.setText(self.lang['error_ok_button'])
-            ok.setToolTip(self.lang['error_ok_button_tt'])
-            mbox.exec()
-        except:
-            print(traceback.format_exc())
+        mbox = QMessageBox(QMessageBox.Critical, self.lang['error_title'],
+                           self.lang['error_text'], QMessageBox.Ok, self)
+        mbox.setWindowIcon(QIcon(ERROR))
+        ok = mbox.button(QMessageBox.Ok)
+        ok.setText(self.lang['error_ok_button'])
+        ok.setToolTip(self.lang['error_ok_button_tt'])
+        mbox.exec()

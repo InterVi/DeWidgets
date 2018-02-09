@@ -1,10 +1,10 @@
 """Move widget window."""
-import traceback
 from PyQt5.QtWidgets import QLabel, QSpinBox, QPushButton, QSlider, QWidget
 from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtCore import Qt, QPoint, QSize
 from PyQt5.QtGui import QIcon
 from core.paths import MOVE
+from core.utils import try_except
 
 
 class Move(QWidget):
@@ -106,48 +106,38 @@ class Move(QWidget):
         # show
         self.show()
 
-    def _save(self):
-        try:
-            self.manager.edit_mode(False)
-            self.close()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _save(self, checked):
+        self.manager.edit_mode(False)
+        self.close()
 
-    def _cancel(self):
-        try:
-            self.window.move(QPoint(self.x_cord, self.y_cord))
-            self.window.resize(QSize(self.w_win, self.h_win))
-            self.window.setWindowOpacity(self.opacity_win)
-            self.close()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _cancel(self, checked):
+        self.window.move(QPoint(self.x_cord, self.y_cord))
+        self.window.resize(QSize(self.w_win, self.h_win))
+        self.window.setWindowOpacity(self.opacity_win)
+        self.close()
 
-    def _move(self):
-        try:
-            if not self.x_edit.text() or not self.y_edit.text():
-                return
-            x = self.x_edit.value()
-            y = self.y_edit.value()
-            self.window.move(QPoint(x, y))
-            self.window.show()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _move(self, value):
+        if not self.x_edit.text() or not self.y_edit.text():
+            return
+        x = self.x_edit.value()
+        y = self.y_edit.value()
+        self.window.move(QPoint(x, y))
+        self.window.show()
 
-    def _resize(self):
-        try:
-            if not self.w_edit.text() or not self.h_edit.text():
-                return
-            w = self.w_edit.value()
-            h = self.h_edit.value()
-            self.window.resize(QSize(w, h))
-            self.window.show()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _resize(self, value):
+        if not self.w_edit.text() or not self.h_edit.text():
+            return
+        w = self.w_edit.value()
+        h = self.h_edit.value()
+        self.window.resize(QSize(w, h))
+        self.window.show()
 
-    def _opacity(self):
-        try:
-            value = float(self.slider.value() / 100)
-            self.window.setWindowOpacity(value)
-            self.slider.setToolTip(str(value))
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _opacity(self, value):
+        value = float(value / 100)
+        self.window.setWindowOpacity(value)
+        self.slider.setToolTip(str(value))

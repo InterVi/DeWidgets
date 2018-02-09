@@ -11,6 +11,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 import widgets as w
 from core.paths import CONF_WIDGETS, WIDGET, C_WIDGETS
+from core.utils import try_except
 
 sys.path.append(C_WIDGETS)
 CUSTOM_WIDGETS = SourceFileLoader('__init__',
@@ -137,10 +138,12 @@ class WidgetManager:
         """
         if not placed:
             for name in w.get_widgets():
-                if name not in self.paths:
+                if name not in sys.modules or sys.modules[name].__file__ \
+                        not in self.paths.values():
                     self.load(name)
             for name in CUSTOM_WIDGETS.get_widgets():
-                if name not in self.paths:
+                if name not in sys.modules or sys.modules[name].__file__ \
+                        not in self.paths.values():
                     self.load(name)
             return
         for name in self.config.config:
@@ -214,59 +217,55 @@ class WidgetManager:
                 del sys.modules[name]
             return False
 
+    @try_except
     def remove(self, name, reminconf=False):
         """Remove widget from desktop.
 
         :param name: str, module name
         :param reminconf: bool, True - remove widget all data from config
         """
-        try:
-            if reminconf:
-                try:
-                    self.widgets[name].purge()
-                except:
-                    print(traceback.format_exc())
-            else:
-                try:
-                    self.widgets[name].remove()
-                except:
-                    print(traceback.format_exc())
-                self.config.add(name)
+        if reminconf:
             try:
-                self.widgets[name].hide()
+                self.widgets[name].purge()
             except:
                 print(traceback.format_exc())
-            self.unload(name)
-            self.config.set_placed(name, False)
-            if reminconf:
-                self.config.remove(name)
-            self.config.save()
+        else:
+            try:
+                self.widgets[name].remove()
+            except:
+                print(traceback.format_exc())
+            self.config.add(name)
+        try:
+            self.widgets[name].hide()
         except:
             print(traceback.format_exc())
+        self.unload(name)
+        self.config.set_placed(name, False)
+        if reminconf:
+            self.config.remove(name)
+        self.config.save()
 
+    @try_except
     def delete_widget(self, name):
         """Remove widget file (after remove widget data from config
         and unload). For only placed widgets.
 
         :param name: str, widget name
         """
+        path = self.paths[name]
         try:
-            path = self.paths[name]
-            try:
-                self.widgets[name].delete_widget()
-            except:
-                print(traceback.format_exc())
-            self.remove(name, True)
-            try:
-                self.widgets[name].unload()
-            except:
-                print(traceback.format_exc())
-            self.unload(name)
-            self.config.remove(name)  # warranty
-            self.del_from_dicts(name)
-            os.remove(path)
+            self.widgets[name].delete_widget()
         except:
             print(traceback.format_exc())
+        self.remove(name, True)
+        try:
+            self.widgets[name].unload()
+        except:
+            print(traceback.format_exc())
+        self.unload(name)
+        self.config.remove(name)  # warranty
+        self.del_from_dicts(name)
+        os.remove(path)
 
     def call_delete_widget(self, module) -> bool:
         """Call widget API (delete_widget and unload). Load -> call -> unload.
@@ -296,36 +295,32 @@ class WidgetManager:
             print(traceback.format_exc())
             return False
 
+    @try_except
     def del_from_dicts(self, name):
         """Remove data from info, paths dict and custom_widgets.
 
         :param name: str, widget name
         """
-        try:
-            del self.info[name]
-            del self.paths[name]
-            if name in self.custom_widgets:
-                self.custom_widgets.remove(name)
-        except:
-            print(traceback.format_exc())
+        del self.info[name]
+        del self.paths[name]
+        if name in self.custom_widgets:
+            self.custom_widgets.remove(name)
 
+    @try_except
     def unload(self, name):
         """Unload widget in memory. Destroy.
 
         :param name: str, widget name
         """
         try:
-            try:
-                self.widgets[name].unload()
-                self.widgets[name].destroy()
-            except:
-                print(traceback.format_exc())
-            del self.widgets[name]
-            del sys.modules[os.path.basename(self.paths[name])[:-3]]
-            if name in self.custom_widgets:
-                self.custom_widgets.remove(name)
+            self.widgets[name].unload()
+            self.widgets[name].destroy()
         except:
             print(traceback.format_exc())
+        del self.widgets[name]
+        del sys.modules[os.path.basename(self.paths[name])[:-3]]
+        if name in self.custom_widgets:
+            self.custom_widgets.remove(name)
 
     def unload_all(self, del_from_dicts=True):
         """Unload all loaded widgets.
@@ -408,89 +403,79 @@ class ConfigManager:
                 continue
             self.load(name)
 
+    @try_except
     def load(self, name):
         """Setup widget (set size, position, opacity, call boot and show.
 
         :param name: str, widget name
         """
-        try:
-            if name not in self.config or name not in self.wm.widgets:
-                return
-            prop = self.config[name]
-            if not prop:
-                return
-            widget = self.wm.widgets[name]
-            widget.resize(int(prop['width']), int(prop['height']))
-            widget.move(int(prop['x']), int(prop['y']))
-            widget.setWindowOpacity(float(prop['opacity']))
-            if self.is_placed(name):
-                # if placed, show window
-                widget.boot()
-                widget.show()
-        except:
-            print(traceback.format_exc())
+        if name not in self.config or name not in self.wm.widgets:
+            return
+        prop = self.config[name]
+        if not prop:
+            return
+        widget = self.wm.widgets[name]
+        widget.resize(int(prop['width']), int(prop['height']))
+        widget.move(int(prop['x']), int(prop['y']))
+        widget.setWindowOpacity(float(prop['opacity']))
+        if self.is_placed(name):
+            # if placed, show window
+            widget.boot()
+            widget.show()
 
+    @try_except
     def save(self):
         """Save config to file."""
-        try:
-            with open(CONF_WIDGETS, 'w', encoding='UTF-8') as config:
-                self.config.write(config)
-        except:
-            print(traceback.format_exc())
+        with open(CONF_WIDGETS, 'w', encoding='UTF-8') as config:
+            self.config.write(config)
 
+    @try_except
     def add(self, name):
         """Add or update widget data in config (not call save).
         Size, position, opacity, placed, file (module name).
 
         :param name: str, widget name
         """
-        try:
-            widget = self.wm.widgets[name]
-            if name in self.config:
-                sec = self.config[name]
-                sec['width'] = str(widget.width())
-                sec['height'] = str(widget.height())
-                sec['x'] = str(widget.x())
-                sec['y'] = str(widget.y())
-                sec['opacity'] = str(widget.windowOpacity())
-                sec['placed'] = str(not widget.isHidden())
-                sec['file'] = os.path.basename(inspect.getfile(widget.__class__
-                                                               ))[:-3]
-            else:
-                self.config[name] = {
-                    'width': str(widget.width()),
-                    'height': str(widget.height()),
-                    'x': str(widget.x()),
-                    'y': str(widget.y()),
-                    'opacity': str(widget.windowOpacity()),
-                    'placed': str(not widget.isHidden()),
-                    'file': os.path.basename(inspect.getfile(widget.__class__)
-                                             )[:-3]
-                }
-        except:
-            print(traceback.format_exc())
+        widget = self.wm.widgets[name]
+        if name in self.config:
+            sec = self.config[name]
+            sec['width'] = str(widget.width())
+            sec['height'] = str(widget.height())
+            sec['x'] = str(widget.x())
+            sec['y'] = str(widget.y())
+            sec['opacity'] = str(widget.windowOpacity())
+            sec['placed'] = str(not widget.isHidden())
+            sec['file'] = os.path.basename(inspect.getfile(widget.__class__
+                                                           ))[:-3]
+        else:
+            self.config[name] = {
+                'width': str(widget.width()),
+                'height': str(widget.height()),
+                'x': str(widget.x()),
+                'y': str(widget.y()),
+                'opacity': str(widget.windowOpacity()),
+                'placed': str(not widget.isHidden()),
+                'file': os.path.basename(inspect.getfile(widget.__class__)
+                                         )[:-3]
+            }
 
+    @try_except
     def remove(self, name):
         """Remove widget data from config (not call save).
 
         :param name: str, widget name
         """
-        try:
-            if name in self.config:
-                del self.config[name]
-        except:
-            print(traceback.format_exc())
+        if name in self.config:
+            del self.config[name]
 
+    @try_except
     def set_placed(self, name, value):
         """Set placed status.
 
         :param name: str, widget name
         :param value: bool, True - if placed to desktop
         """
-        try:
-            self.config[name]['placed'] = str(value)
-        except:
-            print(traceback.format_exc())
+        self.config[name]['placed'] = str(value)
 
     def is_placed(self, name) -> bool:
         """Check widget placed.
@@ -503,22 +488,18 @@ class ConfigManager:
         else:
             return False
 
+    @try_except
     def create(self, name):
         """Create section (empty dict) in config for widget.
 
         :param name: str, widget name
         """
-        try:
-            if name not in self.config:
-                self.config[name] = {}
-        except:
-            print(traceback.format_exc())
+        if name not in self.config:
+            self.config[name] = {}
 
+    @try_except
     def save_positions(self):
         """Save widget positions to config file."""
-        try:
-            for name in self.wm.widgets:
-                self.add(name)
-            self.save()
-        except:
-            print(traceback.format_exc())
+        for name in self.wm.widgets:
+            self.add(name)
+        self.save()

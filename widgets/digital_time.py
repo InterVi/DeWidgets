@@ -3,7 +3,6 @@ import json
 import base64
 from distutils.util import strtobool
 from datetime import datetime
-import traceback
 from PyQt5.QtWidgets import QWidget, QLabel, QListWidget, QListWidgetItem
 from PyQt5.QtWidgets import QCheckBox, QPushButton, QSpinBox, QLineEdit
 from PyQt5.QtWidgets import QColorDialog, QMessageBox
@@ -13,6 +12,7 @@ from PyQt5.QtCore import Qt, QTimer
 from core.manager import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, SUCCESS, DELETE
+from core.utils import try_except
 
 
 def get_time(utc=False, format='%X', hours=0, minutes=0, seconds=0) -> str:
@@ -72,53 +72,47 @@ class DTime(QWidget):
         self.v_box.addWidget(self.label)
         self.setLayout(self.v_box)
 
+    @try_except
     def _init(self):
-        try:
-            name = self.main.names[self.index]
-            self.setWindowIcon(self.main.info.ICON)
-            if self.index > 0:
-                self.setWindowTitle(name)
-                if len(self.main.sizes) >= self.index:
-                    size = self.main.sizes[self.index-1]
-                    self.resize(size['width'], size['height'])
-                    self.move(size['x'], size['y'])
-                    self.setWindowOpacity(size['opacity'])
-            self.setToolTip(name)
-            self.label.setToolTip(name)
-            palette = self.label.palette()
-            palette.setColor(QPalette.WindowText,
-                             QColor(self.main.colors[self.index]))
-            self.label.setPalette(palette)
-            self._update_time()
-        except:
-            print(traceback.format_exc())
+        name = self.main.names[self.index]
+        self.setWindowIcon(self.main.info.ICON)
+        if self.index > 0:
+            self.setWindowTitle(name)
+            if len(self.main.sizes) >= self.index:
+                size = self.main.sizes[self.index - 1]
+                self.resize(size['width'], size['height'])
+                self.move(size['x'], size['y'])
+                self.setWindowOpacity(size['opacity'])
+        self.setToolTip(name)
+        self.label.setToolTip(name)
+        palette = self.label.palette()
+        palette.setColor(QPalette.WindowText,
+                         QColor(self.main.colors[self.index]))
+        self.label.setPalette(palette)
+        self._update_time()
 
+    @try_except
     def _update_time(self):
-        try:
-            self.label.setText(get_time(self.main._utc,
-                                        self.main.times[self.index],
-                                        *self.main.offsets[self.index]))
-        except:
-            print(traceback.format_exc())
+        self.label.setText(get_time(self.main._utc,
+                                    self.main.times[self.index],
+                                    *self.main.offsets[self.index]))
 
+    @try_except
     def resizeEvent(self, event):
-        try:
-            screen = self.main.widget_manager.main_gui.app.desktop().\
-                screenGeometry()
-            if event.size().width() >= screen.width() or\
-                    event.size().height() >= screen.height():  # break loop
-                return
-            h_size = int(self.height() / self.main._hdi)
-            w_size = int(self.width() / self.main._wdi)
-            size = h_size
-            if w_size > h_size:
-                size = w_size
-            font = self.label.font()
-            font.setPointSize(int(size / self.main._sdi))
-            font.setBold(True)
-            self.label.setFont(font)
-        except:
-            print(traceback.format_exc())
+        screen = self.main.widget_manager.main_gui.app.desktop(). \
+            screenGeometry()
+        if event.size().width() >= screen.width() or \
+                event.size().height() >= screen.height():  # break loop
+            return
+        h_size = int(self.height() / self.main._hdi)
+        w_size = int(self.width() / self.main._wdi)
+        size = h_size
+        if w_size > h_size:
+            size = w_size
+        font = self.label.font()
+        font.setPointSize(int(size / self.main._sdi))
+        font.setBold(True)
+        self.label.setFont(font)
 
 
 class Info(WidgetInfo):
@@ -162,85 +156,77 @@ class Main(Widget, DTime):
         self._msec = 1000
         self._utc = False
 
+    @try_except
     def _load_settings(self):
-        try:
-            self.conf = self.widget_manager.get_config(self.info.NAME)
-            if 'times' in self.conf:
-                self.times = json.loads(
-                    base64.b64decode(self.conf['times']).decode('utf-8'))
-            if 'offsets' in self.conf:
-                self.offsets = json.loads(self.conf['offsets'])
-            if 'names' in self.conf:
-                self.names.clear()
-                b_names = json.loads(self.conf['names'])
-                for b_name in b_names:
-                    self.names.append(base64.b64decode(b_name).decode('utf-8'))
-            if 'colors' in self.conf:
-                self.colors = json.loads(self.conf['colors'])
-            if 'sizes' in self.conf:
-                self.sizes = json.loads(self.conf['sizes'])
-            if 'hdi' in self.conf:
-                self._hdi = int(self.conf['hdi'])
-            if 'wdi' in self.conf:
-                self._wdi = int(self.conf['wdi'])
-            if 'sdi' in self.conf:
-                self._sdi = int(self.conf['sdi'])
-            if 'msec' in self.conf:
-                self._msec = int(self.conf['msec'])
-            if 'utc' in self.conf:
-                self._utc = bool(strtobool(self.conf['utc']))
-            self._init()
-        except:
-            print(traceback.format_exc())
+        self.conf = self.widget_manager.get_config(self.info.NAME)
+        if 'times' in self.conf:
+            self.times = json.loads(
+                base64.b64decode(self.conf['times']).decode('utf-8'))
+        if 'offsets' in self.conf:
+            self.offsets = json.loads(self.conf['offsets'])
+        if 'names' in self.conf:
+            self.names.clear()
+            b_names = json.loads(self.conf['names'])
+            for b_name in b_names:
+                self.names.append(base64.b64decode(b_name).decode('utf-8'))
+        if 'colors' in self.conf:
+            self.colors = json.loads(self.conf['colors'])
+        if 'sizes' in self.conf:
+            self.sizes = json.loads(self.conf['sizes'])
+        if 'hdi' in self.conf:
+            self._hdi = int(self.conf['hdi'])
+        if 'wdi' in self.conf:
+            self._wdi = int(self.conf['wdi'])
+        if 'sdi' in self.conf:
+            self._sdi = int(self.conf['sdi'])
+        if 'msec' in self.conf:
+            self._msec = int(self.conf['msec'])
+        if 'utc' in self.conf:
+            self._utc = bool(strtobool(self.conf['utc']))
+        self._init()
 
+    @try_except
     def _load_widgets(self):
-        try:
-            for i in range(len(self.times)):
-                if i == 0:
-                    DTime._init(self)
-                    continue
-                dtime = DTime(self, i)
-                dtime._init()
-                dtime.show()
-                self.widgets.append(dtime)
-        except:
-            print(traceback.format_exc())
+        for i in range(len(self.times)):
+            if i == 0:
+                DTime._init(self)
+                continue
+            dtime = DTime(self, i)
+            dtime._init()
+            dtime.show()
+            self.widgets.append(dtime)
 
+    @try_except
     def _timeout(self):
-        try:
-            self._update_time()
-            for widget in self.widgets:
-                widget._update_time()
-        except:
-            print(traceback.format_exc())
+        self._update_time()
+        for widget in self.widgets:
+            widget._update_time()
 
+    @try_except
     def save_settings(self):
-        try:
-            self.conf['times'] = base64.b64encode(
-                json.dumps(self.times).encode('utf-8')).decode('ASCII')
-            self.conf['offsets'] = json.dumps(self.offsets)
-            b_names = []
-            for name in self.names:
-                b_names.append(base64.b64encode(name.encode('utf-8')
-                                                ).decode('ASCII'))
-            self.conf['names'] = json.dumps(b_names)
-            self.conf['colors'] = json.dumps(self.colors)
-            self.sizes.clear()
-            for widget in self.widgets:
-                size = {
-                    'width': widget.width(), 'height': widget.height(),
-                    'x': widget.x(), 'y': widget.y(),
-                    'opacity': widget.windowOpacity()
-                }
-                self.sizes.append(size)
-            self.conf['sizes'] = json.dumps(self.sizes)
-            self.conf['hdi'] = str(self._hdi)
-            self.conf['wdi'] = str(self._wdi)
-            self.conf['sdi'] = str(self._sdi)
-            self.conf['msec'] = str(self._msec)
-            self.conf['utc'] = str(self._utc)
-        except:
-            print(traceback.format_exc())
+        self.conf['times'] = base64.b64encode(
+            json.dumps(self.times).encode('utf-8')).decode('ASCII')
+        self.conf['offsets'] = json.dumps(self.offsets)
+        b_names = []
+        for name in self.names:
+            b_names.append(base64.b64encode(name.encode('utf-8')
+                                            ).decode('ASCII'))
+        self.conf['names'] = json.dumps(b_names)
+        self.conf['colors'] = json.dumps(self.colors)
+        self.sizes.clear()
+        for widget in self.widgets:
+            size = {
+                'width': widget.width(), 'height': widget.height(),
+                'x': widget.x(), 'y': widget.y(),
+                'opacity': widget.windowOpacity()
+            }
+            self.sizes.append(size)
+        self.conf['sizes'] = json.dumps(self.sizes)
+        self.conf['hdi'] = str(self._hdi)
+        self.conf['wdi'] = str(self._wdi)
+        self.conf['sdi'] = str(self._sdi)
+        self.conf['msec'] = str(self._msec)
+        self.conf['utc'] = str(self._utc)
 
     def boot(self):
         self._load_settings()
@@ -251,63 +237,49 @@ class Main(Widget, DTime):
         self._load_settings()
         self._load_widgets()
 
+    @try_except
     def hide_event(self, mode):
-        try:
-            for widget in self.widgets:
-                widget.setHidden(mode)
-        except:
-            print(traceback.format_exc())
+        for widget in self.widgets:
+            widget.setHidden(mode)
 
+    @try_except
     def edit_mode(self, mode):
-        try:
-            for widget in self.widgets:
-                if mode:
-                    widget.setWindowFlags(Qt.WindowMinimizeButtonHint |
-                                          Qt.WindowStaysOnBottomHint | Qt.Tool)
-                    widget.show()
-                else:
-                    widget.setWindowFlags(Qt.CustomizeWindowHint |
-                                          Qt.WindowStaysOnBottomHint | Qt.Tool)
-                    widget.show()
-            self.save_settings()
-        except:
-            print(traceback.format_exc())
+        for widget in self.widgets:
+            if mode:
+                widget.setWindowFlags(Qt.WindowMinimizeButtonHint |
+                                      Qt.WindowStaysOnBottomHint | Qt.Tool)
+                widget.show()
+            else:
+                widget.setWindowFlags(Qt.CustomizeWindowHint |
+                                      Qt.WindowStaysOnBottomHint | Qt.Tool)
+                widget.show()
+        self.save_settings()
 
     def unload(self):
         self.save_settings()
 
+    @try_except
     def remove(self):
-        try:
-            for widget in self.widgets:
-                widget.destroy()
-        except:
-            print(traceback.format_exc())
+        for widget in self.widgets:
+            widget.destroy()
 
+    @try_except
     def purge(self):
-        try:
-            self.remove()
-            self.__setup_vars()
-        except:
-            print(traceback.format_exc())
+        self.remove()
+        self.__setup_vars()
 
+    @try_except
     def show_settings(self):
-        try:
-            self.settings_win = Settings(self)
-        except:
-            print(traceback.format_exc())
+        self.settings_win = Settings(self)
 
+    @try_except
     def showEvent(self, event):
-        try:
-            self._timeout()
-            self.timer.start(self._msec)
-        except:
-            print(traceback.format_exc())
+        self._timeout()
+        self.timer.start(self._msec)
 
+    @try_except
     def hideEvent(self, event):
-        try:
-            self.timer.stop()
-        except:
-            print(traceback.format_exc())
+        self.timer.stop()
 
     def closeEvent(self, event):
         self.hideEvent(event)
@@ -391,133 +363,115 @@ class Settings(QWidget):
         # show
         self.show()
 
+    @try_except
     def _timeout(self):
-        try:
-            self.time_label.setText(get_time(self.main._utc))
-        except:
-            print(traceback.format_exc())
+        self.time_label.setText(get_time(self.main._utc))
 
+    @try_except
     def _list_fill(self):
-        try:
-            self.list.clear()
-            for name in self.main.names:
-                self.list.addItem(QListWidgetItem(name, self.list))
-            self.list.setCurrentRow(0)
-        except:
-            print(traceback.format_exc())
-
-    def _item_double_clicked(self):
-        try:
-            self.time_edit = TimeEdit(self, self.list.currentRow())
-        except:
-            print(traceback.format_exc())
-
-    def _utc_changed(self):
-        try:
-            self.main._utc = self.utc_checkbox.isChecked()
-        except:
-            print(traceback.format_exc())
-
-    def _timer_change(self):
-        try:
-            self.main._msec = self.timer_spinbox.value()
-            self.timer.stop()
-            self.main.timer.stop()
-            self.timer.start(self.main._msec)
-            self.main.timer.start(self.main._msec)
-        except:
-            print(traceback.format_exc())
-
-    def _add_time(self):
-        try:
-            # adding
-            name = self.lang['names']
-            i = 1
-            while name in self.main.names:
-                name = self.lang['names'] + ' ' + str(i)
-                i += 1
-            self.main.times.append('%X')
-            self.main.offsets.append((0, 0, 0))
-            self.main.names.append(name)
-            self.main.colors.append('#000')
-            dtime = DTime(self.main, len(self.main.times) - 1)
-            dtime._init()
-            dtime.resize(100, 100)
-            dtime.show()
-            self.main.widgets.append(dtime)
-            self.main.save_settings()
+        self.list.clear()
+        for name in self.main.names:
             self.list.addItem(QListWidgetItem(name, self.list))
-            self.list.setCurrentRow(self.list.count() - 1)
-            # show success alert
-            mbox = QMessageBox(QMessageBox.Information,
-                               self.lang['adding_title'],
-                               self.lang['adding_text'],
-                               QMessageBox.Ok, self)
-            mbox.setWindowIcon(QIcon(SUCCESS))
-            ok = mbox.button(QMessageBox.Ok)
-            ok.setText(self.lang['adding_ok_button'])
-            ok.setToolTip(self.lang['adding_ok_button_tt'])
-            mbox.exec()
-        except:
-            print(traceback.format_exc())
+        self.list.setCurrentRow(0)
 
-    def _del_time(self):
-        try:
-            if self.list.count() <= 1:
-                return
-            # show confirm dialog
-            mbox = QMessageBox(QMessageBox.Question,
-                               self.lang['delete_title'],
-                               self.lang['delete_text'].format(
-                                   self.list.currentItem().text()),
-                               QMessageBox.Yes | QMessageBox.No)
-            mbox.setWindowIcon(QIcon(DELETE))
-            yes = mbox.button(QMessageBox.Yes)
-            yes.setText(self.lang['del_yes_button'])
-            yes.setToolTip(self.lang['del_no_button'])
-            no = mbox.button(QMessageBox.No)
-            no.setText(self.lang['del_no_button'])
-            no.setToolTip(self.lang['del_no_button_tt'])
-            if mbox.exec() != QMessageBox.Yes:
-                return
-            # deleting process
-            row = self.list.currentRow()
-            if row == 0:  # change main win
-                self.main.times[0] = self.main.times[1]
-                self.main.offsets[0] = self.main.offsets[1]
-                self.main.names[0] = self.main.names[1]
-                self.main.colors[0] = self.main.colors[1]
-                del self.main.times[0]
-                del self.main.offsets[0]
-                del self.main.names[0]
-                del self.main.colors[0]
-                size = self.main.sizes[0]
-                self.main.resize(size['width'], size['height'])
-                self.main.move(size['x'], size['y'])
-                self.main.setWindowOpacity(size['opacity'])
-                del self.main.sizes[0]
-                self.main.widgets[0].destroy()
-                del self.main.widgets[0]
-                self.main.show()
-                self.main._init()
-            else:  # remove child win
-                del self.main.times[row]
-                del self.main.offsets[row]
-                del self.main.names[row]
-                del self.main.colors[row]
-                if row <= len(self.main.sizes):
-                    del self.main.sizes[row - 1]
-                self.main.widgets[row - 1].destroy()
-                del self.main.widgets[row - 1]
-            self._list_fill()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _item_double_clicked(self, item):
+        self.time_edit = TimeEdit(self, self.list.currentRow())
 
+    @try_except
+    def _utc_changed(self, state):
+        self.main._utc = self.utc_checkbox.isChecked()
+
+    @try_except
+    def _timer_change(self, value):
+        self.main._msec = value
+        self.timer.stop()
+        self.main.timer.stop()
+        self.timer.start(self.main._msec)
+        self.main.timer.start(self.main._msec)
+
+    @try_except
+    def _add_time(self, checked):
+        # adding
+        name = self.lang['names']
+        i = 1
+        while name in self.main.names:
+            name = self.lang['names'] + ' ' + str(i)
+            i += 1
+        self.main.times.append('%X')
+        self.main.offsets.append((0, 0, 0))
+        self.main.names.append(name)
+        self.main.colors.append('#000')
+        dtime = DTime(self.main, len(self.main.times) - 1)
+        dtime._init()
+        dtime.resize(100, 100)
+        dtime.show()
+        self.main.widgets.append(dtime)
+        self.main.save_settings()
+        self.list.addItem(QListWidgetItem(name, self.list))
+        self.list.setCurrentRow(self.list.count() - 1)
+        # show success alert
+        mbox = QMessageBox(QMessageBox.Information,
+                           self.lang['adding_title'],
+                           self.lang['adding_text'],
+                           QMessageBox.Ok, self)
+        mbox.setWindowIcon(QIcon(SUCCESS))
+        ok = mbox.button(QMessageBox.Ok)
+        ok.setText(self.lang['adding_ok_button'])
+        ok.setToolTip(self.lang['adding_ok_button_tt'])
+        mbox.exec()
+
+    def _del_time(self, checked):
+        if self.list.count() <= 1:
+            return
+        # show confirm dialog
+        mbox = QMessageBox(QMessageBox.Question, self.lang['delete_title'],
+                           self.lang['delete_text'].format(
+                               self.list.currentItem().text()),
+                           QMessageBox.Yes | QMessageBox.No)
+        mbox.setWindowIcon(QIcon(DELETE))
+        yes = mbox.button(QMessageBox.Yes)
+        yes.setText(self.lang['del_yes_button'])
+        yes.setToolTip(self.lang['del_no_button'])
+        no = mbox.button(QMessageBox.No)
+        no.setText(self.lang['del_no_button'])
+        no.setToolTip(self.lang['del_no_button_tt'])
+        if mbox.exec() != QMessageBox.Yes:
+            return
+        # deleting process
+        row = self.list.currentRow()
+        if row == 0:  # change main win
+            self.main.times[0] = self.main.times[1]
+            self.main.offsets[0] = self.main.offsets[1]
+            self.main.names[0] = self.main.names[1]
+            self.main.colors[0] = self.main.colors[1]
+            del self.main.times[0]
+            del self.main.offsets[0]
+            del self.main.names[0]
+            del self.main.colors[0]
+            size = self.main.sizes[0]
+            self.main.resize(size['width'], size['height'])
+            self.main.move(size['x'], size['y'])
+            self.main.setWindowOpacity(size['opacity'])
+            del self.main.sizes[0]
+            self.main.widgets[0].destroy()
+            del self.main.widgets[0]
+            self.main.show()
+            self.main._init()
+        else:  # remove child win
+            del self.main.times[row]
+            del self.main.offsets[row]
+            del self.main.names[row]
+            del self.main.colors[row]
+            if row <= len(self.main.sizes):
+                del self.main.sizes[row - 1]
+            self.main.widgets[row - 1].destroy()
+            del self.main.widgets[row - 1]
+        self._list_fill()
+
+    @try_except
     def closeEvent(self, event):
-        try:
-            self.timer.stop()
-        except:
-            print(traceback.format_exc())
+        self.timer.stop()
 
 
 class TimeEdit(QWidget):
@@ -631,65 +585,52 @@ class TimeEdit(QWidget):
         self._timeout()
         self.show()
 
+    @try_except
     def _timeout(self):
-        try:
-            strf = self.format_edit.text()
-            if not strf_validate(strf):
-                strf = '%X'
-            self.time_show.setText(get_time(self.main._utc))
-            self.offset_time.setText(get_time(self.main._utc,
-                                              strf,
-                                              self.hours.value(),
-                                              self.minutes.value(),
-                                              self.seconds.value()))
-        except:
-            print(traceback.format_exc())
+        strf = self.format_edit.text()
+        if not strf_validate(strf):
+            strf = '%X'
+        self.time_show.setText(get_time(self.main._utc))
+        self.offset_time.setText(get_time(self.main._utc, strf,
+                                          self.hours.value(),
+                                          self.minutes.value(),
+                                          self.seconds.value()))
 
-    def _move(self):
-        try:
-            self.move_win = Move(self.widget, self.main.widget_manager)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _move(self, checked):
+        self.move_win = Move(self.widget, self.main.widget_manager)
 
-    def _color(self):
-        try:
-            palette = self.widget.label.palette()
-            palette.setColor(QPalette.WindowText,
-                             QColorDialog.getColor(
-                                 palette.color(QPalette.WindowText), self,
-                                 self.lang['color_title']
-                             ))
-            self._palette = palette
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _color(self, checked):
+        palette = self.widget.label.palette()
+        palette.setColor(QPalette.WindowText,
+                         QColorDialog.getColor(
+                             palette.color(QPalette.WindowText), self,
+                             self.lang['color_title']
+                         ))
+        self._palette = palette
 
-    def _save(self):
-        try:
-            self.main.colors[self.element] = self._palette.color(
-                QPalette.WindowText).name()
-            self.main.names[self.element] = self.name_edit.text()
-            time_format = self.format_edit.text()
-            if not strf_validate(time_format):
-                time_format = '%X'
-            self.main.times[self.element] = time_format
-            self.main.offsets[self.element] = (self.hours.value(),
-                                               self.minutes.value(),
-                                               self.seconds.value())
-            self.main.save_settings()
-            self.settings._list_fill()
-            self.widget._init()
-            self.close()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _save(self, checked):
+        self.main.colors[self.element] = self._palette.color(
+            QPalette.WindowText).name()
+        self.main.names[self.element] = self.name_edit.text()
+        time_format = self.format_edit.text()
+        if not strf_validate(time_format):
+            time_format = '%X'
+        self.main.times[self.element] = time_format
+        self.main.offsets[self.element] = (self.hours.value(),
+                                           self.minutes.value(),
+                                           self.seconds.value())
+        self.main.save_settings()
+        self.settings._list_fill()
+        self.widget._init()
+        self.close()
 
-    def _cancel(self):
-        try:
-            self.close()
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _cancel(self, checked):
+        self.close()
 
+    @try_except
     def closeEvent(self, event):
-        try:
-            self.timer.stop()
-        except:
-            print(traceback.format_exc())
+        self.timer.stop()

@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QLabel
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt
 from core.paths import HELP, LICENSE, AVA, LICENSE_TXT
+from core.utils import try_except
 
 
 class Help(QWidget):
@@ -44,17 +45,13 @@ class Help(QWidget):
         # show
         self.show()
 
-    def _show_license(self):
-        try:
-            self.license_window = License(self.lang)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_license(self, checked):
+        self.license_window = License(self.lang)
 
-    def _show_author(self):
-        try:
-            self.author_window = Author(self.lang)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_author(self, checked):
+        self.author_window = Author(self.lang)
 
 
 class TextViewer(QWidget):

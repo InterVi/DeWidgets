@@ -15,6 +15,7 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QRect
 from core.manager import Widget, WidgetInfo
 from core.paths import RES, SETTINGS, ERROR
+from core.utils import try_except
 
 ICON_PIXMAP = QPixmap(os.path.join(RES, 'cnote', 'icon.png'))
 OPEN_PIXMAP = QPixmap(os.path.join(RES, 'cnote', 'open.png'))
@@ -139,110 +140,92 @@ class Main(Widget, QWidget):
         self._pos = None
         self._hexpass = None
 
+    @try_except
     def _timeout(self):
-        try:
-            if time.time() >= self._end_time:
-                if self.note_win:
-                    self.note_win._exit()
-                else:
-                    self._stop_timer()
-                    self.image.setPixmap(ICON_PIXMAP)
-                    self.image.show()
-        except:
-            print(traceback.format_exc())
-
-    def _load_settings(self):
-        try:
-            self.conf = self.widget_manager.get_config(self.info.NAME)
-            if 'session' in self.conf:
-                self._session = int(self.conf['session'])
-            if 'hot_save' in self.conf:
-                self._hot_save = bool(strtobool(self.conf['hot_save']))
-            if 'handing' in self.conf:
-                self._handing = int(self.conf['handing'])
-            if 'pos' in self.conf:
-                self._pos = QRect(*json.loads(self.conf['pos']))
-        except:
-            print(traceback.format_exc())
-
-    def save_settings(self):
-        try:
-            self.conf['session'] = str(self._session)
-            self.conf['hot_save'] = str(self._hot_save)
-            if self._pos:
-                pos = (self._pos.left(), self._pos.top(), self._pos.width(),
-                       self._pos.height())
-                self.conf['pos'] = json.dumps(pos)
-            self.widget_manager.config.save()
-        except:
-            print(traceback.format_exc())
-
-    def _click(self, event):
-        try:
-            if self._hexpass:
-                self.note_win = Note(self, hexpass=self._hexpass)
+        if time.time() >= self._end_time:
+            if self.note_win:
+                self.note_win._exit()
             else:
-                qid = QInputDialog(self)
-                qid.setWindowIcon(QIcon(OPEN_PIXMAP))
-                qid.setWindowTitle(self.lang['pass_title'])
-                qid.setOkButtonText(self.lang['ok_button'])
-                qid.setCancelButtonText(self.lang['pass_cancel_button'])
-                if 'note' in self.conf:
-                    qid.setLabelText(self.lang['pass_text'])
-                    qid.setTextEchoMode(QLineEdit.Password)
+                self._stop_timer()
+                self.image.setPixmap(ICON_PIXMAP)
+                self.image.show()
+
+    @try_except
+    def _load_settings(self):
+        self.conf = self.widget_manager.get_config(self.info.NAME)
+        if 'session' in self.conf:
+            self._session = int(self.conf['session'])
+        if 'hot_save' in self.conf:
+            self._hot_save = bool(strtobool(self.conf['hot_save']))
+        if 'handing' in self.conf:
+            self._handing = int(self.conf['handing'])
+        if 'pos' in self.conf:
+            self._pos = QRect(*json.loads(self.conf['pos']))
+
+    @try_except
+    def save_settings(self):
+        self.conf['session'] = str(self._session)
+        self.conf['hot_save'] = str(self._hot_save)
+        if self._pos:
+            pos = (self._pos.left(), self._pos.top(), self._pos.width(),
+                   self._pos.height())
+            self.conf['pos'] = json.dumps(pos)
+        self.widget_manager.config.save()
+
+    @try_except
+    def _click(self, event):
+        if self._hexpass:
+            self.note_win = Note(self, hexpass=self._hexpass)
+        else:
+            qid = QInputDialog(self)
+            qid.setWindowIcon(QIcon(OPEN_PIXMAP))
+            qid.setWindowTitle(self.lang['pass_title'])
+            qid.setOkButtonText(self.lang['ok_button'])
+            qid.setCancelButtonText(self.lang['pass_cancel_button'])
+            if 'note' in self.conf:
+                qid.setLabelText(self.lang['pass_text'])
+                qid.setTextEchoMode(QLineEdit.Password)
+            else:
+                qid.setLabelText(self.lang['create_pass_text'])
+            if qid.exec() == QInputDialog.Accepted:
+                text = qid.textValue()
+                if text:
+                    self.note_win = Note(self, text)
+                    if self._session:
+                        self._hexpass = self.note_win.cip.hexpass
+                        self._start_timer()
                 else:
-                    qid.setLabelText(self.lang['create_pass_text'])
-                if qid.exec() == QInputDialog.Accepted:
-                    text = qid.textValue()
-                    if text:
-                        self.note_win = Note(self, text)
-                        if self._session:
-                            self._hexpass = self.note_win.cip.hexpass
-                            self._start_timer()
-                    else:
-                        self.show_pass_error(True)
-        except:
-            print(traceback.format_exc())
+                    self.show_pass_error(True)
 
+    @try_except
     def _stop_timer(self):
-        try:
-            self.timer.stop()
-            self._hexpass = None
-        except:
-            print(traceback.format_exc())
+        self.timer.stop()
+        self._hexpass = None
 
+    @try_except
     def _start_timer(self):
-        try:
-            self._end_time = time.time() + self._session
-            self.timer.start(self._handing)
-        except:
-            print(traceback.format_exc())
+        self._end_time = time.time() + self._session
+        self.timer.start(self._handing)
 
+    @try_except
     def show_pass_error(self, empty=False):
-        try:
-            t = self.lang['empty_text'] if empty else self.lang['wrong_text']
-            mbox = QMessageBox(QMessageBox.Critical,
-                               self.lang['wrong_title'], t, QMessageBox.Ok,
-                               self)
-            mbox.setWindowIcon(QIcon(ERROR))
-            ok = mbox.button(QMessageBox.Ok)
-            ok.setText(self.lang['wrong_ok_button'])
-            ok.setToolTip(self.lang['wrong_ok_button_tt'])
-            mbox.exec()
-        except:
-            print(traceback.format_exc())
+        t = self.lang['empty_text'] if empty else self.lang['wrong_text']
+        mbox = QMessageBox(QMessageBox.Critical,
+                           self.lang['wrong_title'], t, QMessageBox.Ok,
+                           self)
+        mbox.setWindowIcon(QIcon(ERROR))
+        ok = mbox.button(QMessageBox.Ok)
+        ok.setText(self.lang['wrong_ok_button'])
+        ok.setToolTip(self.lang['wrong_ok_button_tt'])
+        mbox.exec()
 
+    @try_except
     def close_note(self):
-        try:
-            self.note_win = None
-        except:
-            print(traceback.format_exc())
+        self.note_win = None
 
+    @try_except
     def show_settings(self):
-        try:
-            self.settings_win = Settings(self)
-        except:
-            print(traceback.format_exc())
+        self.settings_win = Settings(self)
 
     def unload(self):
         self.save_settings()
@@ -256,12 +239,10 @@ class Main(Widget, QWidget):
     def remove(self):
         self._stop_timer()
 
+    @try_except
     def purge(self):
-        try:
-            self._setup_vars()
-            self.remove()
-        except:
-            print(traceback.format_exc())
+        self._setup_vars()
+        self.remove()
 
 
 class Note(QWidget):
@@ -312,12 +293,10 @@ class Note(QWidget):
         # load note and show
         self._load_note()
 
+    @try_except
     def _text_changed(self):
-        try:
-            if self.main._hot_save:
-                self._save_note()
-        except:
-            print(traceback.format_exc())
+        if self.main._hot_save:
+            self._save_note()
 
     def _load_note(self):
         try:
@@ -335,43 +314,35 @@ class Note(QWidget):
             self.main.show_pass_error()
             self._exit()
 
+    @try_except
     def _save_note(self):
-        try:
-            # text -> gzip -> AES-256 -> gzip -> base64
-            note = base64.b64encode(gzip.compress(self.cip.encrypt(
-                self.text_edit.toPlainText()), 9)).decode('ASCII')
-            self.main.conf['note'] = note
-            self.main.widget_manager.config.save()
-        except:
-            print(traceback.format_exc())
+        # text -> gzip -> AES-256 -> gzip -> base64
+        note = base64.b64encode(gzip.compress(self.cip.encrypt(
+            self.text_edit.toPlainText()), 9)).decode('ASCII')
+        self.main.conf['note'] = note
+        self.main.widget_manager.config.save()
 
-    def _exit(self):
-        try:
-            self.main._stop_timer()
+    @try_except
+    def _exit(self, checked):
+        self.main._stop_timer()
+        self.main.image.setPixmap(ICON_PIXMAP)
+        self.main.image.show()
+        self._close()
+
+    @try_except
+    def _close(self, checked=False):
+        if self.text_edit.toPlainText():
+            self._save_note()
+        self.hide()
+        if not self.main._session:
             self.main.image.setPixmap(ICON_PIXMAP)
             self.main.image.show()
-            self._close()
-        except:
-            print(traceback.format_exc())
+        self.main.close_note()
 
-    def _close(self):
-        try:
-            if self.text_edit.toPlainText():
-                self._save_note()
-            self.hide()
-            if not self.main._session:
-                self.main.image.setPixmap(ICON_PIXMAP)
-                self.main.image.show()
-            self.main.close_note()
-        except:
-            print(traceback.format_exc())
-
+    @try_except
     def closeEvent(self, event):
-        try:
-            event.ignore()
-            self._close()
-        except:
-            print(traceback.format_exc())
+        event.ignore()
+        self._close()
 
     def resizeEvent(self, event):
         self.main._pos = self.geometry()
@@ -465,61 +436,57 @@ class Settings(QWidget):
         # show
         self.show()
 
-    def _show_pass(self):
-        try:
-            if self.show_pass.isChecked():
-                self.old_pass.setEchoMode(QLineEdit.Normal)
-                self.new_pass.setEchoMode(QLineEdit.Normal)
-                self.rep_pass.setEchoMode(QLineEdit.Normal)
-            else:
-                self.old_pass.setEchoMode(QLineEdit.Password)
-                self.new_pass.setEchoMode(QLineEdit.Password)
-                self.rep_pass.setEchoMode(QLineEdit.Password)
-        except:
-            print(traceback.format_exc())
+    @try_except
+    def _show_pass(self, state):
+        if self.show_pass.isChecked():
+            self.old_pass.setEchoMode(QLineEdit.Normal)
+            self.new_pass.setEchoMode(QLineEdit.Normal)
+            self.rep_pass.setEchoMode(QLineEdit.Normal)
+        else:
+            self.old_pass.setEchoMode(QLineEdit.Password)
+            self.new_pass.setEchoMode(QLineEdit.Password)
+            self.rep_pass.setEchoMode(QLineEdit.Password)
 
-    def _save(self):
-        try:
-            self.main._session = self.session_sbox.value()
-            self.main._hot_save = self.hot_save.isChecked()
-            if 'note' in self.main.conf:
-                # text edit checks
-                if self.new_pass.text() != self.rep_pass.text():
-                    mbox = QMessageBox(QMessageBox.Critical,
-                                       self.lang['disagree_title'],
-                                       self.lang['disagree_text'],
-                                       QMessageBox.Ok, self)
-                    mbox.setWindowIcon(QIcon(ERROR))
-                    ok = mbox.button(QMessageBox.Ok)
-                    ok.setText(self.lang['dis_ok_button'])
-                    ok.setToolTip(self.lang['dis_ok_button_tt'])
-                    mbox.exec()
+    @try_except
+    def _save(self, checked):
+        self.main._session = self.session_sbox.value()
+        self.main._hot_save = self.hot_save.isChecked()
+        if 'note' in self.main.conf:
+            # text edit checks
+            if self.new_pass.text() != self.rep_pass.text():
+                mbox = QMessageBox(QMessageBox.Critical,
+                                   self.lang['disagree_title'],
+                                   self.lang['disagree_text'],
+                                   QMessageBox.Ok, self)
+                mbox.setWindowIcon(QIcon(ERROR))
+                ok = mbox.button(QMessageBox.Ok)
+                ok.setText(self.lang['dis_ok_button'])
+                ok.setToolTip(self.lang['dis_ok_button_tt'])
+                mbox.exec()
+                return
+            elif self.old_pass.text() and (not self.new_pass.text()
+                                           or not self.rep_pass.text()):
+                self.main.show_pass_error(True)
+                return
+            elif not self.old_pass.text() and (self.new_pass.text()
+                                               or self.rep_pass.text()):
+                self.main.show_pass_error(True)
+                return
+            else:
+                try:  # replacing note content
+                    cip = AESCip(self.old_pass.text())
+                    # base64 -> gzip -> AES-256 -> gzip -> text
+                    note = gzip.decompress(base64.b64decode(
+                        self.main.conf['note']))
+                    note = cip.decrypt(note)
+                    cip.update_pass(self.new_pass.text())
+                    # text -> gzip -> AES-256 -> gzip -> base64
+                    note = base64.b64encode(gzip.compress(
+                        cip.encrypt(note), 9)).decode('ASCII')
+                    self.main.conf['note'] = note
+                except:  # if bad password (possible)
+                    print(traceback.format_exc())
+                    self.main.show_pass_error()
                     return
-                elif self.old_pass.text() and (not self.new_pass.text()
-                                               or not self.rep_pass.text()):
-                    self.main.show_pass_error(True)
-                    return
-                elif not self.old_pass.text() and (self.new_pass.text()
-                                                   or self.rep_pass.text()):
-                    self.main.show_pass_error(True)
-                    return
-                else:
-                    try:  # replacing note content
-                        cip = AESCip(self.old_pass.text())
-                        # base64 -> gzip -> AES-256 -> gzip -> text
-                        note = gzip.decompress(base64.b64decode(
-                            self.main.conf['note']))
-                        note = cip.decrypt(note)
-                        cip.update_pass(self.new_pass.text())
-                        # text -> gzip -> AES-256 -> gzip -> base64
-                        note = base64.b64encode(gzip.compress(
-                            cip.encrypt(note), 9)).decode('ASCII')
-                        self.main.conf['note'] = note
-                    except:  # if bad password (possible)
-                        print(traceback.format_exc())
-                        self.main.show_pass_error()
-                        return
-                self.main.save_settings()
-            self.close()
-        except:
-            print(traceback.format_exc())
+            self.main.save_settings()
+        self.close()
