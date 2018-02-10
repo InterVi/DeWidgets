@@ -57,7 +57,7 @@ class Main(Widget, QWidget):
         self._labels = True
         self._text = True
 
-    @try_except
+    @try_except()
     def setup_ui(self):
         if self._widgets:  # clear
             for w in self._widgets:
@@ -112,7 +112,7 @@ class Main(Widget, QWidget):
         # set layout
         self.layout().update()
 
-    @try_except
+    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'update' in self.conf:
@@ -130,7 +130,7 @@ class Main(Widget, QWidget):
         if 'text' in self.conf:
             self._text = bool(strtobool(self.conf['text']))
 
-    @try_except
+    @try_except()
     def save_settings(self):
         self.conf['update'] = str(self._update)
         self.conf['round'] = str(self._round)
@@ -140,7 +140,7 @@ class Main(Widget, QWidget):
         self.conf['labels'] = str(self._labels)
         self.conf['text'] = str(self._text)
 
-    @try_except
+    @try_except()
     def show_settings(self):
         self.settings_win = Settings(self)
 
@@ -161,12 +161,12 @@ class Main(Widget, QWidget):
         self.timer.stop()
         self._setup_vars()
 
-    @try_except
+    @try_except()
     def showEvent(self, event):
         self.setup_ui()
         self.timer.start(self._update)
 
-    @try_except
+    @try_except()
     def hideEvent(self, event):
         self.timer.stop()
 
@@ -247,7 +247,7 @@ class Settings(QWidget):
         # show
         self.show()
 
-    @try_except
+    @try_except()
     def _save(self, checked):
         self.main._update = self.update_spinbox.value()
         self.main._round = self.round_spinbox.value()

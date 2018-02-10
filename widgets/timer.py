@@ -63,7 +63,7 @@ class Main(Widget, QWidget):
         self.TACK = os.path.join(RES, 'timer', 'tack.ogg')
         self.ALARM = os.path.join(RES, 'timer', 'alarm.ogg')
 
-    @try_except
+    @try_except()
     def _add_timer(self, h=0, m=0, s=0, enabled=True):
         lcd = QLCDNumber(self), QLCDNumber(self), QLCDNumber(self)
         for i in range(3):
@@ -82,20 +82,20 @@ class Main(Widget, QWidget):
         # (lcd, lcd, lcd), QHBoxLayout, is past, is enabled, (h, m, s)
         self.list.append((lcd, h_box, True, enabled, (h, m, s)))
 
-    @try_except
+    @try_except()
     def _delete_timer(self, index):
         self.v_box.removeItem(self.list[index][1])
         del self.list[index]
         self._reset()  # else rendering bug
 
-    @try_except
+    @try_except()
     def _turn_enabled(self, index, enabled):
         item = self.list[index]
         for lcd in item[0]:
             lcd.setEnabled(enabled)
         self.list[index] = item[0], item[1], item[2], enabled, item[4]
 
-    @try_except
+    @try_except()
     def _tick(self):
         ticked = False
         sec = math.floor(time.time() - self._last)  # amplify precision
@@ -128,14 +128,14 @@ class Main(Widget, QWidget):
         else:
             self.timer.stop()
 
-    @try_except
+    @try_except()
     def _play(self, file, volume):  # strange, big memory leak and crash
         player = QMediaPlayer(self)
         player.setMedia(QMediaContent(QUrl.fromLocalFile(file)))
         player.setVolume(volume)
         player.play()
 
-    @try_except
+    @try_except()
     def _sec_sound(self):
         if not bool(strtobool(self.conf['seconds'])):
             return
@@ -145,7 +145,7 @@ class Main(Widget, QWidget):
         else:
             self._play(self.TACK, volume)
 
-    @try_except
+    @try_except()
     def _alarm(self, index):
         if bool(strtobool(self.conf['alarm'])):
             self._play(self.ALARM, int(self.conf['alarm_volume']))
@@ -158,20 +158,20 @@ class Main(Widget, QWidget):
                 QSystemTrayIcon.Information, int(self.conf['notify_msec'])
             )
 
-    @try_except
+    @try_except()
     def _show_timeout(self, index):
         self.boxes.append(Timeout(self, self.get_timer_text(index)))
 
-    @try_except
+    @try_except()
     def _start(self, checked):
         self._last = time.time()
         self.timer.start(int(self.conf['tick_ms']))  # amplify precision
 
-    @try_except
+    @try_except()
     def _pause(self, checked):
         self.timer.stop()
 
-    @try_except
+    @try_except()
     def _reset(self, checked):
         self.timer.stop()
         for timer in self.list:
@@ -180,7 +180,7 @@ class Main(Widget, QWidget):
         self.list.clear()
         self._load_timers()
 
-    @try_except
+    @try_except()
     def _load_timers(self):
         if ('timers' not in self.conf) or self.conf['timers'] == '[]' or \
                 not self.conf['timers']:
@@ -189,7 +189,7 @@ class Main(Widget, QWidget):
         for data in json.loads(self.conf['timers']):
             self._add_timer(*data)
 
-    @try_except
+    @try_except()
     def _save_timers(self):
         if not self.conf:
             return
@@ -198,7 +198,7 @@ class Main(Widget, QWidget):
             timers.append((timer[4][0], timer[4][1], timer[4][2], timer[3]))
         self.conf['timers'] = json.dumps(timers)
 
-    @try_except
+    @try_except()
     def _setup_conf(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'alarm' not in self.conf:
@@ -229,16 +229,16 @@ class Main(Widget, QWidget):
     def unload(self):
         self._save_timers()
 
-    @try_except
+    @try_except()
     def show_settings(self):
         self.settings_win = Settings(self)
 
-    @try_except
+    @try_except()
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton:
             self.menu.exec(event.globalPos())
 
-    @try_except
+    @try_except()
     def mouseDoubleClickEvent(self, event):
         index = int(event.pos().y()/(self.height()/(len(self.list))))
         self._turn_enabled(index, not self.list[index][3])
@@ -271,7 +271,7 @@ class Timeout(QMessageBox):
         # show
         self.show()
 
-    @try_except
+    @try_except()
     def exit(self, checked):  # crutch off memory leak
         self.hide()
         for i in range(len(self.main.boxes)):
@@ -401,7 +401,7 @@ class Settings(QWidget):
         else:
             self.delete_button.setEnabled(False)
 
-    @try_except
+    @try_except()
     def _list_fill(self):
         self.list.clear()
         for i in range(len(self.main.list)):
@@ -412,47 +412,47 @@ class Settings(QWidget):
                 item.setFont(font)
             self.list.addItem(item)
 
-    @try_except
+    @try_except()
     def _item_double_clicked(self, item):
         self.ts_win = TimerSettings(self, True)
 
-    @try_except
+    @try_except()
     def _alert_checkbox_changed(self, state):
         self.main.conf['alert'] = str(self.alert_checkbox.isChecked())
 
-    @try_except
+    @try_except()
     def _alarm_checkbox_changed(self, state):
         self.main.conf['alarm'] = str(self.alarm_checkbox.isChecked())
 
-    @try_except
+    @try_except()
     def _notify_checkbox_changed(self, state):
         self.main.conf['notify'] = str(self.notify_checkbox.isChecked())
 
-    @try_except
+    @try_except()
     def _seconds_checkbox_changed(self, state):
         self.main.conf['seconds'] = str(self.seconds_checkbox.isChecked())
 
-    @try_except
+    @try_except()
     def _alarm_volume_changed(self, value):
         self.main.conf['alarm_volume'] = str(int(value))
 
-    @try_except
+    @try_except()
     def _seconds_volume_changed(self, value):
         self.main.conf['seconds_volume'] = str(int(value))
 
-    @try_except
+    @try_except()
     def _time_changed(self, value):
         self.main.conf['notify_msec'] = str(int(value * 1000))
 
-    @try_except
+    @try_except()
     def _tick_changed(self, value):
         self.main.conf['tick_ms'] = str(int(value))
 
-    @try_except
+    @try_except()
     def _add(self, checked):
         self.ts_win = TimerSettings(self)
 
-    @try_except
+    @try_except()
     def _delete(self, checked):
         if self.list.count() <= 1:
             return
@@ -534,7 +534,7 @@ class TimerSettings(QWidget):
         # show
         self.show()
 
-    @try_except
+    @try_except()
     def _save_exit(self, checked):
         if self.edit:
             item = self.main.list[self.index]

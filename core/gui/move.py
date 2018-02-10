@@ -106,19 +106,19 @@ class Move(QWidget):
         # show
         self.show()
 
-    @try_except
+    @try_except()
     def _save(self, checked):
         self.manager.edit_mode(False)
         self.close()
 
-    @try_except
+    @try_except()
     def _cancel(self, checked):
         self.window.move(QPoint(self.x_cord, self.y_cord))
         self.window.resize(QSize(self.w_win, self.h_win))
         self.window.setWindowOpacity(self.opacity_win)
         self.close()
 
-    @try_except
+    @try_except()
     def _move(self, value):
         if not self.x_edit.text() or not self.y_edit.text():
             return
@@ -127,7 +127,7 @@ class Move(QWidget):
         self.window.move(QPoint(x, y))
         self.window.show()
 
-    @try_except
+    @try_except()
     def _resize(self, value):
         if not self.w_edit.text() or not self.h_edit.text():
             return
@@ -136,7 +136,7 @@ class Move(QWidget):
         self.window.resize(QSize(w, h))
         self.window.show()
 
-    @try_except
+    @try_except()
     def _opacity(self, value):
         value = float(value / 100)
         self.window.setWindowOpacity(value)

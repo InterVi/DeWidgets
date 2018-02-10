@@ -105,7 +105,7 @@ class Settings(QWidget):
             except:
                 print(traceback.format_exc())
 
-    @try_except
+    @try_except()
     def _save(self, checked):
         self.settings['MAIN']['locale'] = \
             self._items[self.language.currentText()]
@@ -120,7 +120,7 @@ class Settings(QWidget):
         # call self.close() -> exit app
         self.destroy()
 
-    @try_except
+    @try_except()
     def _cancel(self, checked):
         self.main._list_fill()
         self.destroy()
@@ -136,7 +136,7 @@ class Settings(QWidget):
         ok.setToolTip(self.lang['SETTINGS']['warn_ok_button_tt'])
         mbox.exec()
 
-    @try_except
+    @try_except()
     def _show_del_widgets(self, checked):
         self.del_widgets_win = Delete(self.lang,
                                       sys.modules['core.gui.gui'].manager)

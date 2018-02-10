@@ -72,7 +72,7 @@ class DTime(QWidget):
         self.v_box.addWidget(self.label)
         self.setLayout(self.v_box)
 
-    @try_except
+    @try_except()
     def _init(self):
         name = self.main.names[self.index]
         self.setWindowIcon(self.main.info.ICON)
@@ -91,13 +91,13 @@ class DTime(QWidget):
         self.label.setPalette(palette)
         self._update_time()
 
-    @try_except
+    @try_except()
     def _update_time(self):
         self.label.setText(get_time(self.main._utc,
                                     self.main.times[self.index],
                                     *self.main.offsets[self.index]))
 
-    @try_except
+    @try_except()
     def resizeEvent(self, event):
         screen = self.main.widget_manager.main_gui.app.desktop(). \
             screenGeometry()
@@ -156,7 +156,7 @@ class Main(Widget, DTime):
         self._msec = 1000
         self._utc = False
 
-    @try_except
+    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'times' in self.conf:
@@ -185,7 +185,7 @@ class Main(Widget, DTime):
             self._utc = bool(strtobool(self.conf['utc']))
         self._init()
 
-    @try_except
+    @try_except()
     def _load_widgets(self):
         for i in range(len(self.times)):
             if i == 0:
@@ -196,13 +196,13 @@ class Main(Widget, DTime):
             dtime.show()
             self.widgets.append(dtime)
 
-    @try_except
+    @try_except()
     def _timeout(self):
         self._update_time()
         for widget in self.widgets:
             widget._update_time()
 
-    @try_except
+    @try_except()
     def save_settings(self):
         self.conf['times'] = base64.b64encode(
             json.dumps(self.times).encode('utf-8')).decode('ASCII')
@@ -237,12 +237,12 @@ class Main(Widget, DTime):
         self._load_settings()
         self._load_widgets()
 
-    @try_except
+    @try_except()
     def hide_event(self, mode):
         for widget in self.widgets:
             widget.setHidden(mode)
 
-    @try_except
+    @try_except()
     def edit_mode(self, mode):
         for widget in self.widgets:
             if mode:
@@ -258,26 +258,26 @@ class Main(Widget, DTime):
     def unload(self):
         self.save_settings()
 
-    @try_except
+    @try_except()
     def remove(self):
         for widget in self.widgets:
             widget.destroy()
 
-    @try_except
+    @try_except()
     def purge(self):
         self.remove()
         self.__setup_vars()
 
-    @try_except
+    @try_except()
     def show_settings(self):
         self.settings_win = Settings(self)
 
-    @try_except
+    @try_except()
     def showEvent(self, event):
         self._timeout()
         self.timer.start(self._msec)
 
-    @try_except
+    @try_except()
     def hideEvent(self, event):
         self.timer.stop()
 
@@ -363,26 +363,26 @@ class Settings(QWidget):
         # show
         self.show()
 
-    @try_except
+    @try_except()
     def _timeout(self):
         self.time_label.setText(get_time(self.main._utc))
 
-    @try_except
+    @try_except()
     def _list_fill(self):
         self.list.clear()
         for name in self.main.names:
             self.list.addItem(QListWidgetItem(name, self.list))
         self.list.setCurrentRow(0)
 
-    @try_except
+    @try_except()
     def _item_double_clicked(self, item):
         self.time_edit = TimeEdit(self, self.list.currentRow())
 
-    @try_except
+    @try_except()
     def _utc_changed(self, state):
         self.main._utc = self.utc_checkbox.isChecked()
 
-    @try_except
+    @try_except()
     def _timer_change(self, value):
         self.main._msec = value
         self.timer.stop()
@@ -390,7 +390,7 @@ class Settings(QWidget):
         self.timer.start(self.main._msec)
         self.main.timer.start(self.main._msec)
 
-    @try_except
+    @try_except()
     def _add_time(self, checked):
         # adding
         name = self.lang['names']
@@ -469,7 +469,7 @@ class Settings(QWidget):
             del self.main.widgets[row - 1]
         self._list_fill()
 
-    @try_except
+    @try_except()
     def closeEvent(self, event):
         self.timer.stop()
 
@@ -585,7 +585,7 @@ class TimeEdit(QWidget):
         self._timeout()
         self.show()
 
-    @try_except
+    @try_except()
     def _timeout(self):
         strf = self.format_edit.text()
         if not strf_validate(strf):
@@ -596,11 +596,11 @@ class TimeEdit(QWidget):
                                           self.minutes.value(),
                                           self.seconds.value()))
 
-    @try_except
+    @try_except()
     def _move(self, checked):
         self.move_win = Move(self.widget, self.main.widget_manager)
 
-    @try_except
+    @try_except()
     def _color(self, checked):
         palette = self.widget.label.palette()
         palette.setColor(QPalette.WindowText,
@@ -610,7 +610,7 @@ class TimeEdit(QWidget):
                          ))
         self._palette = palette
 
-    @try_except
+    @try_except()
     def _save(self, checked):
         self.main.colors[self.element] = self._palette.color(
             QPalette.WindowText).name()
@@ -627,10 +627,10 @@ class TimeEdit(QWidget):
         self.widget._init()
         self.close()
 
-    @try_except
+    @try_except()
     def _cancel(self, checked):
         self.close()
 
-    @try_except
+    @try_except()
     def closeEvent(self, event):
         self.timer.stop()

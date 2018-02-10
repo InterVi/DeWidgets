@@ -31,7 +31,7 @@ class Note(QWidget):
         self.grid.addWidget(self.text_edit)
         self.setLayout(self.grid)
 
-    @try_except
+    @try_except()
     def _init(self):
         self.setStyleSheet(self.main.get_style(self.index))
         if self.index:
@@ -46,7 +46,7 @@ class Note(QWidget):
         else:
             self.setWindowTitle(self.main.info.NAME)
 
-    @try_except
+    @try_except()
     def _text_changed(self):
         if self.main.notes[self.index] == self.text_edit.toPlainText():
             return
@@ -89,7 +89,7 @@ class Main(Widget, Note):
         for item in self.style_names.items():
             self.style_keys[item[1]] = item[0]
 
-    @try_except
+    @try_except()
     def save_conf(self):
         b_notes = []
         for note in self.notes:
@@ -115,7 +115,7 @@ class Main(Widget, Note):
         with open(path, encoding='utf-8') as file:
             return file.read()
 
-    @try_except
+    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'notes' in self.conf:
@@ -131,7 +131,7 @@ class Main(Widget, Note):
             self.editable = json.loads(self.conf['editable'])
         self._init()
 
-    @try_except
+    @try_except()
     def _load_widgets(self):
         for i in range(len(self.notes)):
             if i == 0:
@@ -149,12 +149,12 @@ class Main(Widget, Note):
         self._load_settings()
         self._load_widgets()
 
-    @try_except
+    @try_except()
     def hide_event(self, state):
         for widget in self.widgets:
             widget.setHidden(state)
 
-    @try_except
+    @try_except()
     def edit_mode(self, mode):
         for widget in self.widgets:
             if mode:
@@ -170,17 +170,17 @@ class Main(Widget, Note):
     def unload(self):
         self.save_conf()
 
-    @try_except
+    @try_except()
     def remove(self):
         for widget in self.widgets:
             widget.destroy()
 
-    @try_except
+    @try_except()
     def purge(self):
         self.remove()
         self.__setup_vars()
 
-    @try_except
+    @try_except()
     def show_settings(self):
         self.settings_win = Settings(self)
 
@@ -244,7 +244,7 @@ class Settings(QWidget):
         else:
             self.delete_button.setEnabled(False)
 
-    @try_except
+    @try_except()
     def _list_fill(self):
         self.list.clear()
         item = QListWidgetItem(
@@ -261,11 +261,11 @@ class Settings(QWidget):
                 item.setText('-')
             self.list.addItem(item)
 
-    @try_except
+    @try_except()
     def _list_double_click(self, checked):
         self.note_settings = NoteSettings(self.main, self)
 
-    @try_except
+    @try_except()
     def _editable_changed(self, state):
         self.main.editable = self.editable.isChecked()
         self.main.save_conf()
@@ -273,12 +273,12 @@ class Settings(QWidget):
         for widget in self.main.widgets:
             widget.setEnabled(self.main.editable)
 
-    @try_except
+    @try_except()
     def _save_changed(self, state):
         self.main.conf['hot_saves'] = json.dumps(self.hot_save.isChecked())
         self.main.save_conf()
 
-    @try_except
+    @try_except()
     def _delete(self, checked):
         if self.list.count() <= 1:
             return
@@ -325,7 +325,7 @@ class Settings(QWidget):
         self.main.save_conf()
         self._list_fill()
 
-    @try_except
+    @try_except()
     def _add(self, checked):
         # adding
         self.main.notes.append(self.main.lang['note'])
@@ -399,7 +399,7 @@ class NoteSettings(QWidget):
         # show
         self.show()
 
-    @try_except
+    @try_except()
     def _text_changed(self):
         if self.row == 0:
             self.main.text_edit.setPlainText(self.text_edit.toPlainText())
@@ -409,7 +409,7 @@ class NoteSettings(QWidget):
         self.main.save_conf()
         self.settings._list_fill()
 
-    @try_except
+    @try_except()
     def _style_select(self, index):
         self.main.styles[self.row] = \
             self.main.style_keys[self.styles_list.currentText()]
@@ -422,7 +422,7 @@ class NoteSettings(QWidget):
             self.main.widgets[self.row - 1].show()
         self.main.save_conf()
 
-    @try_except
+    @try_except()
     def _show_move(self, checked):
         if self.row == 0:
             win = self.main

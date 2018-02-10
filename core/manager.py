@@ -138,12 +138,10 @@ class WidgetManager:
         """
         if not placed:
             for name in w.get_widgets():
-                if name not in sys.modules or sys.modules[name].__file__ \
-                        not in self.paths.values():
+                if name not in sys.modules:
                     self.load(name)
             for name in CUSTOM_WIDGETS.get_widgets():
-                if name not in sys.modules or sys.modules[name].__file__ \
-                        not in self.paths.values():
+                if name not in sys.modules:
                     self.load(name)
             return
         for name in self.config.config:
@@ -161,67 +159,136 @@ class WidgetManager:
             if name not in sys.modules:
                 self.load(name)
 
-    def load(self, name, only_info=True) -> bool:
+    def load(self, module_name, only_info=True) -> bool:
         """Load widget from module.
 
-        :param name: str, module name
+        :param module_name: str, module name
         :param only_info: bool, if True - load only WidgetInfo classes
-        :return: True if load correctly
+        :return: bool, True if load correctly
         """
+        @try_except(lambda: False)
+        def return_false():
+            if module_name in sys.modules:
+                del sys.modules[module_name]
+            return False
+
         try:
-            if name in sys.modules:  # get module
-                mod = sys.modules[name]
+            if module_name in sys.modules:  # get module
+                mod = sys.modules[module_name]
             else:  # import module
-                mod = __import__(name)
-            # validate
-            if 'not_loading' in mod.__dict__ and mod.__dict__['not_loading']:
-                del sys.modules[name]
-                return False
-            if 'Main' not in mod.__dict__ or not callable(mod.Main):
-                del sys.modules[name]
-                return False
-            if 'Info' not in mod.__dict__ or not callable(mod.WidgetInfo):
-                del sys.modules[name]
-                return False
-            # get and validate WidgetInfo
+                mod = __import__(module_name)
+            # validate module
+            if not self.validate_widget_module(mod):
+                print(module_name + ' fail validation module')
+                return return_false()
+            if self.is_loading_skip(mod):
+                return return_false()
+            # init and validate WidgetInfo
             info = mod.Info(self.lang)
-            if not isinstance(info, WidgetInfo):
-                del sys.modules[name]
-                return False
+            if not self.validate_widget_info(info):
+                print(module_name + ' fail validation WidgetInfo')
+                return return_false()
+            # check exists
+            if only_info:
+                if info.NAME in self.info:
+                    print(module_name + ', name "' + info.NAME + '" is exists')
+                    return return_false()
+            elif info.NAME in self.widgets:
+                print(module_name + ', name "' + info.NAME + '" is exists')
+                return return_false()
             # fill data
-            if os.path.dirname(mod.__file__) == C_WIDGETS and\
-                    info.NAME not in self.custom_widgets:
-                self.custom_widgets.append(info.NAME)
+            if os.path.dirname(mod.__file__) == C_WIDGETS:
+                if info.NAME in self.custom_widgets:  # check exists
+                    print(module_name + ', name "' + info.NAME + '" is exists')
+                    return return_false()
+                else:
+                    self.custom_widgets.append(info.NAME)
             self.info[info.NAME] = info
             self.paths[info.NAME] = mod.__file__
             if only_info and not self.config.is_placed(info.NAME):
                 return True
-            # validate Widget
+            # init and validate Main class
             widget = mod.Main(self, info)
-            if not isinstance(widget, Widget) or\
-                    not isinstance(widget, QWidget):
-                del sys.modules[name]
-                return False
-            # load Main class
-            widget.load()
-            widget.setWindowFlags(Qt.CustomizeWindowHint |
-                                  Qt.WindowStaysOnBottomHint | Qt.Tool)
-            widget.setWindowTitle(info.NAME)
-            widget.setWindowIcon(info.ICON)
+            if not self.validate_widget_main(widget):
+                print(module_name + ' fail validation Main')
+                return return_false()
+            # setup Main class
+            self.setup_widget(widget, info)
             self.widgets[info.NAME] = widget
             self.config.load(info.NAME)
             return True
         except:
             print(traceback.format_exc())
-            if name in sys.modules:
-                del sys.modules[name]
-            return False
+            print(module_name + ' fail loading')
+            return return_false()
 
-    @try_except
-    def remove(self, name, reminconf=False):
+    @staticmethod
+    def is_loading_skip(mod):
+        """Check not_loading option in module.
+
+        :param mod: module object
+        :return: True if not_loading == True
+        """
+        if 'not_loading' in mod.__dict__ and mod.__dict__['not_loading']:
+            return True
+        return False
+
+    @staticmethod
+    def validate_widget_module(mod) -> bool:
+        """Check widget module.
+
+        :param mod: module object
+        :return: bool, True if module is correct
+        """
+        if 'not_loading' in mod.__dict__ and \
+                type(mod.__dict__['not_loading']) != bool:
+            return False
+        if 'Main' not in mod.__dict__ or not callable(mod.Main):
+            return False
+        if 'Info' not in mod.__dict__ or not callable(mod.WidgetInfo):
+            return False
+        return True
+
+    @staticmethod
+    def validate_widget_info(info) -> bool:
+        """Check WidgetInfo class.
+
+        :param info: WidgetInfo object
+        :return: bool, True if WidgetInfo is correct
+        """
+        if not isinstance(info, WidgetInfo):
+            return False
+        return True
+
+    @staticmethod
+    def validate_widget_main(widget) -> bool:
+        """Check widget Main object.
+
+        :param widget: Widget object
+        :return: bool, True if Widget is correct
+        """
+        if not isinstance(widget, Widget) or not isinstance(widget, QWidget):
+            return False
+        return True
+
+    @staticmethod
+    def setup_widget(widget, info):
+        """Setup widget Main object (set window flags and other).
+
+        :param widget: Widget object
+        :param info: WidgetInfo object
+        """
+        widget.load()
+        widget.setWindowFlags(Qt.CustomizeWindowHint |
+                              Qt.WindowStaysOnBottomHint | Qt.Tool)
+        widget.setWindowTitle(info.NAME)
+        widget.setWindowIcon(info.ICON)
+
+    @try_except()
+    def remove_from_desktop(self, name, reminconf=False):
         """Remove widget from desktop.
 
-        :param name: str, module name
+        :param name: str, widget name
         :param reminconf: bool, True - remove widget all data from config
         """
         if reminconf:
@@ -245,7 +312,7 @@ class WidgetManager:
             self.config.remove(name)
         self.config.save()
 
-    @try_except
+    @try_except()
     def delete_widget(self, name):
         """Remove widget file (after remove widget data from config
         and unload). For only placed widgets.
@@ -257,7 +324,7 @@ class WidgetManager:
             self.widgets[name].delete_widget()
         except:
             print(traceback.format_exc())
-        self.remove(name, True)
+        self.remove_from_desktop(name, True)
         try:
             self.widgets[name].unload()
         except:
@@ -267,48 +334,53 @@ class WidgetManager:
         self.del_from_dicts(name)
         os.remove(path)
 
-    def call_delete_widget(self, module) -> bool:
+    def call_delete_widget(self, module_name) -> bool:
         """Call widget API (delete_widget and unload). Load -> call -> unload.
 
-        :param module: str, module name
-        :return: bool, True if success
+        :param module_name: str, module name
+        :return: bool, True if success, False if bad validation or except
         """
         try:
-            if module not in sys.modules:
+            if module_name not in sys.modules:
                 return False
-            mod = sys.modules[module]
-            # simple validation
-            if 'not_loading' in mod.__dict__ and mod.__dict__['not_loading']:
+            mod = sys.modules[module_name]
+            # validate module
+            if not self.validate_widget_module(mod):
                 return False
-            if 'Main' not in mod.__dict__ or not callable(mod.Main):
+            # init and validate info
+            info = mod.Info(self.lang)
+            if not self.validate_widget_info(info):
                 return False
-            if 'Info' not in mod.__dict__ or not callable(mod.WidgetInfo):
+            # init and validate widget
+            widget = mod.Main(self, info)
+            if not self.validate_widget_main(widget):
                 return False
-            widget = mod.Main(self, mod.Info(self.lang))
-            if not isinstance(widget, Widget):
-                return False
-            # calling
+            # call
             widget.delete_widget()
-            widget.unload()
             return True
         except:
             print(traceback.format_exc())
             return False
 
-    @try_except
-    def del_from_dicts(self, name):
-        """Remove data from info, paths dict and custom_widgets.
+    @try_except()
+    def del_from_dicts(self, name, module_name=None):
+        """Remove data from info, paths dict, custom_widgets and sys.modules.
+        Call unload and this - fully unload widget from runtime.
 
         :param name: str, widget name
+        :param module_name: str, module name (if None - using self.paths)
         """
+        if not module_name:
+            module_name = os.path.basename(self.paths[name])[:-3]
         del self.info[name]
         del self.paths[name]
         if name in self.custom_widgets:
             self.custom_widgets.remove(name)
+        del sys.modules[module_name]
 
-    @try_except
+    @try_except()
     def unload(self, name):
-        """Unload widget in memory. Destroy.
+        """Unload Widget object (only Main class) from runtime. Destroy.
 
         :param name: str, widget name
         """
@@ -318,9 +390,6 @@ class WidgetManager:
         except:
             print(traceback.format_exc())
         del self.widgets[name]
-        del sys.modules[os.path.basename(self.paths[name])[:-3]]
-        if name in self.custom_widgets:
-            self.custom_widgets.remove(name)
 
     def unload_all(self, del_from_dicts=True):
         """Unload all loaded widgets.
@@ -334,7 +403,8 @@ class WidgetManager:
             self.custom_widgets.clear()
 
     def del_data_no_placed(self):
-        """Remove data (from info and paths) only not placed widgets."""
+        """Remove data (from info, paths and sys.modules) only not placed
+        widgets."""
         for name in list(self.info.keys()):
             if name not in self.widgets:
                 self.del_from_dicts(name)
@@ -342,7 +412,7 @@ class WidgetManager:
     def is_placed(self) -> bool:
         """Check the presence of widgets on the desktop.
 
-        :return: True if at least one placed
+        :return: bool, True if at least one placed
         """
         for widget in self.widgets.values():
             if widget.isVisible():
@@ -360,8 +430,8 @@ class WidgetManager:
     def edit_mode(self, mode, name=None) -> bool:
         """Call widget event and save config.
         
-        :param mode: True - edit on
-        :param name: widget name (no call other widgets)
+        :param mode: bool, True - edit on
+        :param name: str, widget name (no call other widgets)
         :return: bool, True - success call and save config
         """
         def save(widget):
@@ -403,7 +473,7 @@ class ConfigManager:
                 continue
             self.load(name)
 
-    @try_except
+    @try_except()
     def load(self, name):
         """Setup widget (set size, position, opacity, call boot and show.
 
@@ -423,13 +493,13 @@ class ConfigManager:
             widget.boot()
             widget.show()
 
-    @try_except
+    @try_except()
     def save(self):
         """Save config to file."""
         with open(CONF_WIDGETS, 'w', encoding='UTF-8') as config:
             self.config.write(config)
 
-    @try_except
+    @try_except()
     def add(self, name):
         """Add or update widget data in config (not call save).
         Size, position, opacity, placed, file (module name).
@@ -459,7 +529,7 @@ class ConfigManager:
                                          )[:-3]
             }
 
-    @try_except
+    @try_except()
     def remove(self, name):
         """Remove widget data from config (not call save).
 
@@ -468,7 +538,7 @@ class ConfigManager:
         if name in self.config:
             del self.config[name]
 
-    @try_except
+    @try_except()
     def set_placed(self, name, value):
         """Set placed status.
 
@@ -488,7 +558,7 @@ class ConfigManager:
         else:
             return False
 
-    @try_except
+    @try_except()
     def create(self, name):
         """Create section (empty dict) in config for widget.
 
@@ -497,7 +567,7 @@ class ConfigManager:
         if name not in self.config:
             self.config[name] = {}
 
-    @try_except
+    @try_except()
     def save_positions(self):
         """Save widget positions to config file."""
         for name in self.wm.widgets:

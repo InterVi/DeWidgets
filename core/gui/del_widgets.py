@@ -83,7 +83,7 @@ class Delete(QWidget):
         else:
             self.del_button.setEnabled(False)
 
-    @try_except
+    @try_except()
     def _list_fill(self):
         self.w_list.clear()
         for name in self.manager.custom_widgets:
@@ -103,16 +103,16 @@ class Delete(QWidget):
             except:
                 print(traceback.format_exc())
 
-    @try_except
+    @try_except()
     def _list_click(self, item):
         self._change_enabled()
         self.h_label.setText(self.manager.info[item.text()].DESCRIPTION)
 
-    @try_except
+    @try_except()
     def _list_double_click(self, item):
         self.item_info = sys.modules['core.gui.gui'].ItemInfo(item.text())
 
-    @try_except
+    @try_except()
     def _delete(self, checked):
         # check item
         item = self.w_list.currentItem()
@@ -141,7 +141,7 @@ class Delete(QWidget):
             self._list_fill()
             self._change_enabled()
 
-    @try_except
+    @try_except()
     def _arch_delete(self, checked):
         self.arch_del_win = ArchDelete(self, self.locale, self.manager)
 
@@ -195,7 +195,7 @@ class ArchDelete(QWidget):
         else:
             self.del_button.setEnabled(False)
 
-    @try_except
+    @try_except()
     def _list_fill(self):
         if not os.path.isfile(CONF_INSTALL):
             return
@@ -209,17 +209,17 @@ class ArchDelete(QWidget):
             item.setToolTip(arch)
             self.w_list.addItem(item)
 
-    @try_except
+    @try_except()
     def _list_click(self, item):
         self.__change_enabled()
         self.h_label.setText(item.toolTip())
 
-    @try_except
+    @try_except()
     def _list_double_click(self, item):
         self.arch_info = ArchInfo(self.locale, item.toolTip(),
                                   self.archives[item.toolTip()])
 
-    @try_except
+    @try_except()
     def _delete(self, checked):
         item = self.w_list.currentItem()
         # create message box
@@ -255,7 +255,7 @@ class ArchDelete(QWidget):
             self.__change_enabled()
             self.main._change_enabled()
 
-    @try_except
+    @try_except()
     def del_widget(self, module):
         """Delete widget.
 

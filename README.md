@@ -29,6 +29,11 @@ DeWidgets -c /home/user/.dw
 
 **-c** - creating folders and files, and/or using this path
 
+## Logs
+
+* **stderr.log** - stderr stream, mainly other processes errors
+* **stdout.log** - stdout stream, errors in main thread, debug info, start and stop info
+
 ## Install and startup
 
 ```shell

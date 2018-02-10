@@ -112,7 +112,7 @@ class Main(Widget, QWidget):
         self._max_recv_speed = 0
         self._max_sent_speed = 0
 
-    @try_except
+    @try_except()
     def setup_ui(self):
         if self._widgets:  # clear
             for w in self._widgets:
@@ -265,7 +265,7 @@ class Main(Widget, QWidget):
             con = str(len(psutil.net_connections(self._kind)))
             self._add_label(self.lang['connections'].format(con))
 
-    @try_except
+    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'update' in self.conf:
@@ -309,7 +309,7 @@ class Main(Widget, QWidget):
         if 'mbit' in self.conf:
             self._mbit = bool(strtobool(self.conf['mbit']))
 
-    @try_except
+    @try_except()
     def save_settings(self):
         self.conf['update'] = str(self._update)
         self.conf['round'] = str(self._round)
@@ -332,7 +332,7 @@ class Main(Widget, QWidget):
         self.conf['kind'] = self._kind
         self.conf['mbit'] = str(self._mbit)
 
-    @try_except
+    @try_except()
     def show_settings(self):
         self.settings_win = Settings(self)
 
@@ -353,12 +353,12 @@ class Main(Widget, QWidget):
         self.timer.stop()
         self._setup_vars()
 
-    @try_except
+    @try_except()
     def showEvent(self, event):
         self.setup_ui()
         self.timer.start(self._update)
 
-    @try_except
+    @try_except()
     def hideEvent(self, event):
         self.timer.stop()
 
@@ -515,7 +515,7 @@ class Settings(QWidget):
         # show
         self.show()
 
-    @try_except
+    @try_except()
     def _save(self, checked):
         self.main._update = self.update_spinbox.value()
         self.main._round = self.round_spinbox.value()

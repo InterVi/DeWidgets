@@ -45,11 +45,11 @@ class Help(QWidget):
         # show
         self.show()
 
-    @try_except
+    @try_except()
     def _show_license(self, checked):
         self.license_window = License(self.lang)
 
-    @try_except
+    @try_except()
     def _show_author(self, checked):
         self.author_window = Author(self.lang)
 

@@ -103,7 +103,7 @@ class Main(Widget, QWidget):
         self.update_timer.stop()
         self._kill_procs()
 
-    @try_except
+    @try_except()
     def show_settings(self):
         self.settings_win = Settings(self)
 
@@ -139,15 +139,15 @@ class Main(Widget, QWidget):
             if self.timer_interval > 0:
                 self.update_timer.start(self.timer_interval)
 
-    @try_except
+    @try_except()
     def _show_list_menu(self, point):
         self.list_menu.exec(self.list.mapToGlobal(point))
 
-    @try_except
+    @try_except()
     def _list_double_click(self, item):
         self.show_more = ShowMore(self)
 
-    @try_except
+    @try_except()
     def _kill_procs(self):
         for p in self.__procs:
             if p and p.is_alive():
@@ -267,7 +267,7 @@ class ShowMore(TextViewer):
         if self.__proc and self.__proc.is_alive():
             self.timer.start(100)
 
-    @try_except
+    @try_except()
     def close(self, checked=False):
         self.timer.stop()
         try:
@@ -355,7 +355,7 @@ class Settings(QWidget):
             self.up_button.setEnabled(False)
             self.down_button.setEnabled(False)
 
-    @try_except
+    @try_except()
     def _list_fill(self):
         self.list.clear()
         for i in range(self.main.list.count()):
@@ -365,7 +365,7 @@ class Settings(QWidget):
             item.setIcon(m_item.icon())
             self.list.addItem(item)
 
-    @try_except
+    @try_except()
     def _time_changed(self, value):
         self.main.update_timer.stop()
         if value > 0:
@@ -377,7 +377,7 @@ class Settings(QWidget):
             self.main.info.NAME]['timer'] = str(self.main.timer_interval)
         self.main.widget_manager.config.save()
 
-    @try_except
+    @try_except()
     def _move(self, up=True):
         row = self.list.currentRow()
         if up and row - 1 >= 0:
@@ -401,7 +401,7 @@ class Settings(QWidget):
     def _down(self, checked):
         self._move(False)
 
-    @try_except
+    @try_except()
     def _delete(self, checked):
         if not self.list.count():
             return
@@ -426,7 +426,7 @@ class Settings(QWidget):
             self._list_fill()
             self.__change_enabeld()
 
-    @try_except
+    @try_except()
     def _add(self, checked):
         id = QInputDialog(self)
         id.setWindowIcon(QIcon(HELP))
@@ -451,7 +451,7 @@ class Settings(QWidget):
                 self.__change_enabeld()
                 self.list.setCurrentRow(self.list.count() - 1)
 
-    @try_except
+    @try_except()
     def _show_error(self):
         mbox = QMessageBox(QMessageBox.Critical, self.lang['error_title'],
                            self.lang['error_text'], QMessageBox.Ok, self)

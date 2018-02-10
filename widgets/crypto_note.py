@@ -140,7 +140,7 @@ class Main(Widget, QWidget):
         self._pos = None
         self._hexpass = None
 
-    @try_except
+    @try_except()
     def _timeout(self):
         if time.time() >= self._end_time:
             if self.note_win:
@@ -150,7 +150,7 @@ class Main(Widget, QWidget):
                 self.image.setPixmap(ICON_PIXMAP)
                 self.image.show()
 
-    @try_except
+    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'session' in self.conf:
@@ -162,7 +162,7 @@ class Main(Widget, QWidget):
         if 'pos' in self.conf:
             self._pos = QRect(*json.loads(self.conf['pos']))
 
-    @try_except
+    @try_except()
     def save_settings(self):
         self.conf['session'] = str(self._session)
         self.conf['hot_save'] = str(self._hot_save)
@@ -172,7 +172,7 @@ class Main(Widget, QWidget):
             self.conf['pos'] = json.dumps(pos)
         self.widget_manager.config.save()
 
-    @try_except
+    @try_except()
     def _click(self, event):
         if self._hexpass:
             self.note_win = Note(self, hexpass=self._hexpass)
@@ -197,17 +197,17 @@ class Main(Widget, QWidget):
                 else:
                     self.show_pass_error(True)
 
-    @try_except
+    @try_except()
     def _stop_timer(self):
         self.timer.stop()
         self._hexpass = None
 
-    @try_except
+    @try_except()
     def _start_timer(self):
         self._end_time = time.time() + self._session
         self.timer.start(self._handing)
 
-    @try_except
+    @try_except()
     def show_pass_error(self, empty=False):
         t = self.lang['empty_text'] if empty else self.lang['wrong_text']
         mbox = QMessageBox(QMessageBox.Critical,
@@ -219,11 +219,11 @@ class Main(Widget, QWidget):
         ok.setToolTip(self.lang['wrong_ok_button_tt'])
         mbox.exec()
 
-    @try_except
+    @try_except()
     def close_note(self):
         self.note_win = None
 
-    @try_except
+    @try_except()
     def show_settings(self):
         self.settings_win = Settings(self)
 
@@ -239,7 +239,7 @@ class Main(Widget, QWidget):
     def remove(self):
         self._stop_timer()
 
-    @try_except
+    @try_except()
     def purge(self):
         self._setup_vars()
         self.remove()
@@ -293,7 +293,7 @@ class Note(QWidget):
         # load note and show
         self._load_note()
 
-    @try_except
+    @try_except()
     def _text_changed(self):
         if self.main._hot_save:
             self._save_note()
@@ -314,7 +314,7 @@ class Note(QWidget):
             self.main.show_pass_error()
             self._exit()
 
-    @try_except
+    @try_except()
     def _save_note(self):
         # text -> gzip -> AES-256 -> gzip -> base64
         note = base64.b64encode(gzip.compress(self.cip.encrypt(
@@ -322,14 +322,14 @@ class Note(QWidget):
         self.main.conf['note'] = note
         self.main.widget_manager.config.save()
 
-    @try_except
+    @try_except()
     def _exit(self, checked):
         self.main._stop_timer()
         self.main.image.setPixmap(ICON_PIXMAP)
         self.main.image.show()
         self._close()
 
-    @try_except
+    @try_except()
     def _close(self, checked=False):
         if self.text_edit.toPlainText():
             self._save_note()
@@ -339,7 +339,7 @@ class Note(QWidget):
             self.main.image.show()
         self.main.close_note()
 
-    @try_except
+    @try_except()
     def closeEvent(self, event):
         event.ignore()
         self._close()
@@ -436,7 +436,7 @@ class Settings(QWidget):
         # show
         self.show()
 
-    @try_except
+    @try_except()
     def _show_pass(self, state):
         if self.show_pass.isChecked():
             self.old_pass.setEchoMode(QLineEdit.Normal)
@@ -447,7 +447,7 @@ class Settings(QWidget):
             self.new_pass.setEchoMode(QLineEdit.Password)
             self.rep_pass.setEchoMode(QLineEdit.Password)
 
-    @try_except
+    @try_except()
     def _save(self, checked):
         self.main._session = self.session_sbox.value()
         self.main._hot_save = self.hot_save.isChecked()
