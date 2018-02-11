@@ -3,7 +3,6 @@ import re
 import sys
 import json
 import base64
-import traceback
 from multiprocessing import Process, Manager
 from mcstatus import MinecraftServer
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout
@@ -14,7 +13,7 @@ from PyQt5.QtCore import Qt, QSize, QTimer
 from core.manager import Widget, WidgetInfo
 from core.gui.help import TextViewer
 from core.paths import RES, RELOAD, SETTINGS, ERROR, DELETE, HELP
-from core.utils import try_except
+from core.utils import try_except, print_stack_trace
 
 
 def get_description(desc) -> str:
@@ -128,7 +127,7 @@ class Main(Widget, QWidget):
                 item.setToolTip(tooltip)
             except:
                 item.setText(addr)
-                print(traceback.format_exc())
+                print_stack_trace()()
 
     def _fill_settings(self):
         section = self.widget_manager.get_config(self.info.NAME)
@@ -226,7 +225,7 @@ class ShowMore(TextViewer):
             try:
                 status = MinecraftServer.lookup(addr).status()
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
                 return
             self.__info_buffer['online'] = str(status.players.online)
             self.__info_buffer['max'] = str(status.players.max)
@@ -243,7 +242,7 @@ class ShowMore(TextViewer):
             try:
                 query = MinecraftServer.lookup(addr).query()
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
                 return
             self.__info_buffer['map'] = query.map
             self.__info_buffer['brand'] = query.software.brand
@@ -275,7 +274,7 @@ class ShowMore(TextViewer):
                 self.__proc.terminate()
                 self.__proc = None
         except:
-            print(traceback.format_exc())
+            print_stack_trace()()
         super().setHidden(True)  # app close bug -> call close or destroy
 
 

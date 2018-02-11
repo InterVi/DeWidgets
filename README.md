@@ -31,8 +31,8 @@ DeWidgets -c /home/user/.dw
 
 ## Logs
 
-* **stderr.log** - stderr stream, mainly other processes errors
-* **stdout.log** - stdout stream, errors in main thread, debug info, start and stop info
+* **stderr.log** - stderr stream, not excepted errors
+* **stdout.log** - stdout stream, excepted errors, debug info, start and stop info, etc
 
 ## Install and startup
 

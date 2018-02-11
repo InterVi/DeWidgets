@@ -3,7 +3,7 @@ import os
 import sys
 import shutil
 from argparse import ArgumentParser
-from configparser import ConfigParser
+from configparser import RawConfigParser
 
 
 RES = os.path.join(sys.path[0], 'res')
@@ -63,7 +63,7 @@ if len(sys.argv):  # parsing arguments
         CW = os.path.join(result.create, 'custom_widgets')
         P = os.path.join(result.create, 'paths.conf')
         if not os.path.isfile(P):
-            conf = ConfigParser()
+            conf = RawConfigParser()
             conf['CONFIGS'] = {
                 'settings': os.path.join(result.create, 'settings.conf'),
                 'widgets': os.path.join(result.create, 'widgets.conf'),
@@ -103,7 +103,7 @@ if len(sys.argv):  # parsing arguments
         CONF_PATHS = result.paths
 
 if os.path.isfile(CONF_PATHS):  # for user customization
-    paths = ConfigParser()
+    paths = RawConfigParser()
     paths.read(CONF_PATHS, 'utf-8')
     CONF_SETTINGS = paths['CONFIGS']['settings']
     CONF_WIDGETS = paths['CONFIGS']['widgets']

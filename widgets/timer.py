@@ -137,7 +137,7 @@ class Main(Widget, QWidget):
 
     @try_except()
     def _sec_sound(self):
-        if not bool(strtobool(self.conf['seconds'])):
+        if not strtobool(self.conf['seconds']):
             return
         volume = int(self.conf['seconds_volume'])
         if int(math.floor(time.time())) % 2 == 0:
@@ -147,11 +147,11 @@ class Main(Widget, QWidget):
 
     @try_except()
     def _alarm(self, index):
-        if bool(strtobool(self.conf['alarm'])):
+        if strtobool(self.conf['alarm']):
             self._play(self.ALARM, int(self.conf['alarm_volume']))
-        if bool(strtobool(self.conf['alert'])):
+        if strtobool(self.conf['alert']):
             self._show_timeout(index)
-        if bool(strtobool(self.conf['notify'])):
+        if strtobool(self.conf['notify']):
             self.widget_manager.main_gui.main.tray.showMessage(
                 self.lang['notify_title'],
                 self.lang['notify_mess'].format(self.get_timer_text(index)),

@@ -4,7 +4,6 @@ import json
 import gzip
 import base64
 import hashlib
-import traceback
 from distutils.util import strtobool
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -15,7 +14,7 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QRect
 from core.manager import Widget, WidgetInfo
 from core.paths import RES, SETTINGS, ERROR
-from core.utils import try_except
+from core.utils import try_except, print_stack_trace
 
 ICON_PIXMAP = QPixmap(os.path.join(RES, 'cnote', 'icon.png'))
 OPEN_PIXMAP = QPixmap(os.path.join(RES, 'cnote', 'open.png'))
@@ -309,7 +308,7 @@ class Note(QWidget):
             self.main.image.show()
             self.show()
         except:
-            print(traceback.format_exc())
+            print_stack_trace()()
             self.cip.hexpass = None
             self.main.show_pass_error()
             self._exit()
@@ -485,7 +484,7 @@ class Settings(QWidget):
                         cip.encrypt(note), 9)).decode('ASCII')
                     self.main.conf['note'] = note
                 except:  # if bad password (possible)
-                    print(traceback.format_exc())
+                    print_stack_trace()()
                     self.main.show_pass_error()
                     return
             self.main.save_settings()

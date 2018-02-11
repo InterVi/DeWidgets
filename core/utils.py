@@ -1,4 +1,5 @@
 """All utils for using in widgets and core."""
+import logging
 import traceback
 
 
@@ -16,12 +17,13 @@ def try_except(except_func=None, ex_args=(), ex_kwargs=()):
             try:
                 return func(*args, **kwargs)
             except:
-                print(traceback.format_exc())
+                logging.getLogger('stdout').error(traceback.format_exc())
                 if except_func:
                     try:
                         return except_func(*ex_args, **ex_kwargs)
                     except:
-                        print(traceback.format_exc())
+                        logging.getLogger('stdout').error(
+                            traceback.format_exc())
                         print('Except args: ' + str(ex_args))
                         print('Except kwargs: ' + str(ex_kwargs))
                 print('Args: ' + str(args))
@@ -30,3 +32,11 @@ def try_except(except_func=None, ex_args=(), ex_kwargs=()):
         return wrapper
 
     return decorator
+
+
+def print_stack_trace():
+    """Print stacktrace to stdout logger. Example: print_stack_trace()()
+
+    :return: lambda function (for create correct trace)
+    """
+    return lambda: logging.getLogger('stdout').error(traceback.format_exc())

@@ -1,17 +1,17 @@
 """Manage widgets."""
 import os
 import sys
+import logging
 import inspect
-import traceback
 from distutils.util import strtobool
-from configparser import ConfigParser
+from configparser import RawConfigParser
 from importlib.machinery import SourceFileLoader
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 import widgets as w
 from core.paths import CONF_WIDGETS, WIDGET, C_WIDGETS
-from core.utils import try_except
+from core.utils import try_except, print_stack_trace
 
 sys.path.append(C_WIDGETS)
 CUSTOM_WIDGETS = SourceFileLoader('__init__',
@@ -108,9 +108,9 @@ class WidgetManager:
         :param main: gui module
         """
         self.lang = lang
-        """ConfigParser dict, current locale."""
+        """RawConfigParser dict, current locale."""
         self.c_lang = c_lang
-        """ConfigParser dict, current locale for custom widgets"""
+        """RawConfigParser dict, current locale for custom widgets"""
         self.widgets = {}
         """Widgets dict, key - name, value - widget object (Main object)."""
         self.info = {}
@@ -123,6 +123,8 @@ class WidgetManager:
         """ConfigManager object"""
         self.main_gui = main
         """core.gui.gui module"""
+        self.logger = logging.getLogger('stdout')
+        """stdout logger"""
 
     def load_all(self):
         """Loading all widgets."""
@@ -179,27 +181,31 @@ class WidgetManager:
                 mod = __import__(module_name)
             # validate module
             if not self.validate_widget_module(mod):
-                print(module_name + ' fail validation module')
+                self.logger.info(module_name + ' fail validation module')
                 return return_false()
             if self.is_loading_skip(mod):
+                self.logger.debug(module_name + ' skipped')
                 return return_false()
             # init and validate WidgetInfo
             info = mod.Info(self.lang)
             if not self.validate_widget_info(info):
-                print(module_name + ' fail validation WidgetInfo')
+                self.logger.info(module_name + ' fail validation WidgetInfo')
                 return return_false()
             # check exists
             if only_info:
                 if info.NAME in self.info:
-                    print(module_name + ', name "' + info.NAME + '" is exists')
+                    self.logger.info(module_name + ', name "' + info.NAME +
+                                     '" is exists')
                     return return_false()
             elif info.NAME in self.widgets:
-                print(module_name + ', name "' + info.NAME + '" is exists')
+                self.logger.info(module_name + ', name "' + info.NAME +
+                                 '" is exists')
                 return return_false()
             # fill data
             if os.path.dirname(mod.__file__) == C_WIDGETS:
                 if info.NAME in self.custom_widgets:  # check exists
-                    print(module_name + ', name "' + info.NAME + '" is exists')
+                    self.logger.info(module_name + ', name "' + info.NAME +
+                                     '" is exists')
                     return return_false()
                 else:
                     self.custom_widgets.append(info.NAME)
@@ -210,7 +216,7 @@ class WidgetManager:
             # init and validate Main class
             widget = mod.Main(self, info)
             if not self.validate_widget_main(widget):
-                print(module_name + ' fail validation Main')
+                self.logger.info(module_name + ' fail validation Main')
                 return return_false()
             # setup Main class
             self.setup_widget(widget, info)
@@ -218,8 +224,8 @@ class WidgetManager:
             self.config.load(info.NAME)
             return True
         except:
-            print(traceback.format_exc())
-            print(module_name + ' fail loading')
+            print_stack_trace()()
+            self.logger.info(module_name + ' fail loading')
             return return_false()
 
     @staticmethod
@@ -295,17 +301,17 @@ class WidgetManager:
             try:
                 self.widgets[name].purge()
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
         else:
             try:
                 self.widgets[name].remove()
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
             self.config.add(name)
         try:
             self.widgets[name].hide()
         except:
-            print(traceback.format_exc())
+            print_stack_trace()()
         self.unload(name)
         self.config.set_placed(name, False)
         if reminconf:
@@ -323,12 +329,12 @@ class WidgetManager:
         try:
             self.widgets[name].delete_widget()
         except:
-            print(traceback.format_exc())
+            print_stack_trace()()
         self.remove_from_desktop(name, True)
         try:
             self.widgets[name].unload()
         except:
-            print(traceback.format_exc())
+            print_stack_trace()()
         self.unload(name)
         self.config.remove(name)  # warranty
         self.del_from_dicts(name)
@@ -359,7 +365,7 @@ class WidgetManager:
             widget.delete_widget()
             return True
         except:
-            print(traceback.format_exc())
+            print_stack_trace()()
             return False
 
     @try_except()
@@ -388,7 +394,7 @@ class WidgetManager:
             self.widgets[name].unload()
             self.widgets[name].destroy()
         except:
-            print(traceback.format_exc())
+            print_stack_trace()()
         del self.widgets[name]
 
     def unload_all(self, del_from_dicts=True):
@@ -440,7 +446,7 @@ class WidgetManager:
                 if not mode:
                     self.config.add(widget.info.NAME)
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
 
         if name and name in self.widgets:
             save(self.widgets[name])
@@ -459,12 +465,14 @@ class ConfigManager:
     """manage config"""
     def __init__(self, widget_manager):
         self.wm = widget_manager
-        self.config = ConfigParser()
+        """WidgetManager object"""
+        self.config = RawConfigParser()
+        """RawConfigParser object"""
         try:
             if os.path.isfile(CONF_WIDGETS):
                 self.config.read(CONF_WIDGETS, 'UTF-8')
         except:
-            print(traceback.format_exc())
+            print_stack_trace()()
 
     def load_all(self):
         """Load (setup) only configured widgets."""

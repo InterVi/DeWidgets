@@ -2,15 +2,18 @@
 import os
 import sys
 import json
-import traceback
-from configparser import ConfigParser
+import logging
+from configparser import RawConfigParser
 from PyQt5.QtWidgets import QWidget, QListWidget, QLabel, QPushButton
 from PyQt5.QtWidgets import QMessageBox, QListWidgetItem
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QRect, Qt
 from core.gui.help import TextViewer
 from core.paths import CONF_INSTALL, DELETE, ZIP, DEL_WIDGETS, DEL_ARCHIVES
-from core.utils import try_except
+from core.utils import try_except, print_stack_trace
+
+
+LOGGER = logging.getLogger('stdout')
 
 
 def del_in_conf(path, sections):
@@ -19,15 +22,18 @@ def del_in_conf(path, sections):
     :param path: path to file
     :param sections: dict, "{"TEST": {"name": "lol"}}"
     """
-    conf = ConfigParser()
+    conf = RawConfigParser()
     conf.read(path, 'utf-8')
     for sec in sections:
         for key in sections[sec]:
             del conf[sec][key]
+            LOGGER.debug('remove ' + key + ' key from section ' + sec)
         if not conf[sec]:
             del conf[sec]
+            LOGGER.debug('remove section ' + sec)
     with open(path, 'w', encoding='utf-8') as file:
         conf.write(file)
+    LOGGER.debug('rewrite ' + path)
 
 
 class Delete(QWidget):
@@ -101,7 +107,7 @@ class Delete(QWidget):
                     item.setFont(font)
                 self.w_list.addItem(item)
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
 
     @try_except()
     def _list_click(self, item):
@@ -129,21 +135,43 @@ class Delete(QWidget):
         no.setToolTip(self.lang['del_mbox_no_button_tt'])
         # process
         if mbox.exec() == QMessageBox.Yes:
-            if item.text() in self.manager.widgets:
-                self.del_widget(item.text())
-            else:
-                py = self.manager.paths[item.text()]
-                self.manager.call_delete_widget(os.path.basename(py)[:-3])
-                os.remove(py)
-                self.manager.del_from_dicts(item.text())
-                self.manager.config.remove(item.text())
-                del sys.modules[os.path.basename(py)[:-3]]
+            self.del_widget(self.manager.paths[item.text()], item.text())
             self._list_fill()
             self._change_enabled()
 
     @try_except()
     def _arch_delete(self, checked):
         self.arch_del_win = ArchDelete(self, self.locale, self.manager)
+
+    def del_widget(self, module, name=None):
+        """Delete widget.
+
+        :param module: str, path or name module
+        :param name: str, widget name (if None - find in manager.paths)
+        """
+        module_name = os.path.basename(module)[:-3]
+        if not name:
+            for w_name in self.manager.paths:
+                if os.path.basename(self.manager.paths[w_name])[:-3] == \
+                        module_name:
+                    name = w_name
+                    break
+        if name and name in self.manager.widgets:
+            self.manager.del_widget(name)
+            LOGGER.debug('delete widget: ' + name)
+        else:
+            r = self.manager.call_delete_widget(module_name)
+            LOGGER.debug(
+                'call delete widget "' + module_name + '", result: ' +
+                str(r) + ', deleting...')
+            os.remove(module)
+            if name:
+                self.manager.del_from_dicts(name)
+                self.manager.config.remove(name)
+                LOGGER.debug('full unload and del info from config: ' + name)
+            elif module_name in sys.modules:
+                del sys.modules[module_name]
+                LOGGER.debug('delete module from sys.modules: ' + module_name)
 
 
 class ArchDelete(QWidget):
@@ -237,14 +265,16 @@ class ArchDelete(QWidget):
         if mbox.exec() == QMessageBox.Yes:
             for py in self.archives[item.toolTip()]['py']:
                 if os.path.isfile(py):
-                    self.del_widget(py)
+                    self.main.del_widget(py)
             for res in self.archives[item.toolTip()]['res']:
                 if os.path.isfile(res):
                     os.remove(res)
+                    LOGGER.debug('remove ' + res)
             for res in self.archives[item.toolTip()]['res']:
                 d = os.path.dirname(res)
                 if os.path.isdir(d):
                     os.rmdir(d)
+                    LOGGER.debug('remove dir ' + d)
             for lang in self.archives[item.toolTip()]['langs']:
                 del_in_conf(lang[0], lang[1])
             del self.archives[item.toolTip()]
@@ -254,27 +284,6 @@ class ArchDelete(QWidget):
             self.main._list_fill()
             self.__change_enabled()
             self.main._change_enabled()
-
-    @try_except()
-    def del_widget(self, module):
-        """Delete widget.
-
-        :param module: path or name module
-        """
-        module = os.path.basename(module)
-        if module[-3:] == '.py':
-            module = module[:-3]
-        for name in self.manager.paths:
-            if os.path.basename(self.manager.paths[name])[:-3] == module:
-                if name in self.manager.widgets:
-                    self.del_widget(name)
-                else:
-                    self.manager.call_delete_widget(module)
-                    os.remove(self.manager.paths[name])
-                    self.manager.del_from_dicts(name)
-                    self.manager.config.remove(name)
-                    del sys.modules[module]
-                return
 
 
 class ArchInfo(TextViewer):

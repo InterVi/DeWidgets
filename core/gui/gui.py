@@ -1,15 +1,14 @@
 """Main GUI."""
 import os
 import sys
-import traceback
 from distutils.util import strtobool
-from configparser import ConfigParser
+from configparser import RawConfigParser
 from PyQt5.QtWidgets import QMainWindow, QListWidgetItem
 from PyQt5.QtWidgets import QPushButton, QCheckBox, QStatusBar, QListWidget
 from PyQt5.QtWidgets import QMessageBox, QSystemTrayIcon, QMenu
 from PyQt5.QtCore import Qt, QRect, QEvent, QLocale
 from PyQt5.QtGui import QIcon
-from core.paths import CONF_SETTINGS, DeWidgetsIcon, ERROR, LOCK_FILE, DELETE
+from core.paths import DeWidgetsIcon, ERROR, LOCK_FILE, DELETE
 from core.paths import LOAD, UNLOAD, RELOAD, SHOW, HIDE, SETTINGS, EXIT, LANGS
 from core.paths import C_LANGS
 from core.gui import add_new
@@ -17,14 +16,14 @@ from core.gui.help import Help, TextViewer
 from core.gui.move import Move
 from core.gui.settings import Settings
 from core.manager import WidgetManager
-from core.utils import try_except
+from core.utils import try_except, print_stack_trace
 
-settings = ConfigParser()
-"""ConfigParser, settings dict"""
-lang = ConfigParser()
-"""ConfigParser, locale dict"""
-c_lang = ConfigParser()
-"""ConfigParser, locale dict for custom widgets"""
+settings = None
+"""RawConfigParser, settings dict"""
+lang = RawConfigParser()
+"""RawConfigParser, locale dict"""
+c_lang = RawConfigParser()
+"""RawConfigParser, locale dict for custom widgets"""
 manager = WidgetManager(lang, c_lang, sys.modules[__name__])
 """WidgetManager object"""
 app = None
@@ -33,11 +32,16 @@ main = None
 """Main object"""
 
 
-def __init__(main_app):
-    """start app"""
-    global app, main
+def __init__(main_app, prop):
+    """Start app.
+
+    :param main_app: QApplication object
+    :param prop: ConfigParser, settings
+    :return:
+    """
+    global app, main, settings
     # load configs
-    settings.read(CONF_SETTINGS, 'utf-8')
+    settings = prop
     lang.read(os.path.join(LANGS, settings['MAIN']['locale'] + '.conf'),
               'utf-8')
     cl_file = os.path.join(C_LANGS, settings['MAIN']['locale'] + '.conf')
@@ -63,7 +67,7 @@ def __init__(main_app):
     main = Main()
     add_new.__init__(lang, main)
     # load widgets
-    if bool(strtobool(settings['MAIN']['load_placed'])):
+    if strtobool(settings['MAIN']['load_placed']):
         manager.load_placed()  # placed only
     else:
         manager.load_all()  # all widgets
@@ -250,7 +254,7 @@ class Main(QMainWindow):
                     item.setFont(font)
                 self.list.addItem(item)
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
 
     @try_except()
     def _list_double_click(self, item):
@@ -268,7 +272,7 @@ class Main(QMainWindow):
             try:
                 manager.load(name)
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
         if names:
             self._list_fill()
         self.__change_enabled()
@@ -294,7 +298,7 @@ class Main(QMainWindow):
                     widget.show()
                     self.statusBar().showMessage(lang['STATUS']['first'])
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
         # save
         manager.edit_mode(self.edit_mode_checkbox.isChecked())
         if not self.edit_mode_checkbox.isChecked():
@@ -364,7 +368,7 @@ class Main(QMainWindow):
                     manager.widgets[name].hide_event(True)
                     manager.widgets[name].setHidden(True)
             except:
-                print(traceback.format_exc())
+                print_stack_trace()()
 
     @try_except()
     def _show_list_menu(self, point):
@@ -385,7 +389,7 @@ class Main(QMainWindow):
     @try_except()
     def _reload(self, point):
         manager.unload_all()
-        if bool(strtobool(settings['MAIN']['load_placed'])):
+        if strtobool(settings['MAIN']['load_placed']):
             manager.load_placed()
         else:
             manager.load_all()
