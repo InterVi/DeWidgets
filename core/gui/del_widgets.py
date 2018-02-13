@@ -2,7 +2,6 @@
 import os
 import sys
 import json
-import logging
 from configparser import RawConfigParser
 from PyQt5.QtWidgets import QWidget, QListWidget, QLabel, QPushButton
 from PyQt5.QtWidgets import QMessageBox, QListWidgetItem
@@ -10,10 +9,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QRect, Qt
 from core.gui.help import TextViewer
 from core.paths import CONF_INSTALL, DELETE, ZIP, DEL_WIDGETS, DEL_ARCHIVES
-from core.utils import try_except, print_stack_trace
-
-
-LOGGER = logging.getLogger('stdout')
+from core.utils import try_except, print_stack_trace, STDOUT
 
 
 def del_in_conf(path, sections):
@@ -27,13 +23,13 @@ def del_in_conf(path, sections):
     for sec in sections:
         for key in sections[sec]:
             del conf[sec][key]
-            LOGGER.debug('remove ' + key + ' key from section ' + sec)
+            STDOUT.debug('remove ' + key + ' key from section ' + sec)
         if not conf[sec]:
             del conf[sec]
-            LOGGER.debug('remove section ' + sec)
+            STDOUT.debug('remove section ' + sec)
     with open(path, 'w', encoding='utf-8') as file:
         conf.write(file)
-    LOGGER.debug('rewrite ' + path)
+    STDOUT.debug('rewrite ' + path)
 
 
 class Delete(QWidget):
@@ -158,20 +154,20 @@ class Delete(QWidget):
                     break
         if name and name in self.manager.widgets:
             self.manager.del_widget(name)
-            LOGGER.debug('delete widget: ' + name)
+            STDOUT.debug('delete widget: ' + name)
         else:
             r = self.manager.call_delete_widget(module_name)
-            LOGGER.debug(
+            STDOUT.debug(
                 'call delete widget "' + module_name + '", result: ' +
                 str(r) + ', deleting...')
             os.remove(module)
             if name:
                 self.manager.del_from_dicts(name)
                 self.manager.config.remove(name)
-                LOGGER.debug('full unload and del info from config: ' + name)
+                STDOUT.debug('full unload and del info from config: ' + name)
             elif module_name in sys.modules:
                 del sys.modules[module_name]
-                LOGGER.debug('delete module from sys.modules: ' + module_name)
+                STDOUT.debug('delete module from sys.modules: ' + module_name)
 
 
 class ArchDelete(QWidget):
@@ -269,12 +265,12 @@ class ArchDelete(QWidget):
             for res in self.archives[item.toolTip()]['res']:
                 if os.path.isfile(res):
                     os.remove(res)
-                    LOGGER.debug('remove ' + res)
+                    STDOUT.debug('remove ' + res)
             for res in self.archives[item.toolTip()]['res']:
                 d = os.path.dirname(res)
                 if os.path.isdir(d):
                     os.rmdir(d)
-                    LOGGER.debug('remove dir ' + d)
+                    STDOUT.debug('remove dir ' + d)
             for lang in self.archives[item.toolTip()]['langs']:
                 del_in_conf(lang[0], lang[1])
             del self.archives[item.toolTip()]

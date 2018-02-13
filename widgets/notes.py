@@ -9,7 +9,7 @@ from PyQt5.QtCore import Qt
 from core.manager import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, DELETE, SUCCESS
-from core.utils import try_except
+from core.utils import try_except, print_stack_trace
 
 
 class Note(QWidget):
@@ -31,7 +31,6 @@ class Note(QWidget):
         self.grid.addWidget(self.text_edit)
         self.setLayout(self.grid)
 
-    @try_except()
     def _init(self):
         self.setStyleSheet(self.main.get_style(self.index))
         if self.index:
@@ -89,7 +88,6 @@ class Main(Widget, Note):
         for item in self.style_names.items():
             self.style_keys[item[1]] = item[0]
 
-    @try_except()
     def save_conf(self):
         b_notes = []
         for note in self.notes:
@@ -115,7 +113,6 @@ class Main(Widget, Note):
         with open(path, encoding='utf-8') as file:
             return file.read()
 
-    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'notes' in self.conf:
@@ -131,15 +128,17 @@ class Main(Widget, Note):
             self.editable = json.loads(self.conf['editable'])
         self._init()
 
-    @try_except()
     def _load_widgets(self):
         for i in range(len(self.notes)):
             if i == 0:
                 continue
-            note = Note(self, i)
-            note._init()
-            note.show()
-            self.widgets.append(note)
+            try:
+                note = Note(self, i)
+                note._init()
+                note.show()
+                self.widgets.append(note)
+            except:
+                print_stack_trace()()
 
     def boot(self):
         self._load_settings()
@@ -149,12 +148,10 @@ class Main(Widget, Note):
         self._load_settings()
         self._load_widgets()
 
-    @try_except()
     def hide_event(self, state):
         for widget in self.widgets:
             widget.setHidden(state)
 
-    @try_except()
     def edit_mode(self, mode):
         for widget in self.widgets:
             if mode:
@@ -170,12 +167,10 @@ class Main(Widget, Note):
     def unload(self):
         self.save_conf()
 
-    @try_except()
     def remove(self):
         for widget in self.widgets:
             widget.destroy()
 
-    @try_except()
     def purge(self):
         self.remove()
         self.__setup_vars()

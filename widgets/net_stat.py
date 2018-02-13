@@ -265,7 +265,6 @@ class Main(Widget, QWidget):
             con = str(len(psutil.net_connections(self._kind)))
             self._add_label(self.lang['connections'].format(con))
 
-    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'update' in self.conf:

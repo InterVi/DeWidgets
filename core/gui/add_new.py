@@ -2,19 +2,18 @@
 import os
 import sys
 import json
-import logging
 import zipfile
 from configparser import RawConfigParser
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtGui import QIcon
 from core.paths import ZIP, SUCCESS, ERROR, C_WIDGETS, C_RES, C_LANGS
 from core.paths import CONF_INSTALL
+from core.utils import STDOUT
 
 lang = None
 """locale dict, setup from __init__"""
 parent = None
 """parent QWidget, setup from __init__"""
-LOGGER = logging.getLogger('stdout')
 
 
 def __init__(locale, qwparent=None):
@@ -91,7 +90,7 @@ def install() -> list:
     - widget.py (python module, widget file)
     """
     files = _get_files()
-    LOGGER.debug('add files: ' + str(files))
+    STDOUT.debug('add files: ' + str(files))
     if not files:
         return []
     broken = []  # broken files
@@ -103,16 +102,16 @@ def install() -> list:
     for file in files:
         if not zipfile.is_zipfile(file):  # test
             broken.append(os.path.basename(file))
-            LOGGER.debug('not zip: ' + file)
+            STDOUT.debug('not zip: ' + file)
         else:
             with zipfile.ZipFile(file) as arch:
                 if arch.testzip():  # test
                     broken.append(os.path.basename(file))
-                    LOGGER.debug('not zip: ' + file)
+                    STDOUT.debug('not zip: ' + file)
                     continue
                 if 'DeWidgets.txt' not in arch.namelist():  # test
                     broken.append(os.path.basename(file))
-                    LOGGER.debug('not DeWidgets.txt: ' + file)
+                    STDOUT.debug('not DeWidgets.txt: ' + file)
                     continue
                 inst_info = {'py': [], 'res': [], 'langs': []}
                 for info in arch.infolist():
@@ -124,7 +123,7 @@ def install() -> list:
                         result.append(info.filename[:-3])
                         inst_info['py'].append(os.path.join(C_WIDGETS,
                                                             info.filename))
-                        LOGGER.debug('extract module: ' + info.filename)
+                        STDOUT.debug('extract module: ' + info.filename)
                     elif info.filename[:3] == 'res':
                         # search files in 'res' folder
                         if not os.path.isdir(C_RES):
@@ -133,7 +132,7 @@ def install() -> list:
                         if not os.path.isfile(r_file):
                             arch.extract(info, os.path.join(C_RES, '..'))
                             inst_info['res'].append(r_file)
-                            LOGGER.debug('extract res: ' + info.filename)
+                            STDOUT.debug('extract res: ' + info.filename)
                     elif info.filename[:5] == 'langs':
                         # search files in 'langs' folder
                         conf = RawConfigParser()  # lang file from patch
@@ -143,7 +142,7 @@ def install() -> list:
                             os.mkdir(C_LANGS)
                         lang_file = os.path.join(C_LANGS, info.filename[6:])
                         inst_info['langs'].append((lang_file, conf._sections))
-                        LOGGER.debug('process lang: ' + info.filename)
+                        STDOUT.debug('process lang: ' + info.filename)
                         if os.path.isfile(lang_file):
                             # if exists - patching
                             old = RawConfigParser()  # to patch
@@ -155,21 +154,21 @@ def install() -> list:
                                             # add new keys
                                             old[section][key] =\
                                                 conf[section][key]
-                                            LOGGER.debug('add key ' + key +
+                                            STDOUT.debug('add key ' + key +
                                                          ' to section ' +
                                                          section)
                                 else:  # adding sections
                                     old[section] = conf[section]
-                                    LOGGER.debug('add section ' + section)
+                                    STDOUT.debug('add section ' + section)
                             with open(lang_file, 'w',
                                       encoding='utf-8') as object_file:
                                 old.write(object_file)
-                            LOGGER.debug('rewrite: ' + lang_file)
+                            STDOUT.debug('rewrite: ' + lang_file)
                         else:  # no exists - add
                             with open(lang_file, 'w',
                                       encoding='utf-8') as object_file:
                                 conf.write(object_file)
-                            LOGGER.debug('create lang file: ' + lang_file)
+                            STDOUT.debug('create lang file: ' + lang_file)
                     conf_inst[file] = inst_info
     with open(CONF_INSTALL, 'w', encoding='utf-8') as file_install:
         file_install.write(json.dumps(conf_inst))
@@ -177,6 +176,6 @@ def install() -> list:
         _show_error(broken)
     if result:  # show widgets names (*.py files)
         _show_success(result)
-    LOGGER.debug('broken: ' + str(broken))
-    LOGGER.debug('result: ' + str(result))
+    STDOUT.debug('broken: ' + str(broken))
+    STDOUT.debug('result: ' + str(result))
     return result

@@ -1,8 +1,6 @@
 """Edit gui settings app."""
 import os
 import sys
-import logging
-from enum import IntEnum
 from distutils.util import strtobool
 from configparser import RawConfigParser
 from PyQt5.QtWidgets import QWidget, QPushButton, QCheckBox, QComboBox, QLabel
@@ -11,58 +9,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from core.gui.del_widgets import Delete
 from core.paths import SETTINGS, SUCCESS, LANGS, CONF_SETTINGS
-from core.utils import try_except, print_stack_trace
-
-
-class LogLevel(IntEnum):
-    """logging levels"""
-    NOTSET = logging.NOTSET
-    DEBUG = logging.DEBUG
-    INFO = logging.INFO
-    WARNING = logging.WARNING
-    ERROR = logging.ERROR
-    CRITICAL = logging.CRITICAL
-
-    @staticmethod
-    def from_string(s) -> int:
-        """Get int level from string key.
-
-        :param s: str, key
-        :return: int, level (not enum) (raise NameError if not found)
-        """
-        if s in LogLevel._member_names_:
-            return int(LogLevel._member_map_[s])
-        raise NameError(str(s) + ' not found')
-
-    @staticmethod
-    def from_int(num) -> str:
-        """Get string key from int level.
-
-        :param num: int, level
-        :return: str, key (raise ValueError if not found)
-        """
-        if num == logging.NOTSET:
-            return 'NOTSET'
-        elif num == logging.DEBUG:
-            return 'DEBUG'
-        elif num == logging.INFO:
-            return 'INFO'
-        elif num == logging.WARNING:
-            return 'WARNING'
-        elif num == logging.ERROR:
-            return 'ERROR'
-        elif num == logging.CRITICAL:
-            return 'CRITICAL'
-        else:
-            raise ValueError(str(num) + ' not found')
-
-    @staticmethod
-    def get_keys() -> tuple:
-        """Get all string keys.
-
-        :return: tuple, str keys
-        """
-        return tuple(LogLevel._member_names_)
+from core.utils import LogLevel, try_except, print_stack_trace
 
 
 class Settings(QWidget):

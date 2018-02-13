@@ -100,7 +100,6 @@ class Main(Widget, QWidget):
         # set layout
         self.layout().update()
 
-    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'update' in self.conf:
@@ -118,7 +117,6 @@ class Main(Widget, QWidget):
         if 'swap' in self.conf:
             self._swap = bool(strtobool(self.conf['swap']))
 
-    @try_except()
     def save_settings(self):
         self.conf['update'] = str(self._update)
         self.conf['round'] = str(self._round)

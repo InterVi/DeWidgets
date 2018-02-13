@@ -112,7 +112,6 @@ class Main(Widget, QWidget):
         # set layout
         self.layout().update()
 
-    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'update' in self.conf:

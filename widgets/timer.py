@@ -82,7 +82,6 @@ class Main(Widget, QWidget):
         # (lcd, lcd, lcd), QHBoxLayout, is past, is enabled, (h, m, s)
         self.list.append((lcd, h_box, True, enabled, (h, m, s)))
 
-    @try_except()
     def _delete_timer(self, index):
         self.v_box.removeItem(self.list[index][1])
         del self.list[index]
@@ -171,7 +170,6 @@ class Main(Widget, QWidget):
     def _pause(self, checked):
         self.timer.stop()
 
-    @try_except()
     def _reset(self, checked):
         self.timer.stop()
         for timer in self.list:
@@ -180,7 +178,6 @@ class Main(Widget, QWidget):
         self.list.clear()
         self._load_timers()
 
-    @try_except()
     def _load_timers(self):
         if ('timers' not in self.conf) or self.conf['timers'] == '[]' or \
                 not self.conf['timers']:
@@ -189,7 +186,6 @@ class Main(Widget, QWidget):
         for data in json.loads(self.conf['timers']):
             self._add_timer(*data)
 
-    @try_except()
     def _save_timers(self):
         if not self.conf:
             return
@@ -198,7 +194,6 @@ class Main(Widget, QWidget):
             timers.append((timer[4][0], timer[4][1], timer[4][2], timer[3]))
         self.conf['timers'] = json.dumps(timers)
 
-    @try_except()
     def _setup_conf(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'alarm' not in self.conf:

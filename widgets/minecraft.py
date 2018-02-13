@@ -13,7 +13,7 @@ from PyQt5.QtCore import Qt, QSize, QTimer
 from core.manager import Widget, WidgetInfo
 from core.gui.help import TextViewer
 from core.paths import RES, RELOAD, SETTINGS, ERROR, DELETE, HELP
-from core.utils import try_except, print_stack_trace
+from core.utils import LogLevel, try_except, print_stack_trace
 
 
 def get_description(desc) -> str:
@@ -106,6 +106,7 @@ class Main(Widget, QWidget):
     def show_settings(self):
         self.settings_win = Settings(self)
 
+    @try_except()
     def _list_fill(self, checked=False):
         self._pool_ping()
         self.list.clear()
@@ -146,14 +147,17 @@ class Main(Widget, QWidget):
     def _list_double_click(self, item):
         self.show_more = ShowMore(self)
 
-    @try_except()
     def _kill_procs(self):
         for p in self.__procs:
-            if p and p.is_alive():
-                p.terminate()
+            try:
+                if p and p.is_alive():
+                    p.terminate()
+            except:
+                print_stack_trace()()
         self.__procs.clear()
 
     def _pool_ping(self):
+        @try_except(level=LogLevel.DEBUG)
         def ping(addr):
             status = MinecraftServer.lookup(addr).status()
             favicon = ''
@@ -204,6 +208,7 @@ class ShowMore(TextViewer):
         self.show()
 
     def _ping_server(self):
+        @try_except(level=LogLevel.DEBUG)
         def ping():
             self.__info_buffer['online'] = ''
             self.__info_buffer['max'] = ''
@@ -225,7 +230,7 @@ class ShowMore(TextViewer):
             try:
                 status = MinecraftServer.lookup(addr).status()
             except:
-                print_stack_trace()()
+                print_stack_trace(LogLevel.DEBUG)()
                 return
             self.__info_buffer['online'] = str(status.players.online)
             self.__info_buffer['max'] = str(status.players.max)
@@ -242,7 +247,7 @@ class ShowMore(TextViewer):
             try:
                 query = MinecraftServer.lookup(addr).query()
             except:
-                print_stack_trace()()
+                print_stack_trace(LogLevel.DEBUG)()
                 return
             self.__info_buffer['map'] = query.map
             self.__info_buffer['brand'] = query.software.brand
@@ -260,6 +265,7 @@ class ShowMore(TextViewer):
         self.__proc = Process(target=ping)
         self.__proc.start()
 
+    @try_except()
     def print_info(self):
         self.text.setHtml(self.lang['info'].format(
             **self.__info_buffer))

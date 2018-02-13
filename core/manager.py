@@ -1,7 +1,6 @@
 """Manage widgets."""
 import os
 import sys
-import logging
 import inspect
 from distutils.util import strtobool
 from configparser import RawConfigParser
@@ -11,7 +10,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 import widgets as w
 from core.paths import CONF_WIDGETS, WIDGET, C_WIDGETS
-from core.utils import try_except, print_stack_trace
+from core.utils import try_except, print_stack_trace, STDOUT
 
 sys.path.append(C_WIDGETS)
 CUSTOM_WIDGETS = SourceFileLoader('__init__',
@@ -123,7 +122,7 @@ class WidgetManager:
         """ConfigManager object"""
         self.main_gui = main
         """core.gui.gui module"""
-        self.logger = logging.getLogger('stdout')
+        self.logger = STDOUT
         """stdout logger"""
 
     def load_all(self):
@@ -340,33 +339,30 @@ class WidgetManager:
         self.del_from_dicts(name)
         os.remove(path)
 
+    @try_except(lambda: False)
     def call_delete_widget(self, module_name) -> bool:
         """Call widget API (delete_widget and unload). Load -> call -> unload.
 
         :param module_name: str, module name
         :return: bool, True if success, False if bad validation or except
         """
-        try:
-            if module_name not in sys.modules:
-                return False
-            mod = sys.modules[module_name]
-            # validate module
-            if not self.validate_widget_module(mod):
-                return False
-            # init and validate info
-            info = mod.Info(self.lang)
-            if not self.validate_widget_info(info):
-                return False
-            # init and validate widget
-            widget = mod.Main(self, info)
-            if not self.validate_widget_main(widget):
-                return False
-            # call
-            widget.delete_widget()
-            return True
-        except:
-            print_stack_trace()()
+        if module_name not in sys.modules:
             return False
+        mod = sys.modules[module_name]
+        # validate module
+        if not self.validate_widget_module(mod):
+            return False
+        # init and validate info
+        info = mod.Info(self.lang)
+        if not self.validate_widget_info(info):
+            return False
+        # init and validate widget
+        widget = mod.Main(self, info)
+        if not self.validate_widget_main(widget):
+            return False
+        # call
+        widget.delete_widget()
+        return True
 
     @try_except()
     def del_from_dicts(self, name, module_name=None):

@@ -12,7 +12,7 @@ from PyQt5.QtCore import Qt, QTimer
 from core.manager import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, SUCCESS, DELETE
-from core.utils import try_except
+from core.utils import try_except, print_stack_trace
 
 
 def get_time(utc=False, format='%X', hours=0, minutes=0, seconds=0) -> str:
@@ -156,7 +156,6 @@ class Main(Widget, DTime):
         self._msec = 1000
         self._utc = False
 
-    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'times' in self.conf:
@@ -185,16 +184,18 @@ class Main(Widget, DTime):
             self._utc = bool(strtobool(self.conf['utc']))
         self._init()
 
-    @try_except()
     def _load_widgets(self):
         for i in range(len(self.times)):
-            if i == 0:
-                DTime._init(self)
-                continue
-            dtime = DTime(self, i)
-            dtime._init()
-            dtime.show()
-            self.widgets.append(dtime)
+            try:
+                if i == 0:
+                    DTime._init(self)
+                    continue
+                dtime = DTime(self, i)
+                dtime._init()
+                dtime.show()
+                self.widgets.append(dtime)
+            except:
+                print_stack_trace()()
 
     @try_except()
     def _timeout(self):
@@ -237,12 +238,10 @@ class Main(Widget, DTime):
         self._load_settings()
         self._load_widgets()
 
-    @try_except()
     def hide_event(self, mode):
         for widget in self.widgets:
             widget.setHidden(mode)
 
-    @try_except()
     def edit_mode(self, mode):
         for widget in self.widgets:
             if mode:
@@ -258,12 +257,10 @@ class Main(Widget, DTime):
     def unload(self):
         self.save_settings()
 
-    @try_except()
     def remove(self):
         for widget in self.widgets:
             widget.destroy()
 
-    @try_except()
     def purge(self):
         self.remove()
         self.__setup_vars()
@@ -421,6 +418,7 @@ class Settings(QWidget):
         ok.setToolTip(self.lang['adding_ok_button_tt'])
         mbox.exec()
 
+    @try_except()
     def _del_time(self, checked):
         if self.list.count() <= 1:
             return

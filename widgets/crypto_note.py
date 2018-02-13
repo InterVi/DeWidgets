@@ -149,7 +149,6 @@ class Main(Widget, QWidget):
                 self.image.setPixmap(ICON_PIXMAP)
                 self.image.show()
 
-    @try_except()
     def _load_settings(self):
         self.conf = self.widget_manager.get_config(self.info.NAME)
         if 'session' in self.conf:
@@ -196,12 +195,10 @@ class Main(Widget, QWidget):
                 else:
                     self.show_pass_error(True)
 
-    @try_except()
     def _stop_timer(self):
         self.timer.stop()
         self._hexpass = None
 
-    @try_except()
     def _start_timer(self):
         self._end_time = time.time() + self._session
         self.timer.start(self._handing)
@@ -218,7 +215,6 @@ class Main(Widget, QWidget):
         ok.setToolTip(self.lang['wrong_ok_button_tt'])
         mbox.exec()
 
-    @try_except()
     def close_note(self):
         self.note_win = None
 
@@ -238,7 +234,6 @@ class Main(Widget, QWidget):
     def remove(self):
         self._stop_timer()
 
-    @try_except()
     def purge(self):
         self._setup_vars()
         self.remove()
@@ -313,7 +308,6 @@ class Note(QWidget):
             self.main.show_pass_error()
             self._exit()
 
-    @try_except()
     def _save_note(self):
         # text -> gzip -> AES-256 -> gzip -> base64
         note = base64.b64encode(gzip.compress(self.cip.encrypt(
