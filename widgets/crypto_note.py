@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QPushButton, QCheckBox, QMessageBox, QInputDialog
 from PyQt5.QtWidgets import QGridLayout, QHBoxLayout
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QRect
-from core.manager import Widget, WidgetInfo
+from core.api import Widget, WidgetInfo
 from core.paths import RES, SETTINGS, ERROR
 from core.utils import try_except, print_stack_trace
 

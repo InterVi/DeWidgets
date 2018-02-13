@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QWidget, QLabel, QProgressBar, QPushButton
 from PyQt5.QtWidgets import QCheckBox, QHBoxLayout, QVBoxLayout, QSpinBox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer
-from core.manager import Widget, WidgetInfo
+from core.api import Widget, WidgetInfo
 from core.paths import RES, SETTINGS
 from core.utils import try_except
 

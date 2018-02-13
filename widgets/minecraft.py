@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QMenu, QPushButton, QMessageBox, QGridLayout
 from PyQt5.QtWidgets import QInputDialog, QSpinBox, QLabel
 from PyQt5.QtGui import QIcon, QPixmap, QImage
 from PyQt5.QtCore import Qt, QSize, QTimer
-from core.manager import Widget, WidgetInfo
+from core.api import Widget, WidgetInfo
 from core.gui.help import TextViewer
 from core.paths import RES, RELOAD, SETTINGS, ERROR, DELETE, HELP
 from core.utils import LogLevel, try_except, print_stack_trace

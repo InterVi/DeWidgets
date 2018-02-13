@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QListWidgetItem, QCheckBox, QMessageBox, QComboBox
 from PyQt5.QtWidgets import QLabel, QGridLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
-from core.manager import Widget, WidgetInfo
+from core.api import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, DELETE, SUCCESS
 from core.utils import try_except, print_stack_trace

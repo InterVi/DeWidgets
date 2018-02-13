@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer, Qt, QUrl
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from core.manager import Widget, WidgetInfo
+from core.api import Widget, WidgetInfo
 from core.paths import RES, SETTINGS, PLAY, PAUSE, STOP, SUCCESS
 from core.utils import try_except
 

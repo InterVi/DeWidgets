@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QColorDialog, QMessageBox
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout
 from PyQt5.QtGui import QIcon, QColor, QPalette
 from PyQt5.QtCore import Qt, QTimer
-from core.manager import Widget, WidgetInfo
+from core.api import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, SUCCESS, DELETE
 from core.utils import try_except, print_stack_trace
