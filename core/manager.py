@@ -358,7 +358,7 @@ class WidgetManager:
 
     def call_end_loading(self):
         """Call end_loading event at all widgets."""
-        for widget in self.widgets:
+        for widget in self.widgets.values():
             try:
                 widget.end_loading()
             except:
@@ -369,7 +369,7 @@ class WidgetManager:
 
         :param name: str, widget name
         """
-        for widget in self.widgets:
+        for widget in self.widgets.values():
             try:
                 widget.load_other(name)
             except:
@@ -380,7 +380,7 @@ class WidgetManager:
 
         :param name: str, widget name
         """
-        for widget in self.widgets:
+        for widget in self.widgets.values():
             try:
                 widget.unload_other(name)
             except:
@@ -403,7 +403,7 @@ class WidgetManager:
         :param name: str, widget name
         :param reminconf: bool, True - remove widget all data from config
         """
-        for widget in self.widgets:
+        for widget in self.widgets.values():
             try:
                 widget.purge_other(name, reminconf)
             except:
