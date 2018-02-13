@@ -224,7 +224,7 @@ class WidgetManager:
             return True
         except:
             print_stack_trace()()
-            self.logger.info(module_name + ' fail loading')
+            self.logger.error(module_name + ' fail loading')
             return return_false()
 
     @staticmethod

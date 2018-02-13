@@ -71,7 +71,7 @@ def try_except(except_func=None, ex_args=(), ex_kwargs=(),
     :param except_func: call if exception
     :param ex_args: arguments for except_func
     :param ex_kwargs: dict arguments for except_func
-    :param level: core.gui.settings.LogLevel, logging level
+    :param level: LogLevel, logging level
     :return: wrapped function
     """
     def decorator(func):
@@ -98,7 +98,7 @@ def try_except(except_func=None, ex_args=(), ex_kwargs=(),
 def print_stack_trace(level=LogLevel.ERROR):
     """Print stacktrace to stdout logger. Example: print_stack_trace()()
 
-    :param level: core.gui.settings.LogLevel, logging level
+    :param level: LogLevel, logging level
     :return: lambda function (for create correct trace)
     """
     return lambda: STDOUT.log(int(level), traceback.format_exc())
