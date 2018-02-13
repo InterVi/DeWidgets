@@ -71,6 +71,7 @@ def __init__(main_app, prop):
         manager.load_placed()  # placed only
     else:
         manager.load_all()  # all widgets
+    manager.call_end_loading()
     main._list_fill()
     if manager.is_placed():
         return  # if found placed widgets - no show main window

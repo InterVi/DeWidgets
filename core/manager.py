@@ -52,6 +52,24 @@ class Widget:
         """load widget event (before setup window flags and other)"""
         pass
 
+    def end_loading(self):
+        """call when all the widgets are loaded (when you start the app)."""
+        pass
+
+    def load_other(self, name):
+        """load other widget event (after loading).
+
+        :param name: str, widget name
+        """
+        pass
+
+    def unload_other(self, name):
+        """unload other widget event (before unloading).
+
+        :param name: str, widget name
+        """
+        pass
+
     def unload(self):
         """unload widget event (before call destroy)."""
         pass
@@ -90,9 +108,24 @@ class Widget:
         """purge widget and all data (before call unload)."""
         pass
 
+    def purge_other(self, name, reminconf):
+        """purge other widget event (before purging).
+
+        :param name: str, widget name
+        :param reminconf: bool, True - remove widget all data from config
+        """
+        pass
+
     def delete_widget(self):
         """Remove widget files (before call purge and unload or only unload).
         If widget not placed, load will not calling - only this before unload.
+        """
+        pass
+
+    def delete_other_widget(self, name):
+        """delete other widget event (see delete_widget) (before deleting).
+
+        :param name: str, widget name
         """
         pass
 
@@ -221,6 +254,7 @@ class WidgetManager:
             self.setup_widget(widget, info)
             self.widgets[info.NAME] = widget
             self.config.load(info.NAME)
+            self.call_load_other(info.NAME)
             return True
         except:
             print_stack_trace()()
@@ -296,6 +330,7 @@ class WidgetManager:
         :param name: str, widget name
         :param reminconf: bool, True - remove widget all data from config
         """
+        self.call_purge_other(name, reminconf)
         if reminconf:
             try:
                 self.widgets[name].purge()
@@ -324,6 +359,7 @@ class WidgetManager:
 
         :param name: str, widget name
         """
+        self.call_delete_other_widget(name)
         path = self.paths[name]
         try:
             self.widgets[name].delete_widget()
@@ -361,6 +397,7 @@ class WidgetManager:
         if not self.validate_widget_main(widget):
             return False
         # call
+        self.call_delete_other_widget(info.NAME)
         widget.delete_widget()
         return True
 
@@ -386,6 +423,7 @@ class WidgetManager:
 
         :param name: str, widget name
         """
+        self.call_unload_other(name)
         try:
             self.widgets[name].unload()
             self.widgets[name].destroy()
@@ -428,6 +466,59 @@ class WidgetManager:
         :return: dict, config section for widget in ConfigParser
         """
         return self.config.config[name]
+
+    def call_end_loading(self):
+        """Call end_loading event at all widgets."""
+        for widget in self.widgets:
+            try:
+                widget.end_loading()
+            except:
+                print_stack_trace()()
+
+    def call_load_other(self, name):
+        """Call load_other event at all widgets.
+
+        :param name: str, widget name
+        """
+        for widget in self.widgets:
+            try:
+                widget.load_other(name)
+            except:
+                print_stack_trace()()
+
+    def call_unload_other(self, name):
+        """Call unload_other event at all widgets.
+
+        :param name: str, widget name
+        """
+        for widget in self.widgets:
+            try:
+                widget.unload_other(name)
+            except:
+                print_stack_trace()()
+
+    def call_delete_other_widget(self, name):
+        """Call delete_other_widget event at all widgets.
+
+        :param name: str, widget name
+        """
+        for widget in self.widgets:
+            try:
+                widget.delete_other_widget(name)
+            except:
+                print_stack_trace()()
+
+    def call_purge_other(self, name, reminconf):
+        """Call purge_other event at all widgets.
+
+        :param name: str, widget name
+        :param reminconf: bool, True - remove widget all data from config
+        """
+        for widget in self.widgets:
+            try:
+                widget.purge_other(name, reminconf)
+            except:
+                print_stack_trace()()
 
     def edit_mode(self, mode, name=None) -> bool:
         """Call widget event and save config.
