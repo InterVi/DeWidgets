@@ -79,16 +79,17 @@ def try_except(except_func=None, ex_args=(), ex_kwargs=(),
             try:
                 return func(*args, **kwargs)
             except:
-                STDOUT.log(int(level), traceback.format_exc())
+                lvl = int(level)
+                STDOUT.log(lvl, traceback.format_exc())
                 if except_func:
                     try:
                         return except_func(*ex_args, **ex_kwargs)
                     except:
-                        STDOUT.log(int(level), traceback.format_exc())
-                        print('Except args: ' + str(ex_args))
-                        print('Except kwargs: ' + str(ex_kwargs))
-                print('Args: ' + str(args))
-                print('Kwargs: ' + str(kwargs))
+                        STDOUT.log(lvl, traceback.format_exc())
+                        STDOUT.log(lvl, 'Except args: ' + str(ex_args))
+                        STDOUT.log(lvl, 'Except kwargs: ' + str(ex_kwargs))
+                STDOUT.log(lvl, 'Args: ' + str(args))
+                STDOUT.log(lvl, 'Kwargs: ' + str(kwargs))
 
         return wrapper
 
