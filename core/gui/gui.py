@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt, QRect, QEvent, QLocale
 from PyQt5.QtGui import QIcon
 from core.paths import DeWidgetsIcon, ERROR, LOCK_FILE, DELETE
 from core.paths import LOAD, UNLOAD, RELOAD, SHOW, HIDE, SETTINGS, EXIT, LANGS
-from core.paths import C_LANGS
+from core.paths import C_LANGS, CONF_SETTINGS
 from core.gui import add_new
 from core.gui.help import Help, TextViewer
 from core.gui.move import Move
@@ -141,6 +141,8 @@ class Main(QMainWindow):
         self.edit_mode_checkbox.setToolTip(lang['MAIN']['edit_mode_tt'])
         self.edit_mode_checkbox.setGeometry(QRect(300, 75, 240, 20))
         self.edit_mode_checkbox.clicked.connect(self._edit_mode)
+        self.edit_mode_checkbox.setChecked(
+            bool(strtobool(settings['MAIN']['edit_mode'])))
         # setup 'Add new' button
         self.new_button = QPushButton(lang['MAIN']['new_button'], self)
         self.new_button.setToolTip(lang['MAIN']['new_button_tt'])
@@ -284,23 +286,14 @@ class Main(QMainWindow):
 
     @try_except()
     def _edit_mode(self, checked):
-        for widget in manager.widgets.values():
-            try:
-                if widget.isHidden():
-                    continue
-                if self.edit_mode_checkbox.isChecked():  # on
-                    widget.setWindowFlags(Qt.WindowMinimizeButtonHint |
-                                          Qt.WindowStaysOnBottomHint | Qt.Tool)
-                    widget.show()
-                    self.statusBar().showMessage(lang['STATUS']['edit_on'])
-                else:  # off
-                    widget.setWindowFlags(Qt.CustomizeWindowHint |
-                                          Qt.WindowStaysOnBottomHint | Qt.Tool)
-                    widget.show()
-                    self.statusBar().showMessage(lang['STATUS']['first'])
-            except:
-                print_stack_trace()()
+        if checked:
+            self.statusBar().showMessage(lang['STATUS']['edit_on'])
+        else:
+            self.statusBar().showMessage(lang['STATUS']['first'])
         # save
+        settings['MAIN']['edit_mode'] = str(checked)
+        with open(CONF_SETTINGS, 'w') as file:
+            settings.write(file)
         manager.edit_mode(self.edit_mode_checkbox.isChecked())
         if not self.edit_mode_checkbox.isChecked():
             manager.config.save()

@@ -76,7 +76,7 @@ class Widget:
         pass
 
     def edit_mode(self, mode):
-        """edit mode checkbox event
+        """edit mode checkbox event (fast drag widgets)
 
         :param mode: True or False
         """

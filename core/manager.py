@@ -11,6 +11,7 @@ import widgets as w
 from core.paths import CONF_WIDGETS, C_WIDGETS
 from core.utils import try_except, print_stack_trace, STDOUT
 from core.api import WidgetInfo, Widget
+from core.gui.drag import show_drag_panel
 
 sys.path.append(C_WIDGETS)
 CUSTOM_WIDGETS = SourceFileLoader('__init__',
@@ -199,8 +200,7 @@ class WidgetManager:
             return False
         return True
 
-    @staticmethod
-    def setup_widget(widget, info):
+    def setup_widget(self, widget, info):
         """Setup widget Main object (set window flags and other).
 
         :param widget: Widget object
@@ -210,7 +210,11 @@ class WidgetManager:
         widget.setWindowFlags(Qt.CustomizeWindowHint |
                               Qt.WindowStaysOnBottomHint | Qt.Tool)
         widget.setWindowTitle(info.NAME)
+        widget.setAccessibleName(info.NAME)
         widget.setWindowIcon(info.ICON)
+        widget.setMouseTracking(True)
+        widget.mouseMoveEvent = show_drag_panel(self, widget
+                                                )(widget.mouseMoveEvent)
 
     @try_except()
     def remove_from_desktop(self, name, reminconf=False):
