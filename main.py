@@ -37,13 +37,6 @@ def get_file_handler(path, log_format):
     return handler
 
 
-def get_stream_handler(stream, log_format):
-    handler = logging.StreamHandler(stream)
-    handler.setLevel(logging.NOTSET)
-    handler.setFormatter(logging.Formatter(log_format))
-    return handler
-
-
 @try_except()
 def __setup_loggers(prop):
     level = int(prop['LOGS']['log_level'])
@@ -54,12 +47,10 @@ def __setup_loggers(prop):
     stdout = logging.getLogger('stdout')
     stdout.setLevel(level)
     stdout.addHandler(get_file_handler(STDOUT_LOG, out_format))
-    stdout.addHandler(get_stream_handler(sys.stdout, out_format))
 
     stderr = logging.getLogger('stderr')
     stderr.setLevel(level)
     stderr.addHandler(get_file_handler(STDERR_LOG, err_format))
-    stderr.addHandler(get_stream_handler(sys.stderr, err_format))
 
     sys.stdout = StreamProxy(stdout)
     sys.stderr = StreamProxy(stderr)
