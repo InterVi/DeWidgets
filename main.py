@@ -7,8 +7,9 @@ import logging
 from configparser import RawConfigParser
 from PyQt5.QtWidgets import QApplication
 import core.gui.gui as gui
-from core.paths import STDERR_LOG, STDOUT_LOG, LOCK_FILE, CONF_SETTINGS
+from core.paths import STDERR_LOG, STDOUT_LOG, CONF_SETTINGS
 from core.utils import try_except, print_stack_trace
+import core.lock as lock
 
 
 class StreamProxy:
@@ -83,8 +84,7 @@ def __start():
         except:
             print_stack_trace()()
         try:  # remove lock file
-            if os.path.isfile(LOCK_FILE):
-                os.remove(LOCK_FILE)
+            lock.remove_lock()
         except:
             print_stack_trace()()
 

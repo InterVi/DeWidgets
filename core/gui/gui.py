@@ -2,29 +2,29 @@
 import os
 import sys
 from distutils.util import strtobool
-from configparser import RawConfigParser
 from PyQt5.QtWidgets import QMainWindow, QListWidgetItem
 from PyQt5.QtWidgets import QPushButton, QCheckBox, QStatusBar, QListWidget
 from PyQt5.QtWidgets import QMessageBox, QSystemTrayIcon, QMenu
 from PyQt5.QtCore import Qt, QRect, QEvent, QLocale
 from PyQt5.QtGui import QIcon
-from core.paths import DeWidgetsIcon, ERROR, LOCK_FILE, DELETE
-from core.paths import LOAD, UNLOAD, RELOAD, SHOW, HIDE, SETTINGS, EXIT, LANGS
-from core.paths import C_LANGS, CONF_SETTINGS
+from core.paths import DeWidgetsIcon, ERROR, DELETE, LOAD, UNLOAD, RELOAD, SHOW
+from core.paths import HIDE, SETTINGS, EXIT, CONF_SETTINGS
 from core.gui import add_new
 from core.gui.help import Help, TextViewer
 from core.gui.move import Move
 from core.gui.settings import Settings
 from core.manager import WidgetManager
 from core.utils import try_except, print_stack_trace
+import core.lock as lock_file
+import core.locales as locales
 
 settings = None
 """RawConfigParser, settings dict"""
-lang = RawConfigParser()
-"""RawConfigParser, locale dict"""
-c_lang = RawConfigParser()
-"""RawConfigParser, locale dict for custom widgets"""
-manager = WidgetManager(lang, c_lang, sys.modules[__name__])
+lang = {}
+"""locale dict"""
+c_lang = {}
+"""locale dict for custom widgets"""
+manager = None
 """WidgetManager object"""
 app = None
 """QApplication object"""
@@ -39,29 +39,23 @@ def __init__(main_app, prop):
     :param prop: ConfigParser, settings
     :return:
     """
-    global app, main, settings
+    global app, main, settings, lang, c_lang, manager
     # load configs
     settings = prop
-    lang.read(os.path.join(LANGS, settings['MAIN']['locale'] + '.conf'),
-              'utf-8')
-    cl_file = os.path.join(C_LANGS, settings['MAIN']['locale'] + '.conf')
-    if os.path.isfile(cl_file):
-        c_lang.read(cl_file, 'utf-8')
-    if os.path.isfile(LOCK_FILE):  # check lock
-        with open(LOCK_FILE) as lock:
-            try:
-                os.kill(int(lock.read()), 0)
-            except OSError:
-                pass
-            else:
-                _show_error()
-                sys.exit(0)
+    lang = locales.get_locale(settings['MAIN']['locale'])
+    if locales.custom_is_exists(settings['MAIN']['locale']):
+        c_lang = locales.get_custom_locale(settings['MAIN']['locale'])
+    # check lock
+    if lock_file.is_locked():
+        _show_error()
+        sys.exit(0)
     # setup locale
     QLocale.setDefault(QLocale(QLocale.__dict__[lang['LANG']['language']],
                                QLocale.__dict__[lang['LANG']['country']]))
+    # init manager
+    manager = WidgetManager(lang, c_lang, sys.modules[__name__])
     # create lock file
-    with open(LOCK_FILE, 'w') as lock:
-        lock.write(str(os.getpid()))
+    lock_file.create_lock()
     # init
     app = main_app
     main = Main()
@@ -292,7 +286,7 @@ class Main(QMainWindow):
             self.statusBar().showMessage(lang['STATUS']['first'])
         # save
         settings['MAIN']['edit_mode'] = str(checked)
-        with open(CONF_SETTINGS, 'w') as file:
+        with open(CONF_SETTINGS, 'w', encoding='utf-8') as file:
             settings.write(file)
         manager.edit_mode(self.edit_mode_checkbox.isChecked())
         if not self.edit_mode_checkbox.isChecked():

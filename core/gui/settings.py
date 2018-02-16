@@ -1,15 +1,14 @@
 """Edit gui settings app."""
-import os
 import sys
 from distutils.util import strtobool
-from configparser import RawConfigParser
 from PyQt5.QtWidgets import QWidget, QPushButton, QCheckBox, QComboBox, QLabel
 from PyQt5.QtWidgets import QMessageBox, QGridLayout, QHBoxLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from core.gui.del_widgets import Delete
-from core.paths import SETTINGS, SUCCESS, LANGS, CONF_SETTINGS
+from core.paths import SETTINGS, SUCCESS, CONF_SETTINGS
 from core.utils import LogLevel, try_except, print_stack_trace
+from core.locales import get_locales, get_locale
 
 
 class Settings(QWidget):
@@ -90,22 +89,9 @@ class Settings(QWidget):
         self._changed = True
 
     def _langs_box_fill(self):
-        for name in os.listdir(LANGS):
+        for name in get_locales():
             try:
-                file = os.path.join(LANGS, name)
-                conf = RawConfigParser()
-                conf.read(file)
-                # checks
-                if 'LANG' not in conf:
-                    continue
-                cont = False
-                for key in ('name', 'description', 'language', 'country'):
-                    if key not in conf['LANG']:
-                        cont = True
-                        break
-                if cont:
-                    continue
-                # fill
+                conf = get_locale(name)
                 item = conf['LANG']['name'] + ' ('
                 item += conf['LANG']['description'] + ')'
                 self.language.addItem(item)
@@ -133,7 +119,7 @@ class Settings(QWidget):
             str(self.load_placed.isChecked())
         self.settings['LOGS']['log_level'] = \
             str(LogLevel.from_string(self.log_levels.currentText()))
-        with open(CONF_SETTINGS, 'w') as file:
+        with open(CONF_SETTINGS, 'w', encoding='utf-8') as file:
             self.settings.write(file)
         if self._changed:
             self._show_warn()
