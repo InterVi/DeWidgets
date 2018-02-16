@@ -324,6 +324,7 @@ class WidgetManager:
             print_stack_trace()()
         del self.widgets[name]
 
+    @try_except()
     def unload_all(self, del_from_dicts=True):
         """Unload all loaded widgets.
 

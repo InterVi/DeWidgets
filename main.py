@@ -76,13 +76,9 @@ def __start():
     except:
         print_stack_trace()()
     finally:  # correct exit
-        try:  # unload widgets
+        try:  # unload widgets and save config
             if gui.manager:
                 gui.manager.unload_all()
-        except:
-            print_stack_trace()()
-        try:  # save widgets config
-            if gui.manager:
                 gui.manager.config.save()
         except:
             print_stack_trace()()
