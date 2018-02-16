@@ -19,7 +19,7 @@ import core.lock as lock_file
 import core.locales as locales
 
 settings = None
-"""RawConfigParser, settings dict"""
+"""settings dict"""
 lang = {}
 """locale dict"""
 c_lang = {}

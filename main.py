@@ -61,6 +61,7 @@ def __setup_loggers(prop):
 def __start():
     prop = RawConfigParser()
     prop.read(CONF_SETTINGS, 'utf-8')
+    prop = dict(prop)
     __setup_loggers(prop)
     try:
         # start
@@ -76,11 +77,13 @@ def __start():
         print_stack_trace()()
     finally:  # correct exit
         try:  # unload widgets
-            gui.manager.unload_all()
+            if gui.manager:
+                gui.manager.unload_all()
         except:
             print_stack_trace()()
         try:  # save widgets config
-            gui.manager.config.save()
+            if gui.manager:
+                gui.manager.config.save()
         except:
             print_stack_trace()()
         try:  # remove lock file
