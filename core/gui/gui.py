@@ -2,6 +2,7 @@
 import os
 import sys
 from distutils.util import strtobool
+from configparser import RawConfigParser
 from PyQt5.QtWidgets import QMainWindow, QListWidgetItem
 from PyQt5.QtWidgets import QPushButton, QCheckBox, QStatusBar, QListWidget
 from PyQt5.QtWidgets import QMessageBox, QSystemTrayIcon, QMenu
@@ -286,8 +287,10 @@ class Main(QMainWindow):
             self.statusBar().showMessage(lang['STATUS']['first'])
         # save
         settings['MAIN']['edit_mode'] = str(checked)
+        conf = RawConfigParser()
+        conf.read_dict(settings)
         with open(CONF_SETTINGS, 'w', encoding='utf-8') as file:
-            settings.write(file)
+            conf.write(file)
         manager.edit_mode(self.edit_mode_checkbox.isChecked())
         if not self.edit_mode_checkbox.isChecked():
             manager.config.save()
