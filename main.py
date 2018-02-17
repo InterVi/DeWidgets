@@ -4,12 +4,11 @@ import os
 import sys
 import inspect
 import logging
-from configparser import RawConfigParser
 from PyQt5.QtWidgets import QApplication
 import core.gui.gui as gui
-from core.paths import STDERR_LOG, STDOUT_LOG, CONF_SETTINGS
+from core.paths import STDERR_LOG, STDOUT_LOG
 from core.utils import try_except, print_stack_trace
-import core.lock as lock
+from core import lock, properties
 
 
 class StreamProxy:
@@ -59,10 +58,14 @@ def __setup_loggers(prop):
 
 @try_except()
 def __start():
-    prop = RawConfigParser()
-    prop.read(CONF_SETTINGS, 'utf-8')
-    prop = dict(prop)
+    is_new = False
+    if not properties.is_exists():
+        is_new = True
+        properties.create_default_settings()
+    prop = properties.read_settings()
     __setup_loggers(prop)
+    if is_new:
+        logging.getLogger('stdout').critical('written default settings config')
     try:
         # start
         logging.getLogger('stdout').info('start')

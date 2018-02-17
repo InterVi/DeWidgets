@@ -1,15 +1,15 @@
 """Edit gui settings app."""
 import sys
 from distutils.util import strtobool
-from configparser import RawConfigParser
 from PyQt5.QtWidgets import QWidget, QPushButton, QCheckBox, QComboBox, QLabel
 from PyQt5.QtWidgets import QMessageBox, QGridLayout, QHBoxLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from core.gui.del_widgets import Delete
-from core.paths import SETTINGS, SUCCESS, CONF_SETTINGS
+from core.paths import SETTINGS, SUCCESS
 from core.utils import LogLevel, try_except, print_stack_trace
 from core.locales import get_locales, get_locale
+from core import properties
 
 
 class Settings(QWidget):
@@ -120,10 +120,7 @@ class Settings(QWidget):
             str(self.load_placed.isChecked())
         self.settings['LOGS']['log_level'] = \
             str(LogLevel.from_string(self.log_levels.currentText()))
-        conf = RawConfigParser()
-        conf.read_dict(self.settings)
-        with open(CONF_SETTINGS, 'w', encoding='utf-8') as file:
-            conf.write(file)
+        properties.write_settings(self.settings)
         if self._changed:
             self._show_warn()
         self.main._list_fill()

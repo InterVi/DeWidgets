@@ -2,14 +2,13 @@
 import os
 import sys
 from distutils.util import strtobool
-from configparser import RawConfigParser
 from PyQt5.QtWidgets import QMainWindow, QListWidgetItem
 from PyQt5.QtWidgets import QPushButton, QCheckBox, QStatusBar, QListWidget
 from PyQt5.QtWidgets import QMessageBox, QSystemTrayIcon, QMenu
 from PyQt5.QtCore import Qt, QRect, QEvent, QLocale
 from PyQt5.QtGui import QIcon
 from core.paths import DeWidgetsIcon, ERROR, DELETE, LOAD, UNLOAD, RELOAD, SHOW
-from core.paths import HIDE, SETTINGS, EXIT, CONF_SETTINGS
+from core.paths import HIDE, SETTINGS, EXIT
 from core.gui import add_new
 from core.gui.help import Help, TextViewer
 from core.gui.move import Move
@@ -17,7 +16,7 @@ from core.gui.settings import Settings
 from core.manager import WidgetManager
 from core.utils import try_except, print_stack_trace
 import core.lock as lock_file
-import core.locales as locales
+from core import locales, properties
 
 settings = None
 """settings dict"""
@@ -287,10 +286,7 @@ class Main(QMainWindow):
             self.statusBar().showMessage(lang['STATUS']['first'])
         # save
         settings['MAIN']['edit_mode'] = str(checked)
-        conf = RawConfigParser()
-        conf.read_dict(settings)
-        with open(CONF_SETTINGS, 'w', encoding='utf-8') as file:
-            conf.write(file)
+        properties.write_settings(settings)
         manager.edit_mode(self.edit_mode_checkbox.isChecked())
         if not self.edit_mode_checkbox.isChecked():
             manager.config.save()

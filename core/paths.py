@@ -91,9 +91,6 @@ if len(sys.argv):  # parsing arguments
                 os.mkdir(CL)
             with open(P, 'w') as file:
                 conf.write(file)
-            if not os.path.isfile(conf['CONFIGS']['settings']):
-                shutil.copyfile(os.path.join(sys.path[0], 'settings.conf'),
-                                conf['CONFIGS']['settings'])
             if not os.path.isfile(os.path.join(result.create, '__init__.py')):
                 shutil.copyfile(os.path.join(sys.path[0], 'custom_widgets',
                                              '__init__.py'),
