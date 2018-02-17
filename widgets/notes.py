@@ -10,11 +10,14 @@ from core.api import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, DELETE, SUCCESS
 from core.utils import try_except, print_stack_trace
+from core.gui.drag import mouse_enter
 
 
 class Note(QWidget):
     def __init__(self, main, index):
         QWidget.__init__(self)
+        self.enterEvent = mouse_enter(main.widget_manager, self
+                                      )(self.enterEvent)
         self.main = main
         self.index = index
         # setup window
@@ -134,6 +137,7 @@ class Main(Widget, Note):
                 continue
             try:
                 note = Note(self, i)
+                note.setAccessibleName(self.info.NAME)
                 note._init()
                 note.show()
                 self.widgets.append(note)
@@ -153,15 +157,8 @@ class Main(Widget, Note):
             widget.setHidden(state)
 
     def edit_mode(self, mode):
-        for widget in self.widgets:
-            if mode:
-                widget.setWindowFlags(Qt.WindowMinimizeButtonHint |
-                                      Qt.WindowStaysOnBottomHint | Qt.Tool)
-                widget.show()
-            else:
-                widget.setWindowFlags(Qt.CustomizeWindowHint |
-                                      Qt.WindowStaysOnBottomHint | Qt.Tool)
-                widget.show()
+        if mode:
+            return
         self.save_conf()
 
     def unload(self):
@@ -326,6 +323,7 @@ class Settings(QWidget):
         self.main.notes.append(self.main.lang['note'])
         self.main.styles.append('white.css')
         note = Note(self.main, self.list.count())
+        note.setAccessibleName(self.main.info.NAME)
         note._init()
         note.show()
         self.main.widgets.append(note)

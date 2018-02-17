@@ -212,7 +212,6 @@ class WidgetManager:
         widget.setWindowTitle(info.NAME)
         widget.setAccessibleName(info.NAME)
         widget.setWindowIcon(info.ICON)
-        widget.setMouseTracking(True)
         widget.enterEvent = mouse_enter(self, widget)(widget.enterEvent)
 
     @try_except()

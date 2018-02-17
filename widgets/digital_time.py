@@ -13,6 +13,7 @@ from core.api import Widget, WidgetInfo
 from core.gui.move import Move
 from core.paths import RES, SETTINGS, SUCCESS, DELETE
 from core.utils import try_except, print_stack_trace
+from core.gui.drag import mouse_enter
 
 
 def get_time(utc=False, format='%X', hours=0, minutes=0, seconds=0) -> str:
@@ -57,6 +58,8 @@ class DTime(QWidget):
         """
         # init
         QWidget.__init__(self)
+        self.enterEvent = mouse_enter(main.widget_manager, self
+                                      )(self.enterEvent)
         self.main = main
         self.index = index
         # setup window
@@ -191,6 +194,7 @@ class Main(Widget, DTime):
                     DTime._init(self)
                     continue
                 dtime = DTime(self, i)
+                dtime.setAccessibleName(self.info.NAME)
                 dtime._init()
                 dtime.show()
                 self.widgets.append(dtime)
@@ -243,15 +247,8 @@ class Main(Widget, DTime):
             widget.setHidden(mode)
 
     def edit_mode(self, mode):
-        for widget in self.widgets:
-            if mode:
-                widget.setWindowFlags(Qt.WindowMinimizeButtonHint |
-                                      Qt.WindowStaysOnBottomHint | Qt.Tool)
-                widget.show()
-            else:
-                widget.setWindowFlags(Qt.CustomizeWindowHint |
-                                      Qt.WindowStaysOnBottomHint | Qt.Tool)
-                widget.show()
+        if mode:
+            return
         self.save_settings()
 
     def unload(self):
@@ -400,6 +397,7 @@ class Settings(QWidget):
         self.main.names.append(name)
         self.main.colors.append('#000')
         dtime = DTime(self.main, len(self.main.times) - 1)
+        dtime.setAccessibleName(self.main.info.NAME)
         dtime._init()
         dtime.resize(100, 100)
         dtime.show()
