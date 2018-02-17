@@ -51,6 +51,7 @@ class DragPanel(FormMove):
         self.setFixedSize(20, 20)
         self.setWindowFlags(Qt.CustomizeWindowHint |
                             Qt.WindowStaysOnBottomHint | Qt.Tool)
+        self.setWindowTitle('DragPanel')
         self.__old_pos = self.pos()
         self.mouse_pos = mouse_pos
         self.widget = widget
@@ -144,15 +145,15 @@ class DragPanel(FormMove):
         self.manager.edit_mode(False, self.widget.accessibleName())
 
 
-def show_drag_panel(manager, qwidget):
-    """Decorator for mouseMoveEvent.
+def mouse_enter(manager, qwidget):
+    """Decorator for enterEvent.
 
     :param manager: WidgetManager object
     :param qwidget: QWidget
     :return: wrapped function
     """
-    def mouse_event(func):
-        def mouse_move_event(event):
+    def wrapper(func):
+        def enter_event(event):
             @try_except()
             def show():
                 main_win = manager.main_gui.main
@@ -168,8 +169,8 @@ def show_drag_panel(manager, qwidget):
                 )
 
             show()
-            func(event)
+            return func(event)
 
-        return mouse_move_event
+        return enter_event
 
-    return mouse_event
+    return wrapper

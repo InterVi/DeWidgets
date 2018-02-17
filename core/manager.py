@@ -11,7 +11,7 @@ import widgets as w
 from core.paths import CONF_WIDGETS, C_WIDGETS
 from core.utils import try_except, print_stack_trace, STDOUT
 from core.api import WidgetInfo, Widget
-from core.gui.drag import show_drag_panel
+from core.gui.drag import mouse_enter
 
 sys.path.append(C_WIDGETS)
 CUSTOM_WIDGETS = SourceFileLoader('__init__',
@@ -213,8 +213,7 @@ class WidgetManager:
         widget.setAccessibleName(info.NAME)
         widget.setWindowIcon(info.ICON)
         widget.setMouseTracking(True)
-        widget.mouseMoveEvent = show_drag_panel(self, widget
-                                                )(widget.mouseMoveEvent)
+        widget.enterEvent = mouse_enter(self, widget)(widget.enterEvent)
 
     @try_except()
     def remove_from_desktop(self, name, reminconf=False):
