@@ -11,7 +11,7 @@ from core.paths import DeWidgetsIcon, ERROR, DELETE, LOAD, UNLOAD, RELOAD, SHOW
 from core.paths import HIDE, SETTINGS, EXIT
 from core.gui import add_new
 from core.gui.help import Help, TextViewer
-from core.gui.move import Move
+from core.gui.edit import Edit
 from core.gui.settings import Settings
 from core.manager import WidgetManager
 from core.utils import try_except, print_stack_trace
@@ -86,7 +86,7 @@ class Main(QMainWindow):
         # setup vars
         self.help_window = None
         self.settings_win = None
-        self.move_window = None
+        self.edit_window = None
         # setup list
         self.list = QListWidget(self)
         self.list.setGeometry(QRect(0, 0, 281, 231))
@@ -125,11 +125,11 @@ class Main(QMainWindow):
         self.wset_button.setToolTip((lang['MAIN']['wset_button_tt']))
         self.wset_button.setGeometry(QRect(300, 35, 94, 27))
         self.wset_button.clicked.connect(self._show_widget_settings)
-        # setup 'Move' button
-        self.move_button = QPushButton(lang['MAIN']['move_button'], self)
-        self.move_button.setToolTip(lang['MAIN']['move_button_tt'])
-        self.move_button.setGeometry(QRect(410, 35, 94, 27))
-        self.move_button.clicked.connect(self._show_move)
+        # setup 'Edit' button
+        self.edit_button = QPushButton(lang['MAIN']['edit_button'], self)
+        self.edit_button.setToolTip(lang['MAIN']['edit_button_tt'])
+        self.edit_button.setGeometry(QRect(410, 35, 94, 27))
+        self.edit_button.clicked.connect(self._show_edit)
         # setup 'edit mode' checkbox
         self.edit_mode_checkbox = QCheckBox(lang['MAIN']['edit_mode'], self)
         self.edit_mode_checkbox.setToolTip(lang['MAIN']['edit_mode_tt'])
@@ -192,18 +192,18 @@ class Main(QMainWindow):
             self.add_button.setEnabled(False)
             self.del_button.setEnabled(False)
             self.wset_button.setEnabled(False)
-            self.move_button.setEnabled(False)
+            self.edit_button.setEnabled(False)
             return
         if manager.config.is_placed(item.text()):
             self.add_button.setEnabled(False)
             self.del_button.setEnabled(True)
             self.wset_button.setEnabled(True)
-            self.move_button.setEnabled(True)
+            self.edit_button.setEnabled(True)
         else:
             self.add_button.setEnabled(True)
             self.del_button.setEnabled(False)
             self.wset_button.setEnabled(False)
-            self.move_button.setEnabled(False)
+            self.edit_button.setEnabled(False)
         if self.list.size().isEmpty():
             self.edit_mode_checkbox.setEnabled(False)
         elif manager.is_placed():
@@ -332,8 +332,8 @@ class Main(QMainWindow):
         manager.widgets[self.list.currentItem().text()].show_settings()
 
     @try_except()
-    def _show_move(self, checked):
-        self.move_window = Move(
+    def _show_edit(self, checked):
+        self.edit_window = Edit(
             manager.widgets[self.list.currentItem().text()], manager)
 
     @try_except()

@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout
 from PyQt5.QtGui import QIcon, QColor, QPalette
 from PyQt5.QtCore import Qt, QTimer
 from core.api import Widget, WidgetInfo
-from core.gui.move import Move
+from core.gui.edit import Edit
 from core.paths import RES, SETTINGS, SUCCESS, DELETE
 from core.utils import try_except, print_stack_trace
 from core.gui.drag import mouse_enter
@@ -536,10 +536,10 @@ class TimeEdit(QWidget):
         # setup name edit
         self.name_edit = QLineEdit(self.main.names[element], self)
         self.name_edit.setToolTip(self.lang['name_edit_tt'])
-        # setup move button
-        self.move_button = QPushButton(self.lang['move_button'], self)
-        self.move_button.setToolTip(self.lang['move_button_tt'])
-        self.move_button.clicked.connect(self._move)
+        # setup edit button
+        self.edit_button = QPushButton(self.lang['edit_button'], self)
+        self.edit_button.setToolTip(self.lang['edit_button_tt'])
+        self.edit_button.clicked.connect(self._edit)
         # setup color button
         self.color_button = QPushButton(self.lang['color_button'], self)
         self.color_button.setToolTip(self.lang['color_button_tt'])
@@ -573,7 +573,7 @@ class TimeEdit(QWidget):
         self.grid.addWidget(self.offset_time, 2, 0, 1, 3)
         self.grid.addLayout(self.h_box, 3, 0, 1, 3)
         self.grid.addWidget(self.name_edit, 4, 0, 1, 3)
-        self.grid.addWidget(self.move_button, 5, 0, 1, 3)
+        self.grid.addWidget(self.edit_button, 5, 0, 1, 3)
         self.grid.addWidget(self.color_button, 6, 0, 1, 3)
         self.grid.addLayout(self.h_box2, 7, 0, 1, 3)
         self.setLayout(self.grid)
@@ -593,8 +593,8 @@ class TimeEdit(QWidget):
                                           self.seconds.value()))
 
     @try_except()
-    def _move(self, checked):
-        self.move_win = Move(self.widget, self.main.widget_manager)
+    def _edit(self, checked):
+        self.move_win = Edit(self.widget, self.main.widget_manager)
 
     @try_except()
     def _color(self, checked):

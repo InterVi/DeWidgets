@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QLabel, QGridLayout
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from core.api import Widget, WidgetInfo
-from core.gui.move import Move
+from core.gui.edit import Edit
 from core.paths import RES, SETTINGS, DELETE, SUCCESS
 from core.utils import try_except, print_stack_trace
 from core.gui.drag import mouse_enter
@@ -373,10 +373,10 @@ class NoteSettings(QWidget):
         self.styles_list.setCurrentText(
             main.style_names[main.styles[self.row]])
         self.styles_list.activated.connect(self._style_select)
-        # setup 'Move' button
-        self.move_button = QPushButton(main.lang['move_button'], self)
-        self.move_button.setToolTip(main.lang['move_button_tt'])
-        self.move_button.clicked.connect(self._show_move)
+        # setup 'Edit' button
+        self.edit_button = QPushButton(main.lang['edit_button'], self)
+        self.edit_button.setToolTip(main.lang['edit_button_tt'])
+        self.edit_button.clicked.connect(self._show_edit)
         # setup 'Close' button
         self.close_button = QPushButton(main.lang['item_close_button'], self)
         self.close_button.setToolTip(main.lang['item_close_button_tt'])
@@ -386,7 +386,7 @@ class NoteSettings(QWidget):
         self.grid.addWidget(self.text_edit, 0, 0, 1, 2)
         self.grid.addWidget(self.label, 1, 0)
         self.grid.addWidget(self.styles_list, 1, 1)
-        self.grid.addWidget(self.move_button, 2, 0, 1, 2)
+        self.grid.addWidget(self.edit_button, 2, 0, 1, 2)
         self.grid.addWidget(self.close_button, 3, 0, 1, 2)
         self.setLayout(self.grid)
         # show
@@ -416,9 +416,9 @@ class NoteSettings(QWidget):
         self.main.save_conf()
 
     @try_except()
-    def _show_move(self, checked):
+    def _show_edit(self, checked):
         if self.row == 0:
             win = self.main
         else:
             win = self.main.widgets[self.row - 1]
-        self.move_win = Move(win, self.main.widget_manager)
+        self.move_win = Edit(win, self.main.widget_manager)

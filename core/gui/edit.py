@@ -1,4 +1,4 @@
-"""Move widget window."""
+"""Edit widget window."""
 from PyQt5.QtWidgets import QLabel, QSpinBox, QPushButton, QSlider, QWidget
 from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtCore import Qt, QPoint, QSize
@@ -7,8 +7,8 @@ from core.paths import MOVE
 from core.utils import try_except
 
 
-class Move(QWidget):
-    """move widget window"""
+class Edit(QWidget):
+    """Edit widget window."""
     def __init__(self, window, manager):
         """
 
@@ -17,7 +17,7 @@ class Move(QWidget):
         """
         super().__init__()
         # vars
-        lang = manager.lang
+        lang = manager.lang['EDIT']
         self.window = window
         self.manager = manager
         self.x_cord = window.pos().x()
@@ -27,49 +27,49 @@ class Move(QWidget):
         self.opacity_win = window.windowOpacity()
         screen = manager.main_gui.app.desktop().screenGeometry()
         # setup window
-        self.setWindowTitle(lang['MOVE']['title'].format(window.windowTitle()))
+        self.setWindowTitle(lang['title'].format(window.windowTitle()))
         self.resize(230, 220)
         self.setWindowFlags(Qt.WindowMinimizeButtonHint)
         self.setWindowIcon(QIcon(MOVE))
         # setup 'X' label
-        self.x_label = QLabel(lang['MOVE']['x_label'], self)
+        self.x_label = QLabel(lang['x_label'], self)
         self.x_label.setAlignment(Qt.AlignCenter)
         # setup 'Y' label
-        self.y_label = QLabel(lang['MOVE']['y_label'], self)
+        self.y_label = QLabel(lang['y_label'], self)
         self.y_label.setAlignment(Qt.AlignCenter)
         # setup 'Height' label
-        self.h_label = QLabel(lang['MOVE']['h_label'], self)
+        self.h_label = QLabel(lang['h_label'], self)
         self.h_label.setAlignment(Qt.AlignCenter)
         # setup 'Width' label
-        self.w_label = QLabel(lang['MOVE']['w_label'], self)
+        self.w_label = QLabel(lang['w_label'], self)
         self.w_label.setAlignment(Qt.AlignCenter)
         # setup 'Opacity' label
-        self.opacity_win_label = QLabel(lang['MOVE']['opacity_label'], self)
+        self.opacity_win_label = QLabel(lang['opacity_label'], self)
         self.opacity_win_label.setAlignment(Qt.AlignCenter)
         # setup 'X' spinbox
         self.x_edit = QSpinBox(self)
-        self.x_edit.setToolTip(lang['MOVE']['x_edit_tt'])
+        self.x_edit.setToolTip(lang['x_edit_tt'])
         self.x_edit.setMinimum(0)
         self.x_edit.setMaximum(screen.width())
         self.x_edit.setValue(self.x_cord)
         self.x_edit.valueChanged.connect(self._move)
         # setup 'Y' spinbox
         self.y_edit = QSpinBox(self)
-        self.y_edit.setToolTip(lang['MOVE']['y_edit_tt'])
+        self.y_edit.setToolTip(lang['y_edit_tt'])
         self.y_edit.setMinimum(0)
         self.y_edit.setMaximum(screen.height())
         self.y_edit.setValue(self.y_cord)
         self.y_edit.valueChanged.connect(self._move)
         # setup 'Height' spinbox
         self.h_edit = QSpinBox(self)
-        self.h_edit.setToolTip(lang['MOVE']['h_edit_tt'])
+        self.h_edit.setToolTip(lang['h_edit_tt'])
         self.h_edit.setMinimum(0)
         self.h_edit.setMaximum(screen.height())
         self.h_edit.setValue(self.h_win)
         self.h_edit.valueChanged.connect(self._resize)
         # setup 'Width' spinbox
         self.w_edit = QSpinBox(self)
-        self.w_edit.setToolTip(lang['MOVE']['w_edit_tt'])
+        self.w_edit.setToolTip(lang['w_edit_tt'])
         self.w_edit.setMinimum(0)
         self.w_edit.setMaximum(screen.width())
         self.w_edit.setValue(self.w_win)
@@ -81,12 +81,12 @@ class Move(QWidget):
         self.slider.setToolTip(str(self.opacity_win))
         self.slider.valueChanged.connect(self._opacity)
         # setup 'Save' button
-        self.save_button = QPushButton(lang['MOVE']['save_button'], self)
-        self.save_button.setToolTip(lang['MOVE']['save_button_tt'])
+        self.save_button = QPushButton(lang['save_button'], self)
+        self.save_button.setToolTip(lang['save_button_tt'])
         self.save_button.clicked.connect(self._save)
         # setup 'Cancel' button
-        self.cancel_button = QPushButton(lang['MOVE']['cancel_button'], self)
-        self.cancel_button.setToolTip(lang['MOVE']['cancel_button_tt'])
+        self.cancel_button = QPushButton(lang['cancel_button'], self)
+        self.cancel_button.setToolTip(lang['cancel_button_tt'])
         self.cancel_button.clicked.connect(self._cancel)
         # setup layout
         self.grid = QGridLayout(self)
