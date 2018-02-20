@@ -124,14 +124,12 @@ class Settings(QWidget):
         if self._changed:
             self._show_warn()
         self.main._list_fill()
-        # strange bug: open from tray (main win hide),
-        # call self.close() -> exit app
-        self.destroy()
+        self.close()
 
     @try_except()
     def _cancel(self, checked):
         self.main._list_fill()
-        self.destroy()
+        self.close()
 
     def _show_warn(self):
         mbox = QMessageBox(QMessageBox.Warning, self.lang['warn_title'],

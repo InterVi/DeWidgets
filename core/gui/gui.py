@@ -390,6 +390,10 @@ class Main(QMainWindow):
                 event.ignore()
                 self.setHidden(True)
 
+    @try_except()
+    def closeEvent(self, event):
+        app.quit()
+
 
 class ItemInfo(TextViewer):
     """view item info"""

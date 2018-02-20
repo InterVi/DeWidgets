@@ -326,7 +326,7 @@ class Note(QWidget):
     def _close(self, checked=False):
         if self.text_edit.toPlainText():
             self._save_note()
-        self.hide()
+        self.close()
         if not self.main._session:
             self.main.image.setPixmap(ICON_PIXMAP)
             self.main.image.show()

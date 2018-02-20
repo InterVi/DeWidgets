@@ -234,7 +234,7 @@ class WidgetManager:
                 print_stack_trace()()
             self.config.add(name)
         try:
-            self.widgets[name].hide()
+            self.widgets[name].close()
         except:
             print_stack_trace()()
         self.unload(name)

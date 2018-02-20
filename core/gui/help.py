@@ -34,7 +34,7 @@ class Help(QWidget):
         # setup 'Close' button
         self.exit_button = QPushButton(lang['HELP']['exit_button'], self)
         self.exit_button.setToolTip(lang['HELP']['exit_button_tt'])
-        self.exit_button.clicked.connect(self.hide)  # close, destroy - bugs
+        self.exit_button.clicked.connect(self.close)
         # setup grid
         self.grid = QGridLayout()
         self.grid.addWidget(self.text, 0, 0, 1, 3)
@@ -67,7 +67,7 @@ class TextViewer(QWidget):
         # setup 'Close' button
         self.exit_button = QPushButton(exit, self)
         self.exit_button.setToolTip(exit_tt)
-        self.exit_button.clicked.connect(self.hide)  # close, destroy - bugs
+        self.exit_button.clicked.connect(self.close)
         # setup v layout
         self.v_box = QVBoxLayout(self)
         self.v_box.addWidget(self.text)

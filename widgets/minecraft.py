@@ -195,7 +195,7 @@ class ShowMore(TextViewer):
             self.lang['close_button_tt']
         )
         self.setWindowIcon(main.list.item(main.list.currentRow()).icon())
-        self.exit_button.clicked.connect(self.close)
+        self.exit_button.clicked.connect(self.exit)
         self.text.setHtml(self.lang['wait'])
         self.__manager = Manager()
         self.__info_buffer = self.__manager.dict()
@@ -273,7 +273,7 @@ class ShowMore(TextViewer):
             self.timer.start(100)
 
     @try_except()
-    def close(self, checked=False):
+    def exit(self, checked=False):
         self.timer.stop()
         try:
             if self.__proc and self.__proc.is_alive():
@@ -281,7 +281,7 @@ class ShowMore(TextViewer):
                 self.__proc = None
         except:
             print_stack_trace()()
-        super().setHidden(True)  # app close bug -> call close or destroy
+        self.close()
 
 
 class Settings(QWidget):

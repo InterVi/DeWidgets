@@ -261,17 +261,15 @@ class Timeout(QMessageBox):
         # setup 'Ok' button
         ok = QPushButton(main.lang['success_ok_button'], self)
         ok.setToolTip(main.lang['success_ok_button_tt'])
-        ok.clicked.connect(self.exit)  # app close bug -> call close or destroy
+        ok.clicked.connect(self.exit)
         self.layout().addWidget(ok)
         # show
         self.show()
 
     @try_except()
-    def exit(self, checked):  # crutch off memory leak
-        self.hide()
-        for i in range(len(self.main.boxes)):
-            if self.main.boxes[i].isHidden():
-                del self.main.boxes[i]
+    def exit(self, checked):
+        self.close()
+        self.main.boxes.remove(self)
 
 
 class Settings(QWidget):

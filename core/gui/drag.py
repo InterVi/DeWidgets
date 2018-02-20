@@ -140,7 +140,7 @@ class DragPanel(FormMove):
 
     @try_except()
     def leaveEvent(self, event):
-        self.hide()
+        self.close()
         del _drags[self.widget.accessibleName()]
         self.manager.edit_mode(False, self.widget.accessibleName())
 

@@ -70,6 +70,7 @@ def __start():
         # start
         logging.getLogger('stdout').info('start')
         app = QApplication(sys.argv)
+        app.setQuitOnLastWindowClosed(False)
         gui.__init__(app, prop)
         # exit
         status = app.exec()  # waiting
