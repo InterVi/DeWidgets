@@ -82,7 +82,7 @@ class Main(Widget, QWidget):
                 bar.setValue(int(pc[i]) if self._percpu else int(pc))
                 self._widgets.append(bar)
                 self.layout().addWidget(bar)
-            if self._freq:  # freqs
+            if self._freq and 'cpu_freq' in psutil.__dict__:  # freqs
                 pf = psutil.cpu_freq(self._percpu)
                 if self._labels:  # titles
                     text = self.lang['freq']

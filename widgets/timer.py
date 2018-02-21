@@ -459,12 +459,12 @@ class TimerSettings(QWidget):
         QWidget.__init__(self)
         self.settings = settings
         self.index = settings.list.currentRow()
-        self.timer = settings.list.item(self.index).text()
         self.main = settings.main
         self.edit = edit
         # setup window
         if edit:
-            self.setWindowTitle(self.main.lang['ts_title'].format(self.timer))
+            timer = settings.list.item(self.index).text()
+            self.setWindowTitle(self.main.lang['ts_title'].format(timer))
         else:
             self.setWindowTitle(self.main.lang['ts_title'].format(''))
         self.setWindowIcon(self.main.windowIcon())
