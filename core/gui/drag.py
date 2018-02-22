@@ -35,8 +35,11 @@ class FormMove(QWidget):
 
     @try_except()
     def mouseReleaseEvent(self, event):
-        if event.buttons() == Qt.LeftButton:
-            self.__mouse_pos = None
+        self.__mouse_pos = None
+
+    @try_except()
+    def mouseDoubleClickEvent(self, event):
+        self.__mouse_pos = None
 
     @try_except()
     def is_moving(self) -> bool:
