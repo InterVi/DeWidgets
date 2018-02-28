@@ -317,7 +317,8 @@ class WidgetManager:
         self.call_unload_other(name)
         try:
             self.widgets[name].unload()
-            self.widgets[name].destroy()
+            self.widgets[name].close()
+            self.widgets[name].deleteLater()
         except:
             print_stack_trace()()
         del self.widgets[name]
@@ -329,10 +330,8 @@ class WidgetManager:
         :param del_from_dicts: bool, if True - like del_from_dicts"""
         for name in list(self.widgets.keys()):
             self.unload(name)
-        if del_from_dicts:
-            self.info.clear()
-            self.paths.clear()
-            self.custom_widgets.clear()
+            if del_from_dicts:
+                self.del_from_dicts(name)
 
     def del_data_no_placed(self):
         """Remove data (from info, paths and sys.modules) only not placed

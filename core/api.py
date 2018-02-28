@@ -57,7 +57,7 @@ class Widget:
         pass
 
     def unload(self):
-        """unload widget event (before call destroy)."""
+        """unload widget event (before call close and deleteLater)."""
         pass
 
     def place(self):

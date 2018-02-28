@@ -53,7 +53,6 @@ class Main(Widget, QWidget):
         self.timer.timeout.connect(self._tick)
         self._last = 0
         self.list = []
-        self.boxes = []
         self.v_box = QVBoxLayout(self)
         self.v_box.setContentsMargins(0, 0, 0, 0)
         self.v_box.setSpacing(1)
@@ -85,7 +84,7 @@ class Main(Widget, QWidget):
     def _delete_timer(self, index):
         self.v_box.removeItem(self.list[index][1])
         del self.list[index]
-        self._reset()  # else rendering bug
+        self._reset()  # render bug not fixed :(
 
     @try_except()
     def _turn_enabled(self, index, enabled):
@@ -159,7 +158,7 @@ class Main(Widget, QWidget):
 
     @try_except()
     def _show_timeout(self, index):
-        self.boxes.append(Timeout(self, self.get_timer_text(index)))
+        Timeout(self, self.get_timer_text(index))
 
     @try_except()
     def _start(self, checked):
@@ -170,13 +169,15 @@ class Main(Widget, QWidget):
     def _pause(self, checked):
         self.timer.stop()
 
-    def _reset(self, checked):
+    @try_except()
+    def _reset(self, checked=False):
         self.timer.stop()
         for timer in self.list:
             self.v_box.removeItem(timer[1])
         self._save_timers()
         self.list.clear()
         self._load_timers()
+        self.layout().update()
 
     def _load_timers(self):
         if ('timers' not in self.conf) or self.conf['timers'] == '[]' or \
@@ -205,7 +206,7 @@ class Main(Widget, QWidget):
         if 'notify_msec' not in self.conf:
             self.conf['notify_msec'] = str(10000)
         if 'seconds' not in self.conf:
-            self.conf['seconds'] = 'True'
+            self.conf['seconds'] = 'False'
         if 'alarm_volume' not in self.conf:
             self.conf['alarm_volume'] = str(100)
         if 'seconds_volume' not in self.conf:
@@ -261,15 +262,10 @@ class Timeout(QMessageBox):
         # setup 'Ok' button
         ok = QPushButton(main.lang['success_ok_button'], self)
         ok.setToolTip(main.lang['success_ok_button_tt'])
-        ok.clicked.connect(self.exit)
+        ok.clicked.connect(self.destroy)
         self.layout().addWidget(ok)
         # show
         self.show()
-
-    @try_except()
-    def exit(self, checked):
-        self.close()
-        self.main.boxes.remove(self)
 
 
 class Settings(QWidget):
