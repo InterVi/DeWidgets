@@ -6,7 +6,9 @@ import psutil
 from PyQt5.QtWidgets import QWidget, QLabel, QProgressBar, QPushButton
 from PyQt5.QtWidgets import QCheckBox, QSpinBox, QComboBox, QListView
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout
-from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
+from PyQt5.QtWidgets import QColorDialog
+from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem, QFont
+from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtCore import Qt, QTimer
 from core.api import Widget, WidgetInfo
 from core.paths import RES, SETTINGS
@@ -111,6 +113,9 @@ class Main(Widget, QWidget):
         self._old_counters = None
         self._max_recv_speed = 0
         self._max_sent_speed = 0
+        self._palette = QPalette()
+        self._palette.setColor(QPalette.WindowText, QColor('#000000'))
+        self._font = QFont()
 
     @try_except()
     def setup_ui(self):
@@ -162,6 +167,8 @@ class Main(Widget, QWidget):
     def _add_label(self, text):
         label = QLabel(text, self)
         label.setAlignment(Qt.AlignCenter)
+        label.setPalette(self._palette)
+        label.setFont(self._font)
         self._widgets.append(label)
         self.layout().addWidget(label)
 
@@ -307,6 +314,13 @@ class Main(Widget, QWidget):
             self._kind = self.conf['kind']
         if 'mbit' in self.conf:
             self._mbit = bool(strtobool(self.conf['mbit']))
+        if 'color' in self.conf:
+            self._palette.setColor(QPalette.WindowText,
+                                   QColor(self.conf['color']))
+        if 'size' in self.conf:
+            self._font.setPointSize(int(self.conf['size']))
+        if 'bold' in self.conf:
+            self._font.setBold(bool(self.conf['bold']))
 
     @try_except()
     def save_settings(self):
@@ -330,6 +344,9 @@ class Main(Widget, QWidget):
         self.conf['con'] = str(self._con)
         self.conf['kind'] = self._kind
         self.conf['mbit'] = str(self._mbit)
+        self.conf['color'] = self._palette.color(QPalette.WindowText).name()
+        self.conf['size'] = str(self._font.pointSize())
+        self.conf['bold'] = str(self._font.bold())
 
     @try_except()
     def show_settings(self):
@@ -371,7 +388,11 @@ class Settings(QWidget):
         # setup window
         self.setWindowIcon(QIcon(SETTINGS))
         self.setWindowTitle(self.lang['settings_title'])
-        self.resize(500, 380)
+        self.resize(500, 460)
+        # setup vars
+        self._palette = QPalette()
+        self._palette.setColor(QPalette.WindowText,
+                               main._palette.color(QPalette.WindowText))
         # setup update label
         self.update_label = QLabel(self.lang['update_label'], self)
         self.update_label.setToolTip(self.lang['update_label_tt'])
@@ -390,6 +411,12 @@ class Settings(QWidget):
         self.round_spinbox.setMinimum(1)
         self.round_spinbox.setMaximum(100)
         self.round_spinbox.setValue(main._round)
+        # setup font size spinbox
+        self.size_spinbox = QSpinBox()
+        self.size_spinbox.setToolTip(self.lang['size_spinbox_tt'])
+        self.size_spinbox.setMinimum(8)
+        self.size_spinbox.setMaximum(80)
+        self.size_spinbox.setValue(main._font.pointSize())
         # setup labels checkbox
         self.labels_checkbox = QCheckBox(self.lang['labels_checkbox'], self)
         self.labels_checkbox.setToolTip(self.lang['labels_checkbox_tt'])
@@ -450,6 +477,10 @@ class Settings(QWidget):
         self.con_checkbox = QCheckBox(self.lang['con_checkbox'], self)
         self.con_checkbox.setToolTip(self.lang['con_checkbox_tt'])
         self.con_checkbox.setChecked(main._con)
+        # setup bold checkbox
+        self.bold_checkbox = QCheckBox(self.lang['bold_checkbox'], self)
+        self.bold_checkbox.setToolTip(self.lang['bold_checkbox_tt'])
+        self.bold_checkbox.setChecked(main._font.bold())
         # setup kind cbox combobox
         self.kind_cbox = QComboBox(self)
         self.kind_cbox.setToolTip(self.lang['kind_cbox_tt'])
@@ -474,6 +505,10 @@ class Settings(QWidget):
             ifaces_model.setItem(i, 0, item)
             i += 1
         self.ifaces_list.setModel(ifaces_model)
+        # setup color button
+        self.color_button = QPushButton(self.lang['color_button'], self)
+        self.color_button.setToolTip(self.lang['color_button_tt'])
+        self.color_button.clicked.connect(self._color)
         # setup save button
         self.save_button = QPushButton(self.lang['save_button'], self)
         self.save_button.setToolTip(self.lang['save_button_tt'])
@@ -482,7 +517,11 @@ class Settings(QWidget):
         self.cancel_button = QPushButton(self.lang['cancel_button'], self)
         self.cancel_button.setToolTip(self.lang['cancel_button_tt'])
         self.cancel_button.clicked.connect(self.close)
-        # setup h box layout
+        # setup font settings h box layout
+        self.h_box2 = QHBoxLayout()
+        self.h_box2.addWidget(self.size_spinbox)
+        self.h_box2.addWidget(self.bold_checkbox)
+        # setup buttons h box layout
         self.h_box = QHBoxLayout()
         self.h_box.addWidget(self.save_button)
         self.h_box.addWidget(self.cancel_button)
@@ -509,10 +548,21 @@ class Settings(QWidget):
         self.grid.addWidget(self.con_checkbox, 9, 0)
         self.grid.addWidget(self.kind_cbox, 10, 0)
         self.grid.addWidget(self.ifaces_list, 10, 1)
-        self.grid.addLayout(self.h_box, 11, 0, 1, 2)
+        self.grid.addWidget(self.color_button, 11, 0)
+        self.grid.addLayout(self.h_box2, 11, 1)
+        self.grid.addLayout(self.h_box, 12, 0, 1, 2)
         self.setLayout(self.grid)
         # show
         self.show()
+
+    @try_except()
+    def _color(self, checked):
+        self._palette.setColor(QPalette.WindowText,
+                               QColorDialog.getColor(
+                                   self._palette.color(QPalette.WindowText),
+                                   self,
+                                   self.lang['color_title'])
+                               )
 
     @try_except()
     def _save(self, checked):
@@ -534,6 +584,9 @@ class Settings(QWidget):
         self.main._dropout = self.dropout_checkbox.isChecked()
         self.main._con = self.con_checkbox.isChecked()
         self.main._kind = self.kind_cbox.currentText()
+        self.main._palette = self._palette
+        self.main._font.setPointSize(self.size_spinbox.value())
+        self.main._font.setBold(self.bold_checkbox.isChecked())
         names = []
         i = 0
         for name in self.stats:
