@@ -320,7 +320,7 @@ class Main(Widget, QWidget):
         if 'size' in self.conf:
             self._font.setPointSize(int(self.conf['size']))
         if 'bold' in self.conf:
-            self._font.setBold(bool(self.conf['bold']))
+            self._font.setBold(bool(strtobool(self.conf['bold'])))
 
     @try_except()
     def save_settings(self):

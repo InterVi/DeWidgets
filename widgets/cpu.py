@@ -2,9 +2,9 @@ import os
 from distutils.util import strtobool
 import psutil
 from PyQt5.QtWidgets import QWidget, QLabel, QProgressBar, QPushButton
-from PyQt5.QtWidgets import QCheckBox, QSpinBox
+from PyQt5.QtWidgets import QCheckBox, QSpinBox, QColorDialog
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QGridLayout
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QColor, QPalette, QFont
 from PyQt5.QtCore import Qt, QTimer
 from core.api import Widget, WidgetInfo
 from core.paths import RES, SETTINGS
@@ -56,6 +56,9 @@ class Main(Widget, QWidget):
         self._freq = True
         self._labels = True
         self._text = True
+        self._palette = QPalette()
+        self._palette.setColor(QPalette.WindowText, QColor('#000000'))
+        self._font = QFont()
 
     @try_except()
     def setup_ui(self):
@@ -90,6 +93,8 @@ class Main(Widget, QWidget):
                         text = self.lang['core_freq'].format(str(i))
                     label = QLabel(text, self)
                     label.setAlignment(Qt.AlignCenter)
+                    label.setPalette(self._palette)
+                    label.setFont(self._font)
                     self._widgets.append(label)
                     self.layout().addWidget(label)
                 bar = QProgressBar(self)
@@ -107,6 +112,8 @@ class Main(Widget, QWidget):
                         str(round(pf.current, self._round))
                     label = QLabel(self.lang['freq_text'].format(text))
                     label.setAlignment(Qt.AlignCenter)
+                    label.setPalette(self._palette)
+                    label.setFont(self._font)
                     self._widgets.append(label)
                     self.layout().addWidget(label)
         # set layout
@@ -128,6 +135,13 @@ class Main(Widget, QWidget):
             self._labels = bool(strtobool(self.conf['labels']))
         if 'text' in self.conf:
             self._text = bool(strtobool(self.conf['text']))
+        if 'color' in self.conf:
+            self._palette.setColor(QPalette.WindowText,
+                                   QColor(self.conf['color']))
+        if 'size' in self.conf:
+            self._font.setPointSize(int(self.conf['size']))
+        if 'bold' in self.conf:
+            self._font.setBold(bool(strtobool(self.conf['bold'])))
 
     @try_except()
     def save_settings(self):
@@ -138,6 +152,8 @@ class Main(Widget, QWidget):
         self.conf['freq'] = str(self._freq)
         self.conf['labels'] = str(self._labels)
         self.conf['text'] = str(self._text)
+        self.conf['size'] = str(self._font.pointSize())
+        self.conf['bold'] = str(self._font.bold())
 
     @try_except()
     def show_settings(self):
@@ -179,7 +195,11 @@ class Settings(QWidget):
         # setup window
         self.setWindowIcon(QIcon(SETTINGS))
         self.setWindowTitle(self.lang['settings_title'])
-        self.resize(200, 260)
+        # setup vars
+        self._palette = QPalette()
+        self._palette.setColor(QPalette.WindowText,
+                               main._palette.color(QPalette.WindowText))
+        self.resize(240, 240)
         # setup update label
         self.update_label = QLabel(self.lang['update_label'], self)
         self.update_label.setToolTip(self.lang['update_label_tt'])
@@ -198,6 +218,12 @@ class Settings(QWidget):
         self.round_spinbox.setMinimum(1)
         self.round_spinbox.setMaximum(100)
         self.round_spinbox.setValue(main._round)
+        # setup font size spinbox
+        self.size_spinbox = QSpinBox()
+        self.size_spinbox.setToolTip(self.lang['size_spinbox_tt'])
+        self.size_spinbox.setMinimum(8)
+        self.size_spinbox.setMaximum(80)
+        self.size_spinbox.setValue(main._font.pointSize())
         # setup percpu checkbox
         self.percpu_checkbox = QCheckBox(self.lang['percpu_checkbox'], self)
         self.percpu_checkbox.setToolTip(self.lang['percpu_checkbox_tt'])
@@ -218,6 +244,14 @@ class Settings(QWidget):
         self.text_checkbox = QCheckBox(self.lang['text_checkbox'], self)
         self.text_checkbox.setToolTip(self.lang['text_checkbox_tt'])
         self.text_checkbox.setChecked(main._text)
+        # setup bold checkbox
+        self.bold_checkbox = QCheckBox(self.lang['bold_checkbox'], self)
+        self.bold_checkbox.setToolTip(self.lang['bold_checkbox_tt'])
+        self.bold_checkbox.setChecked(main._font.bold())
+        # setup color button
+        self.color_button = QPushButton(self.lang['color_button'], self)
+        self.color_button.setToolTip(self.lang['color_button_tt'])
+        self.color_button.clicked.connect(self._color)
         # setup save button
         self.save_button = QPushButton(self.lang['save_button'], self)
         self.save_button.setToolTip(self.lang['save_button_tt'])
@@ -236,15 +270,27 @@ class Settings(QWidget):
         self.grid.addWidget(self.update_spinbox, 0, 1)
         self.grid.addWidget(self.round_label, 1, 0)
         self.grid.addWidget(self.round_spinbox, 1, 1)
-        self.grid.addWidget(self.percpu_checkbox, 2, 0, 1, 2)
-        self.grid.addWidget(self.percent_checkbox, 3, 0, 1, 2)
-        self.grid.addWidget(self.freq_checkbox, 4, 0, 1, 2)
-        self.grid.addWidget(self.labels_checkbox, 5, 0, 1, 2)
-        self.grid.addWidget(self.text_checkbox, 6, 0, 1, 2)
-        self.grid.addLayout(self.h_box, 7, 0, 1, 2)
+        self.grid.addWidget(self.percpu_checkbox, 2, 0)
+        self.grid.addWidget(self.percent_checkbox, 2, 1)
+        self.grid.addWidget(self.freq_checkbox, 3, 0)
+        self.grid.addWidget(self.labels_checkbox, 3, 1)
+        self.grid.addWidget(self.text_checkbox, 4, 0)
+        self.grid.addWidget(self.color_button, 4, 1)
+        self.grid.addWidget(self.size_spinbox, 5, 0)
+        self.grid.addWidget(self.bold_checkbox, 5, 1)
+        self.grid.addLayout(self.h_box, 6, 0, 1, 2)
         self.setLayout(self.grid)
         # show
         self.show()
+
+    @try_except()
+    def _color(self, checked):
+        self._palette.setColor(QPalette.WindowText,
+                               QColorDialog.getColor(
+                                   self._palette.color(QPalette.WindowText),
+                                   self,
+                                   self.lang['color_title'])
+                               )
 
     @try_except()
     def _save(self, checked):
@@ -255,6 +301,9 @@ class Settings(QWidget):
         self.main._freq = self.freq_checkbox.isChecked()
         self.main._labels = self.labels_checkbox.isChecked()
         self.main._text = self.text_checkbox.isChecked()
+        self.main._palette = self._palette
+        self.main._font.setPointSize(self.size_spinbox.value())
+        self.main._font.setBold(self.bold_checkbox.isChecked())
         self.main.save_settings()
         self.main.timer.stop()
         self.main.timer.start(self.main._update)
