@@ -53,6 +53,7 @@ class Main(Widget, QWidget):
         self.timer.timeout.connect(self._tick)
         self._last = 0
         self.list = []
+        self.shows = {}
         self.v_box = QVBoxLayout(self)
         self.v_box.setContentsMargins(0, 0, 0, 0)
         self.v_box.setSpacing(1)
@@ -158,7 +159,9 @@ class Main(Widget, QWidget):
 
     @try_except()
     def _show_timeout(self, index):
-        Timeout(self, self.get_timer_text(index))
+        if index in self.shows:
+            return
+        self.shows[index] = Timeout(self, self.get_timer_text(index), index)
 
     @try_except()
     def _start(self, checked):
@@ -247,13 +250,14 @@ class Main(Widget, QWidget):
 
 
 class Timeout(QMessageBox):
-    def __init__(self, main, timer):
+    def __init__(self, main, timer, index):
         QMessageBox.__init__(self)
         QMessageBox.__init__(self, QMessageBox.Information,
                              main.lang['success_title'],
                              main.lang['success_text'].format(timer),
                              QMessageBox.NoButton, main)
         self.main = main
+        self.index = index
         # setup window
         self.setStandardButtons(QMessageBox.NoButton)
         self.setWindowIcon(QIcon(SUCCESS))
@@ -262,10 +266,15 @@ class Timeout(QMessageBox):
         # setup 'Ok' button
         ok = QPushButton(main.lang['success_ok_button'], self)
         ok.setToolTip(main.lang['success_ok_button_tt'])
-        ok.clicked.connect(self.destroy)
+        ok.clicked.connect(self._exit)
         self.layout().addWidget(ok)
         # show
         self.show()
+
+    @try_except()
+    def _exit(self, checked):
+        del self.main.shows[self.index]
+        self.deleteLater()
 
 
 class Settings(QWidget):
