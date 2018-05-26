@@ -152,6 +152,7 @@ class Main(Widget, QWidget):
         self.conf['freq'] = str(self._freq)
         self.conf['labels'] = str(self._labels)
         self.conf['text'] = str(self._text)
+        self.conf['color'] = self._palette.color(QPalette.WindowText).name()
         self.conf['size'] = str(self._font.pointSize())
         self.conf['bold'] = str(self._font.bold())
 
@@ -195,11 +196,11 @@ class Settings(QWidget):
         # setup window
         self.setWindowIcon(QIcon(SETTINGS))
         self.setWindowTitle(self.lang['settings_title'])
+        self.resize(240, 240)
         # setup vars
         self._palette = QPalette()
         self._palette.setColor(QPalette.WindowText,
                                main._palette.color(QPalette.WindowText))
-        self.resize(240, 240)
         # setup update label
         self.update_label = QLabel(self.lang['update_label'], self)
         self.update_label.setToolTip(self.lang['update_label_tt'])
