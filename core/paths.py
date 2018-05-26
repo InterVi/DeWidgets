@@ -15,7 +15,7 @@ C_RES = os.path.join(C_WIDGETS, 'res')
 C_LANGS = os.path.join(C_WIDGETS, 'langs')
 """langs directory for custom widgets"""
 
-AVA = os.path.join(RES, 'ava.jpg')
+AVA = os.path.join(RES, 'ava.png')
 DELETE = os.path.join(RES, 'delete.png')
 DeWidgetsIcon = os.path.join(RES, 'DeWidgetsIcon.png')
 ERROR = os.path.join(RES, 'error.png')

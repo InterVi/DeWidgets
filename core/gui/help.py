@@ -104,6 +104,7 @@ class Author(TextViewer):
         # setup image
         self.label_ava = QLabel(self)
         self.label_ava.setAlignment(Qt.AlignCenter)
+        self.label_ava.setToolTip(lang['AUTHOR']['label_tt'])
         try:
             self.label_ava.setPixmap(QPixmap(AVA))
         except:
