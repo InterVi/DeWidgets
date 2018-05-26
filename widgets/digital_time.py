@@ -27,13 +27,8 @@ def get_time(utc=False, format='%X', hours=0, minutes=0, seconds=0) -> str:
     :return: str, formatted time string
     """
     dt = datetime.utcnow() if utc else datetime.today()
-    odt = datetime(dt.year, dt.month, dt.day,
-                   dt.hour + hours,
-                   dt.minute + minutes,
-                   dt.second + seconds,
-                   dt.microsecond
-                   )
-    return odt.strftime(format)
+    stamp = dt.timestamp() + (hours * 60 * 60) + (minutes * 60) + seconds
+    return datetime.fromtimestamp(stamp).strftime(format)
 
 
 def strf_validate(strf) -> bool:
